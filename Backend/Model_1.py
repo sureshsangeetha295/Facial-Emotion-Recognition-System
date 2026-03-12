@@ -15,7 +15,7 @@ WEIGHT_DECAY  = 1e-4
 BATCH_SIZE    = 32
 IMG_SIZE      = (224, 224)
 NUM_CLASSES   = 7
-DATASET_PATH  = r"D:\Facial Emotion Detection\Real_Dataset"
+DATASET_PATH  = r"D:\Facial Emotion Detection\Backend\Dataset"
 PHASE3_MODEL  = "models/phase3_best_model.keras"
 MODEL_SAVE    = "models/phase1_best_model.keras"
 LOG_FILE      = "models/phase1_training_log.csv"
@@ -182,7 +182,7 @@ print(f"  PHASE 5 RESULTS")
 print(f"{'='*52}")
 print(f"  Best Train Accuracy : {best_train_acc*100:.2f}%")
 print(f"  Best Val Accuracy   : {best_val_acc*100:.2f}%")
-print(f"  Train/Val Gap       : {train_val_gap*100:.2f}%  {'✅ Good' if train_val_gap < 0.08 else '⚠️ Overfitting'}")
+print(f"  Train/Val Gap       : {train_val_gap*100:.2f}%  {'Good' if train_val_gap < 0.08 else 'Overfitting'}")
 print(f"{'='*52}")
 print(f"\n  Model saved to : {MODEL_SAVE}")
 print(f"  Log saved to   : {LOG_FILE}\n")
