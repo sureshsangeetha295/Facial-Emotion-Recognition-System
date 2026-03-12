@@ -4,7 +4,7 @@ from PIL import Image
 from collections import defaultdict
 
 # ── Config ────────────────────────────────────────────────────────────────────
-DATASET_PATH = r"D:\Facial Emotion Detection\Real_Dataset"
+DATASET_PATH = r"D:\Facial Emotion Detection\Backend\Dataset"
 
 EMOTION_MAP = {
     "1": "Surprise",
