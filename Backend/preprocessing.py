@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 #Config 
-DATASET_PATH = r"D:\Facial Emotion Detection\Real_Dataset"
+DATASET_PATH = r"D:\Facial Emotion Detection\Backend\Dataset"
 IMG_SIZE     = (224, 224)
 BATCH_SIZE   = 16
 SEED         = 42
