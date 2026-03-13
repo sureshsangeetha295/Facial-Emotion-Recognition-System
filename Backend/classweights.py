@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.utils.class_weight import compute_class_weight
 
 #Config 
-DATASET_PATH = r"D:\Facial Emotion Detection\Real_Dataset"
+DATASET_PATH = r"D:\Facial Emotion Detection\Backend\Dataset"
 TRAIN_PATH   = os.path.join(DATASET_PATH, "train")
 
 #Compute Class Weights 
