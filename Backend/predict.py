@@ -1,58 +1,107 @@
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+
 import cv2
 import numpy as np
 import tensorflow as tf
-import os
+from mtcnn import MTCNN
 
-#Config 
-MODEL_PATH  = "models/phase2_best_model.keras"
-IMG_SIZE    = (224, 224)
+# ───────── CONFIG ─────────
+MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
+IMAGE_PATH = r"c:\Users\sures\Downloads\s_test.jpeg"
 
-#Change this to any image path you want to test
-IMAGE_PATH  = r"C:\Users\sures\Downloads\images (3).jpeg"
+IMG_SIZE = (224, 224)
+NUM_PASSES = 5
 
-# Must match sorted() folder names from your training dataset exactly
-CLASS_NAMES    = sorted(["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"])
-INDEX_TO_CLASS = {i: name for i, name in enumerate(CLASS_NAMES)}
-print(f"[INFO] Classes : {CLASS_NAMES}")
+CLASS_NAMES = [
+    "Anger",
+    "Disgust",
+    "Fear",
+    "Happiness",
+    "Neutral",
+    "Sadness",
+    "Surprise"
+]
 
-#Load model 
-print("[INFO] Loading model...")
-model = tf.keras.models.load_model(MODEL_PATH)
-print("[INFO] Ready.\n")
+# ───────── LOAD MODEL ─────────
+print("Loading model...")
+model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+print("Model loaded")
 
-#Load & preprocess (matches phase6 exactly) 
-frame = cv2.imread(IMAGE_PATH)
-if frame is None:
-    raise FileNotFoundError(f"Image not found: {IMAGE_PATH}")
+# ───────── LOAD IMAGE ─────────
+img = cv2.imread(IMAGE_PATH)
 
-img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-img = cv2.resize(img, IMG_SIZE).astype(np.float32)
-img = tf.keras.applications.mobilenet_v2.preprocess_input(img)
-img = np.expand_dims(img, axis=0)
+if img is None:
+    raise RuntimeError("Image not found")
 
-#Predict 
-probs      = model.predict(img, verbose=0)[0]
-pred_idx   = int(np.argmax(probs))
-pred_label = INDEX_TO_CLASS[pred_idx]
-confidence = probs[pred_idx] * 100
+img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-#Print results 
-print(f"  Emotion    : {pred_label}")
-print(f"  Confidence : {confidence:.2f}%")
-print("\n  All scores :")
-for i, prob in enumerate(probs):
-    bar  = "█" * int(prob * 40)
-    mark = " ← predicted" if i == pred_idx else ""
-    print(f"    {INDEX_TO_CLASS[i]:<12} {prob*100:5.1f}%  {bar}{mark}")
+# ───────── MTCNN FACE DETECTOR ─────────
+detector = MTCNN()
+faces = detector.detect_faces(img_rgb)
 
-#Draw & show 
-label_text = f"{pred_label}  {confidence:.1f}%"
-cv2.putText(frame, label_text, (10, 35),
-            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+# ───────── FACE CROP ─────────
+if not faces:
+    print("No face detected, using whole image")
+    face = img_rgb
+    x, y, w, h = 0, 0, img.shape[1], img.shape[0]
+else:
+    x, y, w, h = faces[0]["box"]
 
-cv2.imshow("Prediction", frame)
-cv2.imwrite("result.jpg", frame)
-print("\n  [Saved] result.jpg")
-print("  [Press any key to close]")
+    # Fix negative coordinates
+    x = max(0, x)
+    y = max(0, y)
+
+    face = img_rgb[y:y+h, x:x+w]
+
+# ───────── PREPROCESS ─────────
+face = cv2.resize(face, IMG_SIZE)
+face = face.astype("float32")
+
+# MobileNetV2 normalization (-1 to 1)
+face = tf.keras.applications.mobilenet_v2.preprocess_input(face)
+
+face = np.expand_dims(face, axis=0)
+
+# ───────── AVERAGE PREDICTIONS ─────────
+predictions = []
+
+for _ in range(NUM_PASSES):
+    p = model.predict(face, verbose=0)[0]
+    predictions.append(p)
+
+predictions = np.array(predictions)
+avg_pred = np.mean(predictions, axis=0)
+
+# ───────── RESULTS ─────────
+idx = np.argmax(avg_pred)
+emotion = CLASS_NAMES[idx]
+confidence = avg_pred[idx] * 100
+
+print("\nPrediction:")
+print("Emotion:", emotion)
+print("Confidence:", round(confidence, 2), "%")
+
+print("\nAll probabilities:")
+for i, e in enumerate(CLASS_NAMES):
+    print(f"{e:10s}: {avg_pred[i]*100:.2f}%")
+
+# ───────── DRAW RESULT ─────────
+label = f"{emotion} {confidence:.1f}%"
+
+cv2.rectangle(img, (x, y), (x+w, y+h), (0,255,0), 2)
+
+cv2.putText(
+    img,
+    label,
+    (x, y-10),
+    cv2.FONT_HERSHEY_SIMPLEX,
+    0.9,
+    (0,255,0),
+    2
+)
+
+cv2.imshow("Emotion Prediction", img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
