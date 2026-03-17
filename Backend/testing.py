@@ -1,83 +1,82 @@
 import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+
+import cv2
 import numpy as np
 import tensorflow as tf
+from mtcnn import MTCNN
 
-# ─── Config ───────────────────────────────────────────────────────────────────
-MODEL_PATH = "models/phase6_best_model.keras"
-TEST_PATH  = r"D:\Facial Emotion Detection\Real_Dataset\test"
-IMG_SIZE   = (224, 224)
+# ───────── CONFIG ─────────
+MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
+IMG_SIZE = (224, 224)
+NUM_PASSES = 5
 
-# ─── Load model ───────────────────────────────────────────────────────────────
-print("[INFO] Loading model...")
-model = tf.keras.models.load_model(MODEL_PATH)
-print("[INFO] Model loaded.\n")
+CLASS_NAMES = [
+    "Anger",
+    "Disgust",
+    "Fear",
+    "Happiness",
+    "Neutral",
+    "Sadness",
+    "Surprise"
+]
 
-# ─── Auto-read class names from test folder (same sorted() as training) ───────
-CLASS_NAMES    = sorted([c for c in os.listdir(TEST_PATH)
-                         if os.path.isdir(os.path.join(TEST_PATH, c))])
-INDEX_TO_CLASS = {i: name for i, name in enumerate(CLASS_NAMES)}
-CLASS_TO_INDEX = {name: i for i, name in enumerate(CLASS_NAMES)}
-print(f"[INFO] Classes found : {CLASS_NAMES}\n")
+# ───────── LOAD MODEL (ONLY ONCE) ─────────
+print("Loading model...")
+model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+print("Model loaded")
 
-# ─── Preprocess (matches phase6 exactly) ──────────────────────────────────────
-def preprocess(img_path):
-    img = tf.io.read_file(img_path)
-    img = tf.image.decode_jpeg(img, channels=3)
-    img = tf.image.resize(img, IMG_SIZE)
-    img = tf.keras.applications.mobilenet_v2.preprocess_input(img)
-    return tf.expand_dims(img, axis=0)
+# ───────── LOAD FACE DETECTOR ─────────
+detector = MTCNN()
 
-# ─── Batch test ───────────────────────────────────────────────────────────────
-correct   = 0
-total     = 0
-per_class = {name: {"correct": 0, "total": 0} for name in CLASS_NAMES}
 
-print(f"[INFO] Testing on : {TEST_PATH}\n")
-print(f"  {'Image':<40} {'True':<14} {'Predicted':<14} {'Conf':>6}  {'✓/✗'}")
-print("  " + "-" * 82)
+# ───────── MAIN FUNCTION ─────────
+def predict_emotion_from_image(img):
+    """
+    Input: img (numpy array - BGR or RGB)
+    Output: idx, confidence, probabilities
+    """
 
-for true_label in CLASS_NAMES:
-    class_dir = os.path.join(TEST_PATH, true_label)
+    # If image comes from PIL → already RGB
+    if len(img.shape) == 3 and img.shape[2] == 3:
+        img_rgb = img
+    else:
+        raise ValueError("Invalid image format")
 
-    for fname in os.listdir(class_dir):
-        if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
-            continue
+    # ───────── FACE DETECTION ─────────
+    faces = detector.detect_faces(img_rgb)
 
-        img_path = os.path.join(class_dir, fname)
-        try:
-            inp        = preprocess(img_path)
-            probs      = model.predict(inp, verbose=0)[0]
-            pred_idx   = int(np.argmax(probs))
-            pred_label = INDEX_TO_CLASS[pred_idx]
-            confidence = probs[pred_idx] * 100
+    if not faces:
+        face = img_rgb
+    else:
+        x, y, w, h = faces[0]["box"]
 
-            is_correct = (pred_label.lower() == true_label.lower())
-            if is_correct:
-                correct += 1
-            total += 1
+        x = max(0, x)
+        y = max(0, y)
 
-            per_class[true_label]["total"]   += 1
-            per_class[true_label]["correct"] += int(is_correct)
+        face = img_rgb[y:y+h, x:x+w]
 
-            mark = "✓" if is_correct else "✗"
-            print(f"  {fname:<40} {true_label:<14} {pred_label:<14} {confidence:5.1f}%  {mark}")
+    # ───────── PREPROCESS ─────────
+    face = cv2.resize(face, IMG_SIZE)
+    face = face.astype("float32")
 
-        except Exception as e:
-            print(f"  [ERROR] {fname} → {e}")
+    # MobileNetV2 normalization
+    face = tf.keras.applications.mobilenet_v2.preprocess_input(face)
 
-# ─── Summary ──────────────────────────────────────────────────────────────────
-overall_acc = (correct / total * 100) if total > 0 else 0
+    face = np.expand_dims(face, axis=0)
 
-print("\n" + "=" * 52)
-print("  RESULTS PER CLASS")
-print("=" * 52)
-for name in CLASS_NAMES:
-    c   = per_class[name]["correct"]
-    t   = per_class[name]["total"]
-    acc = (c / t * 100) if t > 0 else 0
-    bar = "█" * int(acc / 5)
-    print(f"  {name:<12}  {c:>3}/{t:<4}  {acc:5.1f}%  {bar}")
+    # ───────── MULTI-PASS PREDICTION ─────────
+    predictions = []
 
-print("=" * 52)
-print(f"  Overall Accuracy : {correct}/{total}  →  {overall_acc:.2f}%")
-print("=" * 52)
+    for _ in range(NUM_PASSES):
+        p = model.predict(face, verbose=0)[0]
+        predictions.append(p)
+
+    predictions = np.array(predictions)
+    avg_pred = np.mean(predictions, axis=0)
+
+    # ───────── RESULT ─────────
+    idx = int(np.argmax(avg_pred))
+    confidence = float(avg_pred[idx] * 100)
+
+    return idx, confidence, avg_pred.tolist()
