@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EmotionAI — FAQ &amp; Help Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
+  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
+  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.04);
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:8px;margin-right:auto;text-decoration:none;color:var(--text)}
+.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500}
+.nav-links a:hover,.nav-links a.active{color:var(--accent)}
+.btn-sm{font-size:13px;font-weight:600;padding:7px 18px;border-radius:99px;background:var(--accent);color:#fff;border:none;cursor:pointer;text-decoration:none;box-shadow:0 3px 10px var(--accent-glow)}
+.faq-hero{background:linear-gradient(135deg,rgba(232,68,10,0.04),rgba(245,158,74,0.06));border-bottom:1px solid var(--border);padding:56px 48px;text-align:center}
+.faq-hero h1{font-family:var(--font-display);font-size:clamp(2rem,4vw,3.2rem);font-weight:600;letter-spacing:-0.02em;margin-bottom:12px}
+.faq-hero h1 em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.faq-hero p{font-size:15px;color:var(--text2);margin-bottom:28px}
+.search-wrap{max-width:480px;margin:0 auto;position:relative}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text3);stroke-width:2;pointer-events:none}
+.search-input{width:100%;padding:12px 14px 12px 42px;border:1.5px solid var(--border2);border-radius:99px;font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--surface);outline:none;transition:all 0.15s;box-shadow:var(--shadow-sm)}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.search-input::placeholder{color:var(--text3)}
+.faq-main{max-width:1100px;margin:0 auto;padding:56px 48px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start}
+.faq-sidebar{position:sticky;top:80px}
+.faq-sidebar h3{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.cat-list{display:flex;flex-direction:column;gap:4px}
+.cat-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border:none;background:none;font-family:var(--font-body);text-align:left}
+.cat-item svg{width:14px;height:14px;stroke-width:1.75;flex-shrink:0}
+.cat-item:hover{background:var(--elevated);color:var(--text)}
+.cat-item.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.cat-count{margin-left:auto;font-size:11px;background:var(--elevated);padding:1px 7px;border-radius:99px;color:var(--text3)}
+.cat-item.active .cat-count{background:rgba(232,68,10,0.12);color:var(--accent)}
+.help-stats{display:flex;gap:0;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+.hstat{flex:1;text-align:center}
+.hstat+.hstat{border-left:1px solid var(--border)}
+.hstat-n{display:block;font-family:var(--font-display);font-size:18px;font-weight:600;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hstat-l{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-top:2px}
+.faq-content h2{font-family:var(--font-display);font-size:1.3rem;font-weight:600;margin-bottom:16px;letter-spacing:-0.01em}
+.faq-list{display:flex;flex-direction:column;gap:8px}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s}
+.faq-item.open{border-color:rgba(232,68,10,0.2);box-shadow:var(--shadow-sm)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text);transition:all 0.15s}
+.faq-q:hover{color:var(--accent)}
+.faq-item.open .faq-q{color:var(--accent)}
+.faq-chevron{width:16px;height:16px;stroke:var(--text3);stroke-width:2;flex-shrink:0;transition:transform 0.2s}
+.faq-item.open .faq-chevron{transform:rotate(180deg);stroke:var(--accent)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.2s}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:200px}
+.faq-a p{font-size:13px;color:var(--text2);line-height:1.7}
+.faq-a-footer{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.helpful-txt{font-size:11px;color:var(--text3)}
+.helpful-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border2);background:none;cursor:pointer;color:var(--text2);transition:all 0.15s;font-family:var(--font-body)}
+.helpful-btn:hover{border-color:var(--accent);color:var(--accent)}
+.helpful-btn svg{width:11px;height:11px;stroke-width:2.5}
+.contact-card{background:linear-gradient(135deg,rgba(232,68,10,0.04),rgba(245,158,74,0.06));border:1px solid rgba(232,68,10,0.12);border-radius:14px;padding:24px;margin-top:24px;text-align:center}
+.contact-card h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.contact-card p{font-size:13px;color:var(--text2);margin-bottom:16px}
+.btn-accent{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:99px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 3px 10px var(--accent-glow);transition:all 0.15s;font-family:var(--font-body)}
+.btn-accent:hover{background:var(--accent2);transform:translateY(-1px)}
+footer{border-top:1px solid var(--border);padding:24px 48px}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:24px}
+.foot-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:600;font-size:14px;margin-right:auto}
+.foot-links{display:flex;gap:20px}
+.foot-links a{font-size:12px;color:var(--text3);text-decoration:none}
+.foot-links a:hover{color:var(--accent)}
+.foot-copy{font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo"><div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>EmotionAI</a>
+  <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="faq.html" class="active">FAQ</a></li><li><a href="feedback.html">Feedback</a></li></ul>
+  <a href="app.html" class="btn-sm">Launch App</a>
+</nav>
+<div class="faq-hero">
+  <h1>How can we<br/><em>help you?</em></h1>
+  <p>Find answers to common questions about EmotionAI</p>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="search-input" type="text" placeholder="Search questions..." oninput="filterFAQ(this.value)"/>
+  </div>
+</div>
+<div class="faq-main">
+  <div class="faq-sidebar">
+    <h3>Categories</h3>
+    <div class="cat-list">
+      <button class="cat-item active" onclick="filterCat(this,'all')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>All questions<span class="cat-count">6</span></button>
+      <button class="cat-item" onclick="filterCat(this,'general')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>General<span class="cat-count">2</span></button>
+      <button class="cat-item" onclick="filterCat(this,'privacy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Privacy &amp; Security<span class="cat-count">2</span></button>
+      <button class="cat-item" onclick="filterCat(this,'technical')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Technical<span class="cat-count">2</span></button>
+    </div>
+    <div class="help-stats">
+      <div class="hstat"><span class="hstat-n">6</span><span class="hstat-l">Questions</span></div>
+      <div class="hstat"><span class="hstat-n">98%</span><span class="hstat-l">Helpful</span></div>
+    </div>
+  </div>
+  <div class="faq-content">
+    <h2>All questions</h2>
+    <div class="faq-list" id="faqList">
+      <div class="faq-item open" data-cat="privacy"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Is my camera feed stored or shared?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>No. Your camera feed is processed entirely within your browser session. Frames are sent to the backend only for analysis and immediately discarded after the result is returned. Nothing is stored, logged, or shared.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+      <div class="faq-item" data-cat="general"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Which browsers are supported?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>EmotionAI works on Chrome, Firefox, Safari, and Edge. Any modern browser with WebRTC camera support will work. No plugins, extensions, or downloads required.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+      <div class="faq-item" data-cat="technical"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">How accurate is the emotion detection?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>The model is trained on the RAF-DB dataset. Accuracy varies by lighting conditions, face angle, and expression intensity. The confidence score displayed reflects the model's certainty for each prediction.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+      <div class="faq-item" data-cat="general"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Do I need an account to use EmotionAI?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>No account is needed to try the detection. Creating an account gives you access to session history, saved results, and feedback features.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+      <div class="faq-item" data-cat="technical"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Why is the detection not working?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Make sure the backend server is running with <code>python main.py</code>. Check that camera permission is granted in your browser. Ensure your face is well-lit and fully visible. If the issue persists, refresh the page.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+      <div class="faq-item" data-cat="privacy"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">What data does EmotionAI collect?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>EmotionAI does not collect biometric data. No images or video frames are ever stored. The app runs locally on your machine — data never leaves your device.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+    </div>
+    <div class="contact-card">
+      <h3>Still have questions?</h3>
+      <p>Can't find what you're looking for? Send us a message.</p>
+      <a href="feedback.html" class="btn-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Contact Support</a>
+    </div>
+  </div>
+</div>
+<footer>
+  <div class="foot-inner">
+    <div class="foot-logo"><div class="logo-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>EmotionAI</div>
+    <div class="foot-links"><a href="index.html">Home</a><a href="faq.html">FAQ</a><a href="feedback.html">Feedback</a><a href="#">Privacy</a></div>
+    <span class="foot-copy">© 2025 EmotionAI</span>
+  </div>
+</footer>
+<script>
+function toggleFAQ(item){item.classList.toggle('open');}
+function filterFAQ(q){document.querySelectorAll('.faq-item').forEach(item=>{const text=item.querySelector('.faq-q').textContent.toLowerCase();item.style.display=text.includes(q.toLowerCase())?'':'none';});}
+function filterCat(btn,cat){document.querySelectorAll('.cat-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.faq-item').forEach(item=>{item.style.display=(cat==='all'||item.dataset.cat===cat)?'':'none';});}
+</script>
+</body>
+</html>

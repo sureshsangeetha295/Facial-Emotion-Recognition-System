@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EmotionAI — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
+  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
+  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+.auth-wrap{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+.auth-left{background:linear-gradient(160deg,#1a1210,#2d1a10);position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:40px;overflow:hidden}
+.auth-left::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(232,68,10,0.2) 0%,transparent 70%);top:-100px;left:-100px;pointer-events:none}
+.auth-left::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,74,0.12) 0%,transparent 70%);bottom:-80px;right:-80px;pointer-events:none}
+.al-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1.1rem;color:#fff;position:relative;z-index:1;text-decoration:none}
+.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(232,68,10,0.4)}
+.al-content{position:relative;z-index:1}
+.al-title{font-family:var(--font-display);font-size:2.4rem;font-weight:600;color:#fff;line-height:1.1;margin-bottom:16px}
+.al-title em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.al-sub{font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;max-width:320px;margin-bottom:32px}
+.al-features{display:flex;flex-direction:column;gap:12px}
+.al-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.7)}
+.al-feat-icon{width:28px;height:28px;border-radius:7px;background:rgba(232,68,10,0.2);border:1px solid rgba(232,68,10,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.al-feat-icon svg{width:13px;height:13px;stroke:#f59e4a;stroke-width:2}
+.al-footer{font-size:12px;color:rgba(255,255,255,0.3);position:relative;z-index:1}
+.auth-right{display:flex;align-items:center;justify-content:center;padding:40px;background:var(--bg);overflow-y:auto}
+.auth-card{width:100%;max-width:400px}
+.auth-tabs{display:flex;background:var(--elevated);border-radius:10px;padding:4px;margin-bottom:28px}
+.auth-tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:600;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--text3);transition:all 0.2s;font-family:var(--font-body)}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.auth-title{font-family:var(--font-display);font-size:1.6rem;font-weight:600;margin-bottom:6px;letter-spacing:-0.01em}
+.auth-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;border-radius:9px;border:1.5px solid var(--border2);background:var(--surface);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:all 0.15s;margin-bottom:20px;font-family:var(--font-body)}
+.google-btn:hover{background:var(--elevated);border-color:rgba(0,0,0,0.18)}
+.divider{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-txt{font-size:11px;color:var(--text3);font-weight:500;white-space:nowrap}
+.form-group{margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:0.04em;text-transform:uppercase}
+input{width:100%;padding:10px 13px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--surface);transition:all 0.15s;outline:none}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+input::placeholder{color:var(--text3)}
+.forgot{font-size:12px;color:var(--accent);text-decoration:none;display:block;text-align:right;margin-top:-8px;margin-bottom:14px}
+.forgot:hover{text-decoration:underline}
+.submit-btn{width:100%;padding:12px;border-radius:9px;background:var(--grad);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);box-shadow:0 4px 14px var(--accent-glow);transition:all 0.15s;margin-bottom:16px}
+.submit-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
+.submit-btn:disabled{opacity:0.45;cursor:not-allowed}
+.terms{font-size:11px;color:var(--text3);text-align:center;line-height:1.6}
+.terms a{color:var(--accent);text-decoration:none}
+.switch-text{font-size:12px;color:var(--text2);text-align:center;margin-top:16px}
+.switch-text a{color:var(--accent);font-weight:600;text-decoration:none;cursor:pointer}
+.pw-wrap{position:relative}
+.pw-toggle{position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);background:none;border:none;padding:2px;display:flex;align-items:center;opacity:0.5;transition:opacity 0.15s}
+.pw-toggle:hover{opacity:1}
+.pw-strength-bars{display:flex;gap:4px;margin-top:7px}
+.pw-bar{flex:1;height:3px;border-radius:99px;background:var(--elevated);transition:background 0.3s}
+.pw-bar.weak{background:#ef4444}
+.pw-bar.fair{background:#f59e0b}
+.pw-bar.good{background:#84cc16}
+.pw-bar.strong{background:#22c55e}
+.pw-label{font-size:11px;color:var(--text3);font-weight:500;margin-top:6px;display:block}
+.pw-reqs{list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:3px}
+.pw-req{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);transition:color 0.2s}
+.pw-req::before{content:'○';font-size:9px;flex-shrink:0}
+.pw-req.met{color:#16a34a}
+.pw-req.met::before{content:'✓'}
+.signup-panel{display:none}
+.signup-panel.active{display:block}
+.login-panel{display:block}
+.login-panel.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-left">
+    <a href="index.html" class="al-logo">
+      <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+      EmotionAI
+    </a>
+    <div class="al-content">
+      <h2 class="al-title">Understand emotion<br/><em>in seconds.</em></h2>
+      <p class="al-sub">Join thousands using EmotionAI for real-time facial emotion detection — private, fast, and browser-based.</p>
+      <div class="al-features">
+        <div class="al-feat"><div class="al-feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>Real-time detection under 50ms</div>
+        <div class="al-feat"><div class="al-feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>100% private — nothing stored</div>
+        <div class="al-feat"><div class="al-feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/></svg></div>7 emotion classes with confidence scores</div>
+        <div class="al-feat"><div class="al-feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>Session history & timeline</div>
+      </div>
+    </div>
+    <div class="al-footer">© 2025 EmotionAI · Private & secure</div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="signupTab" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+      <!-- LOGIN -->
+      <div class="login-panel" id="loginPanel">
+        <h2 class="auth-title">Welcome back</h2>
+        <p class="auth-sub">Sign in to your EmotionAI account</p>
+        <button class="google-btn"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continue with Google</button>
+        <div class="divider"><div class="divider-line"></div><span class="divider-txt">or sign in with email</span><div class="divider-line"></div></div>
+        <div class="form-group"><label>Email address</label><input type="email" placeholder="you@example.com"/></div>
+        <div class="form-group"><label>Password</label><div class="pw-wrap"><input type="password" id="loginPw" placeholder="••••••••" style="padding-right:38px"/><button class="pw-toggle" onclick="toggleVis('loginPw',this)" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <a href="#" class="forgot">Forgot password?</a>
+        <button class="submit-btn" onclick="window.location.href='app.html'">Sign In</button>
+        <p class="switch-text">Don't have an account? <a onclick="switchTab('signup')">Sign up free</a></p>
+      </div>
+      <!-- SIGNUP -->
+      <div class="signup-panel" id="signupPanel">
+        <h2 class="auth-title">Create account</h2>
+        <p class="auth-sub">Start detecting emotions in seconds</p>
+        <button class="google-btn"><svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continue with Google</button>
+        <div class="divider"><div class="divider-line"></div><span class="divider-txt">or sign up with email</span><div class="divider-line"></div></div>
+        <div class="form-row">
+          <div class="form-group"><label>First name</label><input type="text" placeholder="John"/></div>
+          <div class="form-group"><label>Last name</label><input type="text" placeholder="Doe"/></div>
+        </div>
+        <div class="form-group"><label>Email address</label><input type="email" placeholder="you@example.com"/></div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="pwInput" placeholder="Create a strong password" oninput="checkPw(this.value)" style="padding-right:38px"/>
+            <button class="pw-toggle" onclick="toggleVis('pwInput',this)" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-strength-bars"><div class="pw-bar" id="pb1"></div><div class="pw-bar" id="pb2"></div><div class="pw-bar" id="pb3"></div><div class="pw-bar" id="pb4"></div></div>
+          <span class="pw-label" id="pwLabel">Password must contain:</span>
+          <ul class="pw-reqs">
+            <li class="pw-req" id="req-len">At least 8 characters</li>
+            <li class="pw-req" id="req-upper">One uppercase letter (A–Z)</li>
+            <li class="pw-req" id="req-num">One number (0–9)</li>
+            <li class="pw-req" id="req-special">One special character (!@#$%^&*)</li>
+          </ul>
+        </div>
+        <button class="submit-btn" id="createBtn" onclick="submitSignup()" disabled style="margin-top:8px">Create Account</button>
+        <p class="terms">By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+        <p class="switch-text">Already have an account? <a onclick="switchTab('login')">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab){
+  document.getElementById('loginPanel').classList.toggle('hidden',tab==='signup');
+  document.getElementById('signupPanel').classList.toggle('active',tab==='signup');
+  document.getElementById('loginTab').classList.toggle('active',tab==='login');
+  document.getElementById('signupTab').classList.toggle('active',tab==='signup');
+}
+function toggleVis(id,btn){
+  const inp=document.getElementById(id);
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  btn.style.opacity=show?'1':'0.5';
+}
+function checkPw(val){
+  const checks={
+    'req-len':val.length>=8,
+    'req-upper':/[A-Z]/.test(val),
+    'req-num':/[0-9]/.test(val),
+    'req-special':/[^A-Za-z0-9]/.test(val)
+  };
+  let score=Object.values(checks).filter(Boolean).length;
+  Object.entries(checks).forEach(([id,met])=>{
+    document.getElementById(id).classList.toggle('met',met);
+  });
+  const bars=['pb1','pb2','pb3','pb4'];
+  bars.forEach(b=>document.getElementById(b).className='pw-bar');
+  const cls=score<=1?'weak':score===2?'fair':score===3?'good':'strong';
+  const lbl=score===0?'Password must contain:':score<=1?'Weak — needs more variety':score===2?'Fair — getting stronger':score===3?'Good — almost there!':'Strong password!';
+  for(let i=0;i<score;i++)document.getElementById(bars[i]).classList.add(cls);
+  const labelEl=document.getElementById('pwLabel');
+  labelEl.textContent=lbl;
+  labelEl.style.color=score===0?'':score<=1?'#ef4444':score===2?'#f59e0b':score===3?'#84cc16':'#22c55e';
+  document.getElementById('createBtn').disabled=score<4;
+}
+function submitSignup(){window.location.href='app.html';}
+</script>
+</body>
+</html>
