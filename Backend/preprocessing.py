@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 #Config 
-DATASET_PATH = r"D:\Facial Emotion Detection\Backend\Dataset"
+DATASET_PATH = r"D:\Facial Emotion Detection\Dataset"
 IMG_SIZE     = (224, 224)
 BATCH_SIZE   = 16
 SEED         = 42
@@ -87,4 +87,9 @@ if __name__ == "__main__":
     print(f"  Image tensor shape : {imgs.shape}")       
     print(f"  Labels shape       : {labels.shape}")     
     print(f"  Pixel range        : [{imgs.min():.2f}, {imgs.max():.2f}]")  # [-1, 1]
+    print(train_gen.class_indices)
     print(f"{'='*52}\n")
+
+    train_gen, val_gen, test_gen = get_generators()
+
+    
