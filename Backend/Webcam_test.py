@@ -16,23 +16,21 @@ from typing import List, Dict, Any, Tuple, Optional, Union, cast
 from PIL import Image, ImageDraw, ImageFont
 import platform
 
-# ─────────────────────────────────────────────────────────────────
+
 #  CONFIG
-# ─────────────────────────────────────────────────────────────────
+
 MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
 
 IMG_SIZE         = (224, 224)
-CONF_THRESHOLD   = 0.28   # lowered: Sadness was ~30%, below old 0.42 — never voted
+CONF_THRESHOLD   = 0.28   
 MARGIN           = 0.08
 SMOOTHING_FRAMES = 8
 VOTING_FRAMES    = 12
 MIN_FACE_SIZE    = 80
 TRACK_DISTANCE   = 80
-EMA_ALPHA        = 0.55   # raised: stale emotion history was polluting flat-confidence cases
+EMA_ALPHA        = 0.55   
 
-# Padding added around the raw MTCNN bounding box before cropping.
-# RAF-DB training images include forehead + chin context; 20 % gives
-# the model the same spatial priors it was trained on.
+
 CROP_PAD = 0.20
 
 CLASS_NAMES: List[str] = [
@@ -41,16 +39,16 @@ CLASS_NAMES: List[str] = [
     "Sadness", "Surprise"
 ]
 
-# ── Calibration ──────────────────────────────────────────────────
-TEMPERATURE = 0.65   # sharpened: was 0.80 — too soft, kept all confidences low
+# Calibration 
+TEMPERATURE = 0.65   
 PRIOR_BOOST: Dict[str, float] = {
     "Anger":     1.40,
-    "Disgust":   0.22,   # cut to 0.22: raw Disgust score was 10x Fear, needed 18x ratio to flip
-    "Fear":      4.00,   # 4.00: ratio vs Disgust(0.22) = 18x, enough to overcome raw Disgust dominance
+    "Disgust":   0.22,   
+    "Fear":      4.00,   
     "Happiness": 0.25,
-    "Neutral":   0.60,   # restored: 0.45 let Surprise through on near-tied faces
-    "Sadness":   1.30,   # 1.30: with Neutral at 0.55 the ratio is 0.42 — Sadness wins close calls
-    "Surprise":  0.35,   # cut to 0.35: needs to be clearly dominant to win; stops sad→surprise flip
+    "Neutral":   0.60,   
+    "Sadness":   1.30,   
+    "Surprise":  0.35,   
 }
 _BOOST_VEC = np.array([PRIOR_BOOST[l] for l in CLASS_NAMES], dtype=np.float32)
 
@@ -85,21 +83,20 @@ EMOJIS: Dict[str, Tuple[str, str, str]] = {
     "Surprise":  ("SURPRISED", "Didn't see that coming!", "😲"),
 }
 
-# ─────────────────────────────────────────────────────────────────
+
 #  LOAD MODEL
-# ─────────────────────────────────────────────────────────────────
+
 print("[INFO] Loading model ...")
 model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 print("[INFO] Model loaded.  Press ENTER to scan, Q to quit.\n")
 
-# ─────────────────────────────────────────────────────────────────
+
 #  FACE DETECTOR
-# ─────────────────────────────────────────────────────────────────
+
 detector = MTCNN()
 
-# ─────────────────────────────────────────────────────────────────
 #  TRACKING STATE
-# ─────────────────────────────────────────────────────────────────
+
 next_id: int = 0
 tracked_faces: Dict[int, Tuple[int, int]] = {}
 
@@ -107,12 +104,7 @@ pred_buffer:    deque = deque(maxlen=SMOOTHING_FRAMES)
 emotion_buffer: deque = deque(maxlen=VOTING_FRAMES)
 ema_pred: Optional[np.ndarray] = None
 
-# ─────────────────────────────────────────────────────────────────
-#  [1] SAFE MTCNN TYPING
-#  MTCNN keypoints can be numpy scalars, plain floats, or ints
-#  depending on version. float() -> round() -> int() is the only
-#  truly safe conversion path.
-# ─────────────────────────────────────────────────────────────────
+
 def _safe_kp(pt: Any) -> Tuple[int, int]:
     """Convert any MTCNN keypoint value to a guaranteed (int, int)."""
     try:
@@ -130,12 +122,7 @@ def _safe_box(box: Any) -> Optional[Tuple[int, int, int, int]]:
     except (TypeError, IndexError, ValueError):
         return None
 
-# ─────────────────────────────────────────────────────────────────
-#  [2] FACE ALIGNMENT  (safe typing + reflect border)
-#  BORDER_REFLECT_101 fills edge pixels with a mirror of the image
-#  instead of black wedges, which pollutes the crop with dark
-#  values that shift MobileNetV2's [-1, 1] input statistics.
-# ─────────────────────────────────────────────────────────────────
+
 def align_face(img: np.ndarray, left_eye: Any, right_eye: Any) -> np.ndarray:
     lx, ly = _safe_kp(left_eye)
     rx, ry = _safe_kp(right_eye)
@@ -148,9 +135,9 @@ def align_face(img: np.ndarray, left_eye: Any, right_eye: Any) -> np.ndarray:
         borderMode=cv2.BORDER_REFLECT_101,
     )
 
-# ─────────────────────────────────────────────────────────────────
+
 #  CALIBRATION
-# ─────────────────────────────────────────────────────────────────
+
 def apply_calibration(raw_probs: np.ndarray) -> np.ndarray:
     eps    = 1e-7
     probs  = np.clip(raw_probs, eps, 1.0)
@@ -162,14 +149,8 @@ def apply_calibration(raw_probs: np.ndarray) -> np.ndarray:
     total    = adjusted.sum()
     return adjusted / total if total > 0 else scaled
 
-# ─────────────────────────────────────────────────────────────────
-#  [3] CLAHE LIGHTING NORMALISATION
-#  MobileNetV2 was trained on well-lit RAF-DB images. Webcam
-#  footage under dim / uneven lighting has a compressed histogram.
-#  CLAHE on the L channel brings it back into the expected range,
-#  recovering 4-8 % accuracy on dark or overexposed faces without
-#  any retraining or synthetic data.
-# ─────────────────────────────────────────────────────────────────
+
+
 _clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 def apply_clahe(face_rgb: np.ndarray) -> np.ndarray:
@@ -179,9 +160,9 @@ def apply_clahe(face_rgb: np.ndarray) -> np.ndarray:
     lab_eq  = cv2.merge([_clahe.apply(l), a, b])
     return cv2.cvtColor(lab_eq, cv2.COLOR_LAB2RGB)
 
-# ─────────────────────────────────────────────────────────────────
-#  PREPROCESS  (CLAHE -> resize -> MobileNetV2 normalise)
-# ─────────────────────────────────────────────────────────────────
+
+#  PREPROCESS  (CLAHE - resize -MobileNetV2 normalise)
+
 def preprocess(face_rgb: np.ndarray) -> np.ndarray:
     # CLAHE removed: over-equalises well-lit webcam faces and shifts
     # pixel distribution away from RAF-DB training data.
@@ -190,29 +171,9 @@ def preprocess(face_rgb: np.ndarray) -> np.ndarray:
     face = tf.keras.applications.mobilenet_v2.preprocess_input(face)
     return np.expand_dims(face, axis=0)
 
-# ─────────────────────────────────────────────────────────────────
-#  [4] BOUNDARY GUARDS  (shared function — used by BOTH predict
-#  path AND the S_LOAD final-result path)
-#  Previously guards only ran inside predict_emotion() during the
-#  EMA pass. S_LOAD then called np.argmax(avg) directly, bypassing
-#  them entirely. Now both paths call apply_boundary_guards().
-# ─────────────────────────────────────────────────────────────────
+
 def apply_boundary_guards(probs: np.ndarray) -> int:
-    """
-    Return the guarded argmax of a calibrated probability vector.
-
-    Rules (in strict elif chain — each rule fires on the current winner
-    only, so a Disgust demotion that promotes Sadness is never then
-    immediately suppressed by the Neutral rule):
-
-      1. Disgust needs margin >= 0.12 to be declared.
-      2. Neutral with gap < MARGIN yields to runner-up
-         (skip Disgust runner-up if its own gap is also small).
-      3. Sadness: Rule 3 REMOVED — the old 0.06 threshold was
-         suppressing Sadness back to Neutral even on genuinely sad
-         faces. With Sadness boost raised to 1.20 vs Neutral 0.70,
-         trust the calibrated winner.
-    """
+    
     top3   = np.argsort(probs)[-3:]
     best   = int(top3[-1])
     second = int(top3[-2])
@@ -253,9 +214,8 @@ def apply_boundary_guards(probs: np.ndarray) -> int:
 
     return best
 
-# ─────────────────────────────────────────────────────────────────
 #  PREDICT  (3x averaging + calibration + EMA + boundary guards)
-# ─────────────────────────────────────────────────────────────────
+
 def predict_emotion(face_rgb: np.ndarray) -> Tuple[str, float, np.ndarray]:
     """Returns (stable_label, confidence, smoothed_probs)."""
     global ema_pred
@@ -290,9 +250,9 @@ def predict_emotion(face_rgb: np.ndarray) -> Tuple[str, float, np.ndarray]:
               if emotion_buffer else "Detecting...")
     return stable, confidence, smoothed.copy()
 
-# ─────────────────────────────────────────────────────────────────
+
 #  FACE GETTER  (MTCNN + safe typing + padded crop)
-# ─────────────────────────────────────────────────────────────────
+
 def get_face(frame_bgr: np.ndarray) -> Optional[Tuple[np.ndarray, np.ndarray, Tuple[int,int,int,int]]]:
     rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
@@ -347,9 +307,9 @@ def get_face(frame_bgr: np.ndarray) -> Optional[Tuple[np.ndarray, np.ndarray, Tu
 
     return frame_bgr, face_crop, (x, y, w, h)
 
-# ─────────────────────────────────────────────────────────────────
+
 #  FACE TRACKING
-# ─────────────────────────────────────────────────────────────────
+
 def assign_face_id(cx: int, cy: int) -> int:
     global next_id
     for fid, (px, py) in tracked_faces.items():
@@ -360,9 +320,8 @@ def assign_face_id(cx: int, cy: int) -> int:
     next_id += 1
     return next_id - 1
 
-# =================================================================
 #  ANIMATION HELPERS
-# =================================================================
+
 def get_emoji_font(size: int = 52) -> Union[ImageFont.FreeTypeFont, ImageFont.ImageFont]:
     system = platform.system()
     paths  = {
@@ -525,9 +484,8 @@ def draw_hex_grid(canvas: np.ndarray, t: float,
             cv2.polylines(canvas, [np.array(pts, dtype=np.int32)],
                           True, (bright, bright, bright+10), 1)
 
-# =================================================================
 #  SCREEN BUILDERS
-# =================================================================
+
 def screen_waiting(t: float) -> np.ndarray:
     canvas = make_gradient(WIN_H, WIN_W, (4,4,14), (14,6,28))
     add_noise(canvas, 3)
@@ -748,17 +706,11 @@ def screen_confirm(face_bgr: np.ndarray, label: str, color: tuple,
 def screen_result(face_bgr: np.ndarray, label: str, color: tuple,
                   t: float, avg_probs: Optional[np.ndarray],
                   result_elapsed: float = 0.0) -> np.ndarray:
-    """
-    Result screen — no comparison bars.
-    Layout:
-      TOP (FACE_H):  face photo + vignette + pulsing coloured border + scan line
-      BOTTOM (160px): large emoji  |  emotion name (spring)  |  arc confidence
-                       typewriter caption  |  ENTER prompt
-    """
+    
     PHASE2_START = 1.0
     TYPEWR_SPEED = 16
 
-    # ── Face panel ──────────────────────────────────────────────
+    # Face panel 
     canvas     = np.zeros((WIN_H, WIN_W, 3), dtype=np.uint8)
     face_panel = cv2.resize(face_bgr, (WIN_W, FACE_H))
     canvas[:FACE_H] = face_panel
@@ -801,7 +753,7 @@ def screen_result(face_bgr: np.ndarray, label: str, color: tuple,
                            tuple(min(255, int(c * alpha)) for c in color), -1, cv2.LINE_AA)
                 cv2.addWeighted(dot_ov, alpha * 0.7, canvas, 1 - alpha * 0.7, 0, canvas)
 
-    # ── Bottom panel — dark gradient tinted with emotion colour ──
+    # Bottom panel — dark gradient tinted with emotion colour 
     dark_base = tuple(max(0, int(c * 0.14)) for c in color)
     for i in range(BOTTOM_H):
         f = 1 - (i / BOTTOM_H) * 0.6
@@ -821,14 +773,14 @@ def screen_result(face_bgr: np.ndarray, label: str, color: tuple,
         x = max(0.0, min(x, 1.0))
         return 1 - math.exp(-6 * x) * math.cos(8 * x)
 
-    # ── Phase 1: emotion name springs in from bottom ─────────────
+    # Phase 1: emotion name springs in from bottom 
     name_y     = int(FACE_H + 10 + 38 * spring(p1))
     name_scale = min(0.80 + 0.55 * spring(p1), 1.35)
     name_ov    = canvas.copy()
     put_centered(name_ov, title, name_y, font, name_scale, color, 3)
     cv2.addWeighted(name_ov, p1, canvas, 1 - p1, 0, canvas)
 
-    # ── Confidence arc (replaces bar) ────────────────────────────
+    # Confidence arc (replaces bar) 
     # Draws a thin arc around a circle at bottom-right quadrant of panel
     arc_cx = WIN_W - 52
     arc_cy = FACE_H + 80
@@ -856,7 +808,7 @@ def screen_result(face_bgr: np.ndarray, label: str, color: tuple,
                 (arc_cx - pw // 2, arc_cy + ph // 2),
                 font, 0.38, tuple(min(255, c + 60) for c in color), 1, cv2.LINE_AA)
 
-    # ── Phase 2: emoji + typewriter caption ──────────────────────
+    #Phase 2: emoji + typewriter caption 
     if emoji_char:
         if not in_p2:
             # Phase 1 — large emoji, bounces in
@@ -925,9 +877,7 @@ def screen_result(face_bgr: np.ndarray, label: str, color: tuple,
     add_scanlines(canvas)
     return canvas
 
-# =================================================================
 #  STATE MACHINE
-# =================================================================
 S_WAIT    = 0
 S_ALIGN   = 1
 S_FLASH   = 2
@@ -982,7 +932,7 @@ while True:
     face_found = face_result is not None
     elapsed    = now - phase_start
 
-    # ── Transitions ──────────────────────────────────────────
+    # Transitions ─
     if state == S_WAIT:
         if face_found:
             state = S_ALIGN
@@ -1057,10 +1007,7 @@ while True:
             pred_buffer.clear()
             emotion_buffer.clear()
 
-    # ── Render ────────────────────────────────────────────────
-    # Pylance fix: narrow Optional[ndarray] to ndarray with assert guards.
-    # last_face is always initialised to a zeros array so it is never None.
-    # snapshot_face is set before any state that uses it (S_FLASH onward).
+    
     _lf: np.ndarray = last_face if last_face is not None else np.zeros((200,200,3), dtype=np.uint8)
     _sf: np.ndarray = snapshot_face if snapshot_face is not None else _lf
 
