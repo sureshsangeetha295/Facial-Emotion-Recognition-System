@@ -6,9 +6,9 @@ import numpy as np
 import tensorflow as tf
 from mtcnn import MTCNN
 
-# ───────── CONFIG ─────────
+#CONFIG 
 MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
-IMAGE_PATH = r"c:\Users\sures\Downloads\s_test.jpeg"
+IMAGE_PATH = r"c:\Users\sures\Downloads\d_test.jpeg" 
 
 IMG_SIZE = (224, 224)
 NUM_PASSES = 5
@@ -23,12 +23,12 @@ CLASS_NAMES = [
     "Surprise"
 ]
 
-# ───────── LOAD MODEL ─────────
+# LOAD MODEL 
 print("Loading model...")
 model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 print("Model loaded")
 
-# ───────── LOAD IMAGE ─────────
+# LOAD IMAGE 
 img = cv2.imread(IMAGE_PATH)
 
 if img is None:
@@ -36,11 +36,11 @@ if img is None:
 
 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-# ───────── MTCNN FACE DETECTOR ─────────
+# MTCNN FACE DETECTOR 
 detector = MTCNN()
 faces = detector.detect_faces(img_rgb)
 
-# ───────── FACE CROP ─────────
+# FACE CROP 
 if not faces:
     print("No face detected, using whole image")
     face = img_rgb
@@ -54,7 +54,7 @@ else:
 
     face = img_rgb[y:y+h, x:x+w]
 
-# ───────── PREPROCESS ─────────
+#  PREPROCESS ─
 face = cv2.resize(face, IMG_SIZE)
 face = face.astype("float32")
 
@@ -63,7 +63,7 @@ face = tf.keras.applications.mobilenet_v2.preprocess_input(face)
 
 face = np.expand_dims(face, axis=0)
 
-# ───────── AVERAGE PREDICTIONS ─────────
+# AVERAGE PREDICTIONS 
 predictions = []
 
 for _ in range(NUM_PASSES):
@@ -73,7 +73,7 @@ for _ in range(NUM_PASSES):
 predictions = np.array(predictions)
 avg_pred = np.mean(predictions, axis=0)
 
-# ───────── RESULTS ─────────
+#  RESULTS 
 idx = np.argmax(avg_pred)
 emotion = CLASS_NAMES[idx]
 confidence = avg_pred[idx] * 100
@@ -86,7 +86,7 @@ print("\nAll probabilities:")
 for i, e in enumerate(CLASS_NAMES):
     print(f"{e:10s}: {avg_pred[i]*100:.2f}%")
 
-# ───────── DRAW RESULT ─────────
+#  DRAW RESULT 
 label = f"{emotion} {confidence:.1f}%"
 
 cv2.rectangle(img, (x, y), (x+w, y+h), (0,255,0), 2)
