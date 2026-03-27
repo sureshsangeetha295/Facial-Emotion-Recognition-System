@@ -10,7 +10,7 @@ from mtcnn import MTCNN
 # Suppress noisy TF warnings
 tf.get_logger().setLevel("ERROR")
 
-# ── CONFIG ────────────────────────────────────────────────────────────────────
+# CONFIG 
 MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
 IMG_SIZE   = (224, 224)
 
@@ -24,7 +24,7 @@ CLASS_NAMES = [
     "Surprise",
 ]
 
-# ── LAZY SINGLETONS ───────────────────────────────────────────────────────────
+# LAZY SINGLETONS 
 _model    = None
 _detector = None
 
@@ -47,7 +47,7 @@ def get_detector():
     return _detector
 
 
-# ── MAIN FUNCTION ─────────────────────────────────────────────────────────────
+# MAIN FUNCTION 
 
 def predict_emotion_from_image(img: np.ndarray):
     """
@@ -65,7 +65,7 @@ def predict_emotion_from_image(img: np.ndarray):
     if img.ndim != 3 or img.shape[2] != 3:
         raise ValueError("Expected an RGB image with shape (H, W, 3)")
 
-    # ── Face detection ────────────────────────────────────────────────────────
+    # Face detection
     detector = get_detector()
     faces    = detector.detect_faces(img)
 
@@ -78,17 +78,17 @@ def predict_emotion_from_image(img: np.ndarray):
     else:
         face = img  # No face found — use full frame
 
-    # ── Preprocessing ─────────────────────────────────────────────────────────
+    # Preprocessing 
     face = cv2.resize(face, IMG_SIZE)
     face = face.astype("float32")
     face = tf.keras.applications.mobilenet_v2.preprocess_input(face)
     face = np.expand_dims(face, axis=0)  # (1, 224, 224, 3)
 
-    # ── Inference ─────────────────────────────────────────────────────────────
+    # Inference 
     model    = get_model()
     avg_pred = model.predict(face, verbose=0)[0]
 
-    # ── Result ────────────────────────────────────────────────────────────────
+    # Result 
     idx        = int(np.argmax(avg_pred))
     confidence = float(avg_pred[idx] * 100)  # 0–100 percentage
 
