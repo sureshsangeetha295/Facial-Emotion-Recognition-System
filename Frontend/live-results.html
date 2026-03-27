@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EmotionAI — Live Results</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="./style/app.css"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #0a0a0f;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  /* ── top bar ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  .top-bar .logo {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+  }
+  .top-bar .page-title {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-left: 4px;
+  }
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-left: auto;
+    transition: all 0.3s;
+  }
+  .live-indicator.on {
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #ef4444;
+  }
+  .live-indicator.off {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.3);
+  }
+  .live-pip {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .live-indicator.on .live-pip {
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .back-btn {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.15s;
+  }
+  .back-btn:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+  /* ── main grid ── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    padding: 20px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── dominant emotion hero ── */
+  .hero-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    transition: border-color 0.4s;
+    grid-column: 1;
+  }
+  .hero-icon-wrap {
+    width: 72px; height: 72px;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.4s;
+    font-size: 36px;
+  }
+  .hero-emotion {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    transition: color 0.4s;
+  }
+  .hero-conf {
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 6px;
+  }
+  .hero-conf span {
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+  }
+  .hero-ms {
+    margin-top: 4px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.25);
+  }
+  .hero-waiting {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* ── probability bars ── */
+  .bars-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px 24px;
+    grid-column: 1;
+  }
+  .card-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 16px;
+  }
+  .prob-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .prob-name {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    min-width: 72px;
+  }
+  .prob-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .prob-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+  }
+  .prob-pct {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .prob-row.dominant .prob-name { color: #fff; font-weight: 600; }
+  .prob-row.dominant .prob-pct  { color: rgba(255,255,255,0.8); font-weight: 600; }
+
+  /* ── right column: session stats + history ── */
+  .right-col {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .stats-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px 24px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .stat-val {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .stat-val.accent { color: #22c97a; }
+
+  /* ── timeline / history list ── */
+  .history-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px 24px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .history-list {
+    overflow-y: auto;
+    flex: 1;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column-reverse; /* newest at top */
+    gap: 6px;
+  }
+  .history-list::-webkit-scrollbar { width: 3px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .h-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    animation: slideIn 0.2s ease;
+    flex-shrink: 0;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .h-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .h-emotion { font-size: 12px; font-weight: 500; color: #e2e8f0; min-width: 68px; }
+  .h-conf    { font-size: 11px; color: rgba(255,255,255,0.3); flex: 1; }
+  .h-time    { font-size: 10px; color: rgba(255,255,255,0.2); font-variant-numeric: tabular-nums; }
+
+  .history-empty {
+    font-size: 13px;
+    color: rgba(255,255,255,0.2);
+    font-style: italic;
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  /* ── sparkline timeline strip ── */
+  .sparkline-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px 24px;
+    grid-column: 1;
+  }
+  .spark-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 40px;
+    margin-top: 12px;
+  }
+  .spark-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    min-height: 4px;
+    transition: height 0.25s;
+  }
+
+  /* ── no live warning ── */
+  .no-live-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #f59e0b;
+    margin-bottom: 4px;
+    grid-column: 1 / -1;
+  }
+  .no-live-banner.show { display: flex; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="logo">EmotionAI</a>
+  <span class="page-title">/ Live Results</span>
+  <div class="live-indicator off" id="live-indicator">
+    <div class="live-pip"></div>
+    <span id="live-indicator-text">Waiting for live session...</span>
+  </div>
+  <a href="app.html" class="back-btn">← Back to camera</a>
+</div>
+
+<div class="main">
+
+  <!-- offline banner -->
+  <div class="no-live-banner" id="no-live-banner">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+    No live session active — open the camera page, start your camera, then click <strong style="margin:0 4px;">Go Live</strong>
+  </div>
+
+  <!-- hero -->
+  <div class="hero-card" id="hero-card">
+    <div class="hero-icon-wrap" id="hero-icon">
+      <span style="font-size:38px;opacity:0.15">◉</span>
+    </div>
+    <div>
+      <div class="hero-waiting" id="hero-emotion">Waiting for detection...</div>
+      <div class="hero-conf" id="hero-conf"></div>
+      <div class="hero-ms"  id="hero-ms"></div>
+    </div>
+  </div>
+
+  <!-- right column -->
+  <div class="right-col">
+    <div class="stats-card">
+      <div class="card-label">Session stats</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Detections</div>
+          <div class="stat-val" id="stat-count">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Avg latency</div>
+          <div class="stat-val accent" id="stat-ms">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Top emotion</div>
+          <div class="stat-val" id="stat-top" style="font-size:14px;line-height:1.4">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Session time</div>
+          <div class="stat-val" id="stat-time">0:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="history-card">
+      <div class="card-label">Detection history</div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty" id="history-empty">No detections yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- probability bars -->
+  <div class="bars-card">
+    <div class="card-label">All probabilities</div>
+    <div id="prob-bars-live"></div>
+  </div>
+
+  <!-- sparkline -->
+  <div class="sparkline-card">
+    <div class="card-label">Emotion timeline</div>
+    <div class="spark-row" id="spark-row"></div>
+  </div>
+
+</div>
+
+<script>
+// emotion config 
+const EMOTIONS = [
+  { key: "Happiness", label: "Happiness", color: "#f59e0b", emoji: "😊" },
+  { key: "Sadness",   label: "Sadness",   color: "#3b82f6", emoji: "😢" },
+  { key: "Anger",     label: "Anger",     color: "#ef4444", emoji: "😠" },
+  { key: "Surprise",  label: "Surprise",  color: "#f97316", emoji: "😲" },
+  { key: "Fear",      label: "Fear",      color: "#8b5cf6", emoji: "😨" },
+  { key: "Disgust",   label: "Disgust",   color: "#06b6d4", emoji: "🤢" },
+  { key: "Neutral",   label: "Neutral",   color: "#6b7280", emoji: "😐" },
+];
+const colorMap = Object.fromEntries(EMOTIONS.map(e => [e.key, e.color]));
+const emojiMap = Object.fromEntries(EMOTIONS.map(e => [e.key, e.emoji]));
+
+// state 
+let sessionCount = 0;
+let sessionMsTotal = 0;
+let sessionStart = null;
+let emotionCounts = {};
+let sessionTimerInterval = null;
+const MAX_HISTORY = 80;
+const MAX_SPARK   = 60;
+let sparkData = [];
+
+// build probability bars once 
+function buildProbBars() {
+  const container = document.getElementById("prob-bars-live");
+  container.innerHTML = "";
+  EMOTIONS.forEach(e => {
+    const row = document.createElement("div");
+    row.className = "prob-row";
+    row.id = "prow-" + e.key;
+    row.innerHTML = `
+      <span class="prob-name">${e.label}</span>
+      <div class="prob-track">
+        <div class="prob-fill" id="pfill-${e.key}" style="background:${e.color}"></div>
+      </div>
+      <span class="prob-pct" id="ppct-${e.key}">—</span>`;
+    container.appendChild(row);
+  });
+}
+
+// render a new result 
+function renderResult(entry) {
+  const { emotion, confidence, probs, ms, ts } = entry;
+  const color = colorMap[emotion] || "#888";
+  const emoji = emojiMap[emotion] || "◉";
+
+  // Hero card
+  const heroCard = document.getElementById("hero-card");
+  heroCard.style.borderColor = color + "44";
+
+  document.getElementById("hero-icon").innerHTML =
+    `<span style="font-size:38px">${emoji}</span>`;
+  document.getElementById("hero-icon").style.background = color + "18";
+
+  const heroEmotion = document.getElementById("hero-emotion");
+  heroEmotion.className = "hero-emotion";
+  heroEmotion.style.color = color;
+  heroEmotion.textContent = emotion;
+
+  document.getElementById("hero-conf").innerHTML =
+    `Confidence: <span>${(confidence * 100).toFixed(1)}%</span>`;
+  document.getElementById("hero-ms").textContent = `Inference: ${ms} ms`;
+
+  // Probability bars
+  EMOTIONS.forEach(e => {
+    const val = probs[e.key] ?? 0;
+    const pct = (val * 100).toFixed(1);
+    const fill = document.getElementById("pfill-" + e.key);
+    const pctEl = document.getElementById("ppct-" + e.key);
+    const row   = document.getElementById("prow-"  + e.key);
+    if (fill)  fill.style.width = pct + "%";
+    if (pctEl) pctEl.textContent = pct + "%";
+    if (row) {
+      row.classList.toggle("dominant", e.key === emotion);
+    }
+  });
+
+  // Session stats
+  sessionCount++;
+  sessionMsTotal += ms;
+  if (!sessionStart) {
+    sessionStart = Date.now();
+    startSessionTimer();
+  }
+  emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+
+  document.getElementById("stat-count").textContent = sessionCount;
+  document.getElementById("stat-ms").textContent =
+    Math.round(sessionMsTotal / sessionCount) + " ms";
+
+  const topEmotion = Object.entries(emotionCounts)
+    .sort((a, b) => b[1] - a[1])[0];
+  document.getElementById("stat-top").textContent = topEmotion ? topEmotion[0] : "—";
+
+  // History list
+  addHistoryItem(emotion, confidence, ms, ts);
+
+  // Sparkline
+  sparkData.push({ emotion, confidence });
+  if (sparkData.length > MAX_SPARK) sparkData.shift();
+  renderSparkline();
+}
+
+function addHistoryItem(emotion, confidence, ms, ts) {
+  const list = document.getElementById("history-list");
+  const empty = document.getElementById("history-empty");
+  if (empty) empty.remove();
+
+  // Trim to max
+  const existing = list.querySelectorAll(".h-item");
+  if (existing.length >= MAX_HISTORY) {
+    existing[existing.length - 1].remove();
+  }
+
+  const color = colorMap[emotion] || "#888";
+  const time  = new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  const item = document.createElement("div");
+  item.className = "h-item";
+  item.innerHTML = `
+    <div class="h-dot" style="background:${color}"></div>
+    <span class="h-emotion">${emotion}</span>
+    <span class="h-conf">${(confidence * 100).toFixed(1)}%</span>
+    <span class="h-time">${time}</span>`;
+  list.insertBefore(item, list.firstChild);
+}
+
+function renderSparkline() {
+  const row = document.getElementById("spark-row");
+  row.innerHTML = "";
+  sparkData.forEach(d => {
+    const bar = document.createElement("div");
+    bar.className = "spark-bar";
+    const h = Math.max(4, Math.round(d.confidence * 40));
+    bar.style.height  = h + "px";
+    bar.style.background = (colorMap[d.emotion] || "#888") + "bb";
+    row.appendChild(bar);
+  });
+}
+
+function startSessionTimer() {
+  if (sessionTimerInterval) return;
+  sessionTimerInterval = setInterval(() => {
+    if (!sessionStart) return;
+    const s = Math.floor((Date.now() - sessionStart) / 1000);
+    const m = Math.floor(s / 60);
+    const sec = String(s % 60).padStart(2, "0");
+    document.getElementById("stat-time").textContent = `${m}:${sec}`;
+  }, 1000);
+}
+
+// ── live status indicator ─────────────────────────────────────────────────────
+function setLiveIndicator(isLive) {
+  const el   = document.getElementById("live-indicator");
+  const text = document.getElementById("live-indicator-text");
+  const banner = document.getElementById("no-live-banner");
+
+  if (isLive) {
+    el.className = "live-indicator on";
+    text.textContent = "LIVE";
+    banner.classList.remove("show");
+  } else {
+    el.className = "live-indicator off";
+    text.textContent = "Session ended";
+    banner.classList.add("show");
+  }
+}
+
+// localStorage listener
+window.addEventListener("storage", e => {
+  if (e.key === "emoai_tick") {
+    try {
+      const latest = JSON.parse(localStorage.getItem("emoai_latest") || "null");
+      if (latest) renderResult(latest);
+    } catch {}
+  }
+  if (e.key === "emoai_live_active") {
+    setLiveIndicator(e.newValue === "1");
+  }
+});
+
+// init: read state already in localStorage (if page opened mid-session) 
+function init() {
+  buildProbBars();
+
+  const isLive = localStorage.getItem("emoai_live_active") === "1";
+  setLiveIndicator(isLive);
+  if (!isLive) {
+    document.getElementById("no-live-banner").classList.add("show");
+  }
+
+  // Replay existing session log so opening this page mid-session shows history
+  try {
+    const log = JSON.parse(localStorage.getItem("emoai_session_log") || "[]");
+    if (log.length > 0) {
+      // Render all but last silently for stats, then render last fully
+      log.forEach((entry, i) => {
+        if (i < log.length - 1) {
+          // Count for stats without full DOM render
+          sessionCount++;
+          sessionMsTotal += entry.ms;
+          if (!sessionStart) sessionStart = entry.ts;
+          emotionCounts[entry.emotion] = (emotionCounts[entry.emotion] || 0) + 1;
+          sparkData.push({ emotion: entry.emotion, confidence: entry.confidence });
+          if (sparkData.length > MAX_SPARK) sparkData.shift();
+          addHistoryItem(entry.emotion, entry.confidence, entry.ms, entry.ts);
+        } else {
+          renderResult(entry);
+        }
+      });
+
+      // Fix stats after batch replay
+      document.getElementById("stat-count").textContent = sessionCount;
+      document.getElementById("stat-ms").textContent =
+        Math.round(sessionMsTotal / sessionCount) + " ms";
+      const topEmotion = Object.entries(emotionCounts)
+        .sort((a, b) => b[1] - a[1])[0];
+      document.getElementById("stat-top").textContent = topEmotion ? topEmotion[0] : "—";
+      renderSparkline();
+      if (sessionStart) startSessionTimer();
+    }
+  } catch {}
+}
+
+init();
+</script>
+</body>
+</html>
