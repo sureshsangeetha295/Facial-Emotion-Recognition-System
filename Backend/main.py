@@ -7,9 +7,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
@@ -17,7 +17,7 @@ EMOTION_LABELS = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness",
 executor       = ThreadPoolExecutor(max_workers=1)
 
 
-# ── Background preload ─────────────────────────────────────────────────────────
+# Background preload
 def _preload():
     try:
         import testing
@@ -27,17 +27,15 @@ def _preload():
         print(f"[EmotionAI] Preload error: {e}")
 
 
-# ── Lifespan (modern FastAPI startup/shutdown) ─────────────────────────────────
+# Lifespan (modern FastAPI startup/shutdown)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup — load model + detector in background thread
     loop = asyncio.get_event_loop()
     loop.run_in_executor(executor, _preload)
     yield
-    # Shutdown — nothing to clean up
 
 
-# ── App setup ─────────────────────────────────────────────────────────────────
+# App setup
 app = FastAPI(title="EmotionAI", lifespan=lifespan)
 
 app.add_middleware(
@@ -48,7 +46,7 @@ app.add_middleware(
 )
 
 
-# ── Predict pipeline ──────────────────────────────────────────────────────────
+# Predict pipeline
 def run_pipeline(img_rgb: np.ndarray):
     import testing
     idx, confidence, probs = testing.predict_emotion_from_image(img_rgb)
@@ -69,7 +67,7 @@ def run_pipeline(img_rgb: np.ndarray):
     }, None
 
 
-# ── API routes ─────────────────────────────────────────────────────────────────
+# API routes
 
 @app.get("/health")
 async def health():
@@ -104,7 +102,7 @@ async def predict(file: UploadFile = File(...)):
         })
 
 
-# ── Frontend directory ─────────────────────────────────────────────────────────
+# Frontend directory
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
@@ -124,10 +122,17 @@ if not FRONTEND_DIR:
 print(f"[EmotionAI] Frontend: {FRONTEND_DIR}  exists={os.path.isdir(FRONTEND_DIR)}")
 
 
-# ── Frontend pages (must be before static mount) ──────────────────────────────
+# Frontend pages (must be before static mount)
 
+# "/" now opens login first
 @app.get("/")
 async def root():
+    return FileResponse(os.path.join(FRONTEND_DIR, "login.html"))
+
+# Landing page (after login)
+@app.get("/home")
+@app.get("/index.html")
+async def landing_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 @app.get("/app")
@@ -150,12 +155,21 @@ async def faq_page():
 async def feedback_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "feedback.html"))
 
+# Logout — clears session cookie and redirects back to login
+@app.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/", status_code=302)
+    # Clear the session cookie (name matches what login.html sets)
+    response.delete_cookie("ea_session")
+    response.delete_cookie("ea_cookie_consent")
+    return response
+
 
 # Static catch-all — must be last
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 
-#Entry point 
+# Entry point
 if __name__ == "__main__":
     webbrowser.open("http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)
