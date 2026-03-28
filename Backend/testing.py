@@ -11,7 +11,7 @@ from mtcnn import MTCNN
 tf.get_logger().setLevel("ERROR")
 
 # CONFIG 
-MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
+MODEL_PATH = r"D:\EMOTION-ANALYSIS\Backend\Models\phase2_best_model.keras"
 IMG_SIZE   = (224, 224)
 
 CLASS_NAMES = [

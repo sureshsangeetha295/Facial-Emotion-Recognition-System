@@ -26,7 +26,7 @@ const API = (() => {
         signal: controller.signal
       });
 
-      clearTimeout(timer); // FIX: moved here — before res.json() so timer is cleared even if JSON parsing throws
+      clearTimeout(timer); 
 
       const data = await res.json();
 
@@ -34,7 +34,7 @@ const API = (() => {
       if (!res.ok || data.error) {
         const msg = data.message || data.error || `HTTP ${res.status}`;
         const err = new Error(msg);
-        err.code  = data.error;   // e.g. "no_face"
+        err.code  = data.error;   
         throw err;
       }
 

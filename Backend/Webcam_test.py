@@ -17,9 +17,9 @@ from PIL import Image, ImageDraw, ImageFont
 import platform
 
 
-#  CONFIG
+# CONFIG
 
-MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
+MODEL_PATH = r"D:\EMOTION-ANALYSIS\Backend\Models\phase2_best_model.keras"
 
 IMG_SIZE         = (224, 224)
 CONF_THRESHOLD   = 0.28   
@@ -52,7 +52,7 @@ PRIOR_BOOST: Dict[str, float] = {
 }
 _BOOST_VEC = np.array([PRIOR_BOOST[l] for l in CLASS_NAMES], dtype=np.float32)
 
-# ── Window layout ────────────────────────────────────────────────
+# Window layout 
 WIN_W         = 560
 FACE_H        = 460
 BOTTOM_H      = 160
@@ -84,18 +84,18 @@ EMOJIS: Dict[str, Tuple[str, str, str]] = {
 }
 
 
-#  LOAD MODEL
+# LOAD MODEL
 
 print("[INFO] Loading model ...")
 model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 print("[INFO] Model loaded.  Press ENTER to scan, Q to quit.\n")
 
 
-#  FACE DETECTOR
+# FACE DETECTOR
 
 detector = MTCNN()
 
-#  TRACKING STATE
+# TRACKING STATE
 
 next_id: int = 0
 tracked_faces: Dict[int, Tuple[int, int]] = {}
@@ -136,7 +136,7 @@ def align_face(img: np.ndarray, left_eye: Any, right_eye: Any) -> np.ndarray:
     )
 
 
-#  CALIBRATION
+# CALIBRATION
 
 def apply_calibration(raw_probs: np.ndarray) -> np.ndarray:
     eps    = 1e-7
@@ -230,7 +230,7 @@ def predict_emotion(face_rgb: np.ndarray) -> Tuple[str, float, np.ndarray]:
     pred_buffer.append(cal)
     avg_pred = np.mean(pred_buffer, axis=0)
 
-    # EMA smoothing trick (industry trick — no synthetic data)
+    # EMA smoothing trick 
     if ema_pred is None:
         ema_pred = avg_pred
     else:
@@ -251,7 +251,7 @@ def predict_emotion(face_rgb: np.ndarray) -> Tuple[str, float, np.ndarray]:
     return stable, confidence, smoothed.copy()
 
 
-#  FACE GETTER  (MTCNN + safe typing + padded crop)
+# FACE GETTER  (MTCNN + safe typing + padded crop)
 
 def get_face(frame_bgr: np.ndarray) -> Optional[Tuple[np.ndarray, np.ndarray, Tuple[int,int,int,int]]]:
     rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
@@ -308,7 +308,7 @@ def get_face(frame_bgr: np.ndarray) -> Optional[Tuple[np.ndarray, np.ndarray, Tu
     return frame_bgr, face_crop, (x, y, w, h)
 
 
-#  FACE TRACKING
+# sFACE TRACKING
 
 def assign_face_id(cx: int, cy: int) -> int:
     global next_id
@@ -320,7 +320,7 @@ def assign_face_id(cx: int, cy: int) -> int:
     next_id += 1
     return next_id - 1
 
-#  ANIMATION HELPERS
+# ANIMATION HELPERS
 
 def get_emoji_font(size: int = 52) -> Union[ImageFont.FreeTypeFont, ImageFont.ImageFont]:
     system = platform.system()
@@ -484,7 +484,7 @@ def draw_hex_grid(canvas: np.ndarray, t: float,
             cv2.polylines(canvas, [np.array(pts, dtype=np.int32)],
                           True, (bright, bright, bright+10), 1)
 
-#  SCREEN BUILDERS
+# SCREEN BUILDERS
 
 def screen_waiting(t: float) -> np.ndarray:
     canvas = make_gradient(WIN_H, WIN_W, (4,4,14), (14,6,28))

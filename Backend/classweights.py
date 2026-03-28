@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.utils.class_weight import compute_class_weight
 
 #Config 
-DATASET_PATH = r"D:\Facial Emotion Detection\Backend\Dataset"
+DATASET_PATH = r"D:\EMOTION-ANALYSIS\Backend\Dataset"
 TRAIN_PATH   = os.path.join(DATASET_PATH, "train")
 
 #Compute Class Weights 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     train_gen, _, _ = get_generators()
     class_weights, class_indices = get_class_weights(train_gen)
 
-    # reverse map: index → emotion name
+    # reverse map: index - emotion name
     idx_to_emotion = {v: k for k, v in class_indices.items()}
 
     print(f"\n{'='*52}")

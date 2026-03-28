@@ -7,7 +7,7 @@ import tensorflow as tf
 from mtcnn import MTCNN
 
 #CONFIG 
-MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
+MODEL_PATH = r"D:\EMOTION-ANALYSIS\Backend\Models\phase2_best_model.keras"
 IMAGE_PATH = r"c:\Users\sures\Downloads\d_test.jpeg" 
 
 IMG_SIZE = (224, 224)
