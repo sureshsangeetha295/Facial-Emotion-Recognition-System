@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EngageAI - Live Student Engagement Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="./style/app.css"/>
+<style>
+  #cam-video { transform: scaleX(-1); object-fit: cover; width: 100%; height: 100%; }
+  .cam-col { position: relative; border-radius: 16px; overflow: hidden; background: #0a0806; min-height: 420px; }
+  #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+  .live-badge.on { background: #ef4444; color: white; border-color: #ef4444; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">EngageAI</a>
+  <div class="backend-pill" id="backend-pill">
+    <div id="backend-status" class="backend-dot"></div>
+    <span id="backend-label">Connecting...</span>
+  </div>
+</nav>
+
+<div class="top-section">
+
+  <div class="cam-col" id="cam-col">
+    <div class="cam-overlay-top">
+      <div class="live-badge" id="live-badge"><span class="live-pip"></span> LIVE</div>
+      <span id="ms-badge"></span>
+    </div>
+
+    <video id="cam-video" playsinline muted></video>
+    <canvas id="cam-canvas" style="display:none;"></canvas>
+    <canvas id="overlay"></canvas>
+
+    <div id="cam-placeholder">
+      <span style="color:#aaa;font-size:15px">Camera preview will appear here</span>
+    </div>
+
+    <div class="cam-bottom">
+      <div id="status-bar" style="margin-bottom:10px"></div>
+      <div style="display:flex;gap:10px">
+        <button id="btn-start" onclick="toggleLive()" style="flex:1;padding:14px;background:linear-gradient(135deg,#e8440a,#f59e4a);color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer">
+          ▶️ Start Live Detection
+        </button>
+        <button id="btn-stop" onclick="stopLive()" class="hidden" style="flex:1;padding:14px;background:#4b5563;color:white;border:none;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer">
+          ⏹️ Stop Live Detection
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="r-block">
+      <div class="sec-lbl">CURRENT ENGAGEMENT</div>
+      <div id="result-badge"><div class="res-empty">Start live detection to monitor student engagement</div></div>
+    </div>
+    <div class="r-block grow">
+      <div class="sec-lbl">EMOTION PROBABILITIES</div>
+      <div id="prob-bars"><div class="wait-msg">Waiting for live analysis...</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="./script/config.js"></script>
+<script src="./script/api.js"></script>
+<script src="./script/renderer.js"></script>
+<script src="./script/timeline.js"></script>
+
+<script>
+// ====================== CLEAN LIVE DETECTION ======================
+let video = document.getElementById('cam-video');
+let canvas = document.getElementById('cam-canvas');
+let overlay = document.getElementById('overlay');
+let ctx = overlay.getContext('2d');
+let stream = null;
+let isLive = false;
+let liveInterval = null;
+
+async function toggleLive() {
+  if (isLive) return stopLive();
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }
+    });
+
+    video.srcObject = stream;
+    await video.play();
+
+    canvas.width = overlay.width = video.videoWidth || 1280;
+    canvas.height = overlay.height = video.videoHeight || 720;
+
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('btn-start').classList.add('hidden');
+    document.getElementById('btn-stop').classList.remove('hidden');
+    document.getElementById('live-badge').classList.add('on');
+
+    isLive = true;
+    document.getElementById("status-bar").innerHTML = "✅ Live monitoring started...";
+    document.getElementById("status-bar").style.display = "block";
+
+    liveInterval = setInterval(liveDetect, 300);
+
+  } catch (err) {
+    document.getElementById("status-bar").innerHTML = "❌ Camera error: " + err.message;
+    document.getElementById("status-bar").style.display = "block";
+  }
+}
+
+function stopLive() {
+  if (liveInterval) clearInterval(liveInterval);
+  if (stream) stream.getTracks().forEach(t => t.stop());
+
+  video.srcObject = null;
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+  document.getElementById('cam-placeholder').style.display = '';
+  document.getElementById('btn-start').classList.remove('hidden');
+  document.getElementById('btn-stop').classList.add('hidden');
+  document.getElementById('live-badge').classList.remove('on');
+
+  isLive = false;
+  document.getElementById("status-bar").style.display = "none";
+}
+
+async function liveDetect() {
+  if (!isLive) return;
+
+  try {
+    const ctxCam = canvas.getContext("2d");
+    ctxCam.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.82));
+
+    const data = await API.predict(blob);
+
+    Renderer.showResult({ ...data, ms: 35 });
+    Timeline.push(data.emotion, data.confidence);
+
+  } catch (e) {}
+}
+
+// Make functions available globally
+window.toggleLive = toggleLive;
+window.stopLive = stopLive;
+</script>
+</body>
+</html>

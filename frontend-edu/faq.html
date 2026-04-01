@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EngageAI - FAQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
+  --accent:#e8440a;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
+  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:8px;margin-right:auto;text-decoration:none;color:var(--text)}
+.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500}
+.nav-links a:hover,.nav-links a.active{color:var(--accent)}
+.btn-sm{font-size:13px;font-weight:600;padding:7px 18px;border-radius:99px;background:var(--accent);color:#fff;border:none;cursor:pointer;box-shadow:0 3px 10px var(--accent-glow)}
+.faq-hero{background:linear-gradient(135deg,rgba(232,68,10,0.04),rgba(245,158,74,0.06));border-bottom:1px solid var(--border);padding:56px 48px;text-align:center}
+.faq-hero h1{font-family:var(--font-display);font-size:clamp(2rem,4vw,3.2rem);font-weight:600;letter-spacing:-0.02em;margin-bottom:12px}
+.faq-hero p{font-size:15px;color:var(--text2);margin-bottom:28px}
+.faq-main{max-width:1100px;margin:0 auto;padding:56px 48px;display:grid;grid-template-columns:220px 1fr;gap:40px}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s}
+.faq-q{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text)}
+.faq-item.open .faq-q{color:var(--accent)}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.2s}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:220px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+        <circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/>
+      </svg>
+    </div>
+    EngageAI
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="faq.html" class="active">FAQ</a></li>
+    <li><a href="feedback.html">Feedback</a></li>
+  </ul>
+  <a href="app.html" class="btn-sm">Launch Live Monitor</a>
+</nav>
+
+<div class="faq-hero">
+  <h1>Frequently Asked<br/><em>Questions</em></h1>
+  <p>Everything you need to know about EngageAI Student Engagement Monitor</p>
+</div>
+
+<div class="faq-main">
+  <div class="faq-content">
+    <div class="faq-item open">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my students' camera feed stored?<span style="margin-left:auto">▼</span></div>
+      <div class="faq-a"><p>No. Everything is processed locally. Frames are sent only for analysis and immediately discarded. Nothing is stored or shared.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I use it during Zoom / Google Meet / Teams classes?<span style="margin-left:auto">▼</span></div>
+      <div class="faq-a"><p>Yes. Just run EngageAI in a separate browser tab or window while teaching. It works independently of any video conferencing tool.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How accurate is the emotion detection?<span style="margin-left:auto">▼</span></div>
+      <div class="faq-a"><p>The model is trained on RAF-DB dataset. Accuracy is good under normal lighting and when the student's face is clearly visible. Confidence scores are shown for every prediction.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does it require high-end hardware?<span style="margin-left:auto">▼</span></div>
+      <div class="faq-a"><p>No. It runs efficiently on normal laptops. The heavy model runs on your local backend (CPU mode by default).</p></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can multiple students be monitored at once?<span style="margin-left:auto">▼</span></div>
+      <div class="faq-a"><p>Currently it monitors one face at a time (the clearest face in frame). Multi-student support is planned for future updates.</p></div>
+    </div>
+  </div>
+</div>
+
+<footer style="text-align:center;padding:30px;color:#888;font-size:12px">
+  © 2026 EngageAI • Private & Secure Student Engagement Tool
+</footer>
+
+<script>
+function toggleFAQ(item){ item.classList.toggle('open'); }
+</script>
+</body>
+</html>

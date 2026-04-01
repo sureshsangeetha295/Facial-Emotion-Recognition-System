@@ -20,21 +20,21 @@ const API = (() => {
     const timer = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT_MS);
 
     try {
-      const res = await fetch(CONFIG.PREDICT_URL, {
+      // Auth.apiFetch attaches Bearer token automatically
+      const res = await Auth.apiFetch(CONFIG.PREDICT_URL, {
         method: "POST",
-        body: formData,
-        signal: controller.signal
+        body:   formData,
+        signal: controller.signal,
       });
 
-      clearTimeout(timer); // FIX: moved here — before res.json() so timer is cleared even if JSON parsing throws
+      clearTimeout(timer);
 
       const data = await res.json();
 
-      // Handle backend error responses (400 = no face, 500 = server error)
       if (!res.ok || data.error) {
         const msg = data.message || data.error || `HTTP ${res.status}`;
         const err = new Error(msg);
-        err.code  = data.error;   // e.g. "no_face"
+        err.code  = data.error;
         throw err;
       }
 

@@ -1,8 +1,7 @@
 import os
-# ── MUST be set before ANY tensorflow import ──────────────────────────────────
 os.environ["TF_USE_LEGACY_KERAS"]  = "1"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"   # Force CPU
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"    # Suppress C++ TF logs
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"   
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"   
 
 import threading
 import cv2
@@ -11,19 +10,15 @@ import tensorflow as tf
 
 tf.get_logger().setLevel("ERROR")
 
-# ─────────────────────────────────────────────────────────────────────────────
+
 # CONFIG
-# ─────────────────────────────────────────────────────────────────────────────
+
 MODEL_PATH = r"D:\Facial Emotion Detection\Backend\Models\phase2_best_model.keras"
 IMG_SIZE   = (224, 224)
 
 CLASS_NAMES = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
 
-# ─────────────────────────────────────────────────────────────────────────────
-# THREAD-SAFE SINGLETONS
-# Locks prevent two threads loading the model simultaneously,
-# which caused the "RaggedTensorSpec already registered" crash.
-# ─────────────────────────────────────────────────────────────────────────────
+
 _model         = None
 _haar_detector = None
 _mtcnn         = None
@@ -73,14 +68,13 @@ def get_mtcnn():
     return _mtcnn
 
 
-# Alias so existing main.py preload call works unchanged
+
 def get_detector():
     return get_haar_detector()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # FACE DETECTION HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 def _detect_face_haar(img_rgb: np.ndarray):
     """Fast (~5-15 ms). Primary detector used for every live frame."""
@@ -113,7 +107,6 @@ def _detect_face_haar(img_rgb: np.ndarray):
 
 
 def _detect_face_mtcnn(img_rgb: np.ndarray):
-    """Accurate but slow (~2-4 s on CPU). Only for single-shot requests."""
     faces = get_mtcnn().detect_faces(img_rgb)
     if not faces:
         return None
@@ -123,23 +116,10 @@ def _detect_face_mtcnn(img_rgb: np.ndarray):
     return face if face.size > 0 else None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # MAIN PREDICTION FUNCTION
-# ─────────────────────────────────────────────────────────────────────────────
 
 def predict_emotion_from_image(img: np.ndarray, use_mtcnn: bool = False):
-    """
-    Parameters
-    ----------
-    img       : RGB ndarray (H, W, 3)
-    use_mtcnn : use MTCNN instead of Haar — only for high-quality single shots
-
-    Returns
-    -------
-    idx        : int   — index into CLASS_NAMES
-    confidence : float — 0-100
-    probs      : list  — per-class probabilities (0-100 scale)
-    """
+    
     if img.ndim != 3 or img.shape[2] != 3:
         raise ValueError("Expected RGB image with shape (H, W, 3)")
 
