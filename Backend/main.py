@@ -5,382 +5,250 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import io
 import json
+import uuid
+import re
 import asyncio
-from typing import cast
+import psycopg2
+import psycopg2.extras
 import webbrowser
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, Query, Depends, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, Query, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 from PIL import Image
-from pydantic import BaseModel, ConfigDict          # ← FIX: import ConfigDict
-from sqlalchemy import (
-    create_engine, Integer, String, Float,
-    DateTime, Text, ForeignKey, Boolean, text       # ← FIX: import text for health check
-)
-from sqlalchemy.orm import (
-    declarative_base, sessionmaker, Session,
-    relationship, Mapped, mapped_column
-)
 from dotenv import load_dotenv
-import hashlib
-import base64
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
 
-# LOAD .env
+# ── ENV ───────────────────────────────────────────────────────────────────────
+
 load_dotenv()
 
-DB_HOST     = os.getenv("DB_HOST")
-DB_PORT     = os.getenv("DB_PORT",     "5432")
-DB_NAME     = os.getenv("DB_NAME")
-DB_USER     = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
-SECRET_KEY                  = cast(str, os.getenv("SECRET_KEY"))
-ALGORITHM                   = os.getenv("JWT_ALGORITHM", "HS256")
+APP_HOST     = os.getenv("APP_HOST", "0.0.0.0")
+APP_PORT     = int(os.getenv("APP_PORT", "8000"))
+SECRET_KEY   = os.getenv("SECRET_KEY", "change-me-in-production-use-a-long-random-string")
+ALGORITHM    = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-REFRESH_TOKEN_EXPIRE_DAYS   = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS",   "7"))
+REFRESH_TOKEN_EXPIRE_DAYS   = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS",   "30"))
 
-APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
-APP_PORT = int(os.getenv("APP_PORT", "8000"))
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin@1234")
 
-_missing = [v for v in ("DB_NAME", "DB_USER", "DB_PASSWORD", "SECRET_KEY") if not os.getenv(v)]
-if _missing:
-    raise RuntimeError(
-        f"\n\n  Missing required .env variables: {', '.join(_missing)}\n"
-        "  Copy .env.example → .env and fill in the values.\n"
-    )
+DB_DSN = {
+    "host":     os.getenv("DB_HOST",     "localhost"),
+    "port":     int(os.getenv("DB_PORT",  "5432")),
+    "dbname":   os.getenv("DB_NAME",     "emotionai"),
+    "user":     os.getenv("DB_USER",     "postgres"),
+    "password": os.getenv("DB_PASSWORD", ""),
+}
 
 
-# PASSWORD HASHING & JWT
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=12,
-)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# ── PASSWORD ──────────────────────────────────────────────────────────────────
 
-def _prehash(plain: str) -> str:
-    """SHA-256 → base64 so bcrypt never sees more than 72 bytes."""
-    digest = hashlib.sha256(plain.encode("utf-8")).digest()
-    return base64.b64encode(digest).decode("utf-8")
+pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(_prehash(plain))
+    return pwd_ctx.hash(plain)
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(_prehash(plain), hashed)
+    return pwd_ctx.verify(plain, hashed)
 
-def create_access_token(data: dict) -> str:
+def validate_password_strength(pw: str) -> Optional[str]:
+    if len(pw) < 8:
+        return "Password must be at least 8 characters."
+    if not re.search(r"[A-Z]", pw):
+        return "Password must include at least one uppercase letter (A-Z)."
+    if not re.search(r"[a-z]", pw):
+        return "Password must include at least one lowercase letter (a-z)."
+    if not re.search(r"[0-9]", pw):
+        return "Password must include at least one number (0-9)."
+    if not re.search(r"[^A-Za-z0-9]", pw):
+        return "Password must include at least one special character (!@#$...)."
+    return None
+
+def validate_username(username: str) -> Optional[str]:
+    """
+    Allowed: letters (a-z A-Z), digits (0-9), underscore (_), dot (.), hyphen (-), space.
+    Rules:
+      - 3 to 30 characters
+      - Only letters, numbers, spaces, _ . -
+      - Must start and end with a letter or number (no leading/trailing spaces)
+      - Must contain at least one letter (not digits/symbols only)
+    Examples: "john doe", "Dayana Priya", "john_doe", "JohnDoe99", "j.doe-24"
+    """
+    u = username.strip()
+    if len(u) < 3:
+        return "Username must be at least 3 characters."
+    if len(u) > 30:
+        return "Username must be 30 characters or fewer."
+    if not re.match(r"^[A-Za-z0-9._ -]+$", u):
+        return "Username can only contain letters, numbers, spaces, _ . and -"
+    if not re.match(r"^[A-Za-z0-9]", u):
+        return "Username must start with a letter or number."
+    if not re.search(r"[A-Za-z0-9]$", u):
+        return "Username must end with a letter or number."
+    if not re.search(r"[A-Za-z]", u):
+        return "Username must contain at least one letter."
+    return None
+
+
+# ── JWT ───────────────────────────────────────────────────────────────────────
+
+def create_token(data: dict, expires_delta: timedelta) -> str:
     payload = data.copy()
-    payload["exp"]  = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload["type"] = "access"
+    payload["exp"] = datetime.now(timezone.utc) + expires_delta
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-def create_refresh_token(data: dict) -> tuple[str, datetime]:
-    expires = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    payload = data.copy()
-    payload["exp"]  = expires
-    payload["type"] = "refresh"
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM), expires
+def create_access_token(user_id: int, is_admin: bool = False) -> str:
+    return create_token({"sub": str(user_id), "admin": is_admin, "type": "access"},
+                        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+
+def create_refresh_token(user_id: int) -> str:
+    return create_token({"sub": str(user_id), "type": "refresh"},
+                        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
 def decode_token(token: str) -> dict:
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
+    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+
+# ── DB ────────────────────────────────────────────────────────────────────────
+
+def db_conn():
+    con = psycopg2.connect(**DB_DSN)
+    con.autocommit = False
+    return con
+
+def fetchone(cur) -> Optional[dict]:
+    row = cur.fetchone()
+    if row is None:
+        return None
+    cols = [d[0] for d in cur.description]
+    return dict(zip(cols, row))
+
+def fetchall(cur) -> list:
+    cols = [d[0] for d in cur.description]
+    return [dict(zip(cols, row)) for row in cur.fetchall()]
+
+
+def init_db():
+    """Create all tables and sync admin account from .env."""
+    con = db_conn()
+    cur = con.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id            BIGSERIAL    PRIMARY KEY,
+            username      VARCHAR(80)  NOT NULL UNIQUE,
+            email         VARCHAR(254) NOT NULL UNIQUE,
+            password_hash TEXT         NOT NULL,
+            is_admin      BOOLEAN      NOT NULL DEFAULT FALSE,
+            created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            last_login    TIMESTAMPTZ
         )
-
-
-# DATABASE
-engine       = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base         = declarative_base()
-
-
-# Models 
-
-class User(Base):
-    __tablename__ = "users"
-
-    id              : Mapped[int]      = mapped_column(Integer,     primary_key=True, index=True)
-    username        : Mapped[str]      = mapped_column(String(100), unique=True, nullable=False, index=True)
-    email           : Mapped[str]      = mapped_column(String(255), unique=True, nullable=False, index=True)
-    hashed_password : Mapped[str]      = mapped_column(String(255), nullable=False)
-    is_active       : Mapped[bool]     = mapped_column(Boolean,     default=True)
-    is_admin        : Mapped[bool]     = mapped_column(Boolean,     default=False)
-    created_at      : Mapped[datetime] = mapped_column(DateTime,    default=datetime.utcnow)
-
-    detections     = relationship("Detection",    back_populates="user")
-    sessions       = relationship("SessionLog",   back_populates="user")
-    refresh_tokens = relationship("RefreshToken", back_populates="user")
-    feedbacks      = relationship("Feedback",     back_populates="user")
-
-
-class RefreshToken(Base):
-    __tablename__ = "refresh_tokens"
-
-    id         : Mapped[int]      = mapped_column(Integer,     primary_key=True, index=True)
-    user_id    : Mapped[int]      = mapped_column(Integer,     ForeignKey("users.id"), nullable=False)
-    token      : Mapped[str]      = mapped_column(String(512), unique=True, nullable=False, index=True)
-    expires_at : Mapped[datetime] = mapped_column(DateTime,    nullable=False)
-    revoked    : Mapped[bool]     = mapped_column(Boolean,     default=False)
-    created_at : Mapped[datetime] = mapped_column(DateTime,    default=datetime.utcnow)
-
-    user = relationship("User", back_populates="refresh_tokens")
-
-
-class Detection(Base):
-    __tablename__ = "detections"
-
-    id          : Mapped[int]        = mapped_column(Integer,    primary_key=True, index=True)
-    user_id     : Mapped[int | None] = mapped_column(Integer,    ForeignKey("users.id"), nullable=True)
-    emotion     : Mapped[str]        = mapped_column(String(50), nullable=False)
-    confidence  : Mapped[float]      = mapped_column(Float,      nullable=False)
-    all_scores  : Mapped[str | None] = mapped_column(Text,       nullable=True)
-    detected_at : Mapped[datetime]   = mapped_column(DateTime,   default=datetime.utcnow)
-
-    user = relationship("User", back_populates="detections")
-
-
-class SessionLog(Base):
-    __tablename__ = "sessions"
-
-    id           : Mapped[int]             = mapped_column(Integer,  primary_key=True, index=True)
-    user_id      : Mapped[int | None]      = mapped_column(Integer,  ForeignKey("users.id"), nullable=True)
-    started_at   : Mapped[datetime]        = mapped_column(DateTime, default=datetime.utcnow)
-    ended_at     : Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    total_frames : Mapped[int]             = mapped_column(Integer,  default=0)
-
-    user = relationship("User", back_populates="sessions")
-
-
-class Feedback(Base):
-    __tablename__ = "feedback"
-
-    id         : Mapped[int]             = mapped_column(Integer,     primary_key=True, index=True)
-    user_id    : Mapped[int | None]      = mapped_column(Integer,     ForeignKey("users.id"), nullable=True)
-    name       : Mapped[str | None]      = mapped_column(String(100), nullable=True)
-    email      : Mapped[str | None]      = mapped_column(String(255), nullable=True)
-    rating     : Mapped[int | None]      = mapped_column(Integer,     nullable=True)   # 1–5
-    message    : Mapped[str]             = mapped_column(Text,        nullable=False)
-    created_at : Mapped[datetime]        = mapped_column(DateTime,    default=datetime.utcnow)
-
-    user = relationship("User", back_populates="feedbacks")
-
-
-# PYDANTIC SCHEMAS
-
-class UserRegister(BaseModel):
-    username: str
-    email:    str
-    password: str
-
-class UserOut(BaseModel):
-    id:         int
-    username:   str
-    email:      str
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-class TokenResponse(BaseModel):
-    access_token:  str
-    refresh_token: str
-    token_type:    str = "bearer"
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-class SessionEnd(BaseModel):
-    session_id:   int
-    total_frames: int = 0
-
-class FeedbackIn(BaseModel):
-    name:    str | None = None
-    email:   str | None = None
-    rating:  int | None = None          # 1–5
-    message: str
-
-class FeedbackOut(BaseModel):
-    id:         int
-    user_id:    int | None
-    name:       str | None
-    email:      str | None
-    rating:     int | None
-    message:    str
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-class AdminUserOut(BaseModel):
-    id:         int
-    username:   str
-    email:      str
-    is_active:  bool
-    is_admin:   bool
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# FASTAPI DEPENDENCIES
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def get_current_user(
-    token: str     = Depends(oauth2_scheme),
-    db:    Session = Depends(get_db),
-) -> User:
-    payload = decode_token(token)
-    if payload.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Wrong token type")
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Token missing subject")
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail="User not found or inactive")
-    return user
-
-oauth2_optional = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
-
-def get_optional_user(
-    token: str | None = Depends(oauth2_optional),
-    db:    Session    = Depends(get_db),
-) -> User | None:
-    if not token:
-        return None
-    try:
-        payload = decode_token(token)
-        if payload.get("type") != "access":
-            return None
-        user_id = payload.get("sub")
-        if not user_id:
-            return None
-        return db.query(User).filter(
-            User.id == int(user_id), User.is_active == True
-        ).first()
-    except HTTPException:
-        return None
-
-
-def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return current_user
-
-
-# APP SETUP
-
-EMOTION_LABELS = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
-
-executor = ThreadPoolExecutor(max_workers=1)
-
-
-#  DB connectivity check with clear error message 
-def _check_db_connection(retries: int = 3, delay: float = 2.0) -> None:
-    """
-    Try to reach PostgreSQL before creating tables.
-    Raises RuntimeError with an actionable message if the server is unreachable.
-    """
-    import time
-    from sqlalchemy import text as sa_text
-
-    last_exc = None
-    for attempt in range(1, retries + 1):
-        try:
-            with engine.connect() as conn:
-                conn.execute(sa_text("SELECT 1"))
-            return  # success
-        except Exception as exc:
-            last_exc = exc
-            print(
-                f"[EmotionAI] DB connection attempt {attempt}/{retries} failed. "
-                f"Retrying in {delay}s…"
-            )
-            time.sleep(delay)
-
-    raise RuntimeError(
-        f"Database connection failed. Check PostgreSQL and .env settings.\n"
-        f"Error: {last_exc}"
-    )
-
-
-def _auto_migrate() -> None:
-    """
-    Safely apply schema changes to tables that already exist in the DB.
-    Uses IF NOT EXISTS / conditional logic so re-runs are always safe.
-    """
-    from sqlalchemy import text as sa_text
-
-    migrations = [
-        # Add is_admin to users (was missing in older deployments)
-        """
-        DO $$ BEGIN
-            IF NOT EXISTS (
-                SELECT 1 FROM information_schema.columns
-                WHERE table_name='users' AND column_name='is_admin'
-            ) THEN
-                ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE;
-            END IF;
-        END $$;
-        """,
-        # Drop image_path from detections if it still exists
-        """
-        DO $$ BEGIN
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns
-                WHERE table_name='detections' AND column_name='image_path'
-            ) THEN
-                ALTER TABLE detections DROP COLUMN image_path;
-            END IF;
-        END $$;
-        """,
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS detections (
+            id         BIGSERIAL    PRIMARY KEY,
+            user_id    BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+            emotion    VARCHAR(40)  NOT NULL,
+            confidence REAL         NOT NULL,
+            engagement REAL         NOT NULL,
+            source     VARCHAR(20)  NOT NULL DEFAULT 'webcam',
+            all_probs  TEXT,
+            created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_det_user    ON detections(user_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_det_created ON detections(created_at)")
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS session_timeline (
+            id                 BIGSERIAL   PRIMARY KEY,
+            session_id         TEXT        NOT NULL,
+            user_id            BIGINT      REFERENCES users(id) ON DELETE SET NULL,
+            source             VARCHAR(20) NOT NULL DEFAULT 'webcam',
+            time_offset        REAL        NOT NULL DEFAULT 0.0,
+            emotion            VARCHAR(40) NOT NULL,
+            engagement         REAL        NOT NULL,
+            average_engagement REAL,
+            dominant_emotion   VARCHAR(40),
+            frame_count        INTEGER     NOT NULL DEFAULT 1,
+            started_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            ended_at           TIMESTAMPTZ
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stl_session ON session_timeline(session_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stl_user    ON session_timeline(user_id)")
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS feedback (
+            id         BIGSERIAL    PRIMARY KEY,
+            user_id    BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+            username   VARCHAR(80)  NOT NULL DEFAULT 'Guest',
+            email      VARCHAR(254),
+            rating     SMALLINT     CHECK (rating BETWEEN 1 AND 5),
+            category   VARCHAR(60)  NOT NULL DEFAULT 'General',
+            message    TEXT         NOT NULL,
+            status     VARCHAR(20)  NOT NULL DEFAULT 'new',
+            created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+        )
+    """)
+    # ── Migrate existing feedback table ──────────────────────────────────────
+    # Adds any columns that were introduced after the initial deploy.
+    # Each ALTER runs in isolation so an already-existing column is just skipped.
+    _fb_migrations = [
+        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS username  VARCHAR(80)  NOT NULL DEFAULT 'Guest'",
+        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS email     VARCHAR(254)",
+        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS rating    SMALLINT",
+        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS category  VARCHAR(60)  NOT NULL DEFAULT 'General'",
+        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS status    VARCHAR(20)  NOT NULL DEFAULT 'new'",
     ]
+    for _sql in _fb_migrations:
+        try:
+            cur.execute(_sql)
+            con.commit()
+        except Exception as _e:
+            con.rollback()
+            print(f"[EmotionAI] feedback migration skipped (already applied): {_e}")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_fb_user    ON feedback(user_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_fb_created ON feedback(created_at)")
 
-    with engine.begin() as conn:
-        for stmt in migrations:
-            conn.execute(sa_text(stmt))
+    # Sync admin account from .env (create or update password)
+    cur.execute("SELECT id FROM users WHERE username=%s AND is_admin=TRUE", (ADMIN_USERNAME,))
+    existing_admin = cur.fetchone()
+    if not existing_admin:
+        cur.execute(
+            "INSERT INTO users (username, email, password_hash, is_admin) VALUES (%s,%s,%s,TRUE)",
+            (ADMIN_USERNAME, f"{ADMIN_USERNAME}@emotionai.local", hash_password(ADMIN_PASSWORD))
+        )
+        print(f"[EmotionAI] Default admin created  ->  username: {ADMIN_USERNAME}")
+        print("[EmotionAI] Please change the admin password after first login!")
+    else:
+        cur.execute(
+            "UPDATE users SET password_hash=%s WHERE username=%s AND is_admin=TRUE",
+            (hash_password(ADMIN_PASSWORD), ADMIN_USERNAME)
+        )
+        print(f"[EmotionAI] Admin credentials synced from .env  ->  username: {ADMIN_USERNAME}")
 
-    print("[EmotionAI] Auto-migration complete")
+    con.commit()
+    cur.close()
+    con.close()
+    print("[EmotionAI] Database initialised")
 
+
+# ── LIFESPAN ──────────────────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print(f"[EmotionAI] DB → {DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-    print(f"[EmotionAI] JWT algorithm={ALGORITHM}  "
-          f"access_ttl={ACCESS_TOKEN_EXPIRE_MINUTES}m")
-
-    #  check DB is reachable BEFORE calling create_all 
-    _check_db_connection()
-
-    # Auto-migrate existing tables for columns added after initial creation.
-    # These are safe no-ops if the columns already exist (IF NOT EXISTS).
-    _auto_migrate()
-
-    Base.metadata.create_all(bind=engine)
-    print("[EmotionAI] Database tables ready")
-
+    init_db()
     try:
         import testing
         testing.get_haar_detector()
@@ -388,368 +256,837 @@ async def lifespan(app: FastAPI):
         print("[EmotionAI] Preload complete")
     except Exception as e:
         print(f"[EmotionAI] Preload error (non-fatal): {e}")
-
-    # Open browser only after server is fully ready
     webbrowser.open(f"http://localhost:{APP_PORT}")
+    yield
 
-    yield   # Server runs here
 
+# ── APP (must be created before auth dependencies and route decorators) ────────
 
 app = FastAPI(title="EmotionAI", lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
+# ── AUTH DEPENDENCIES ─────────────────────────────────────────────────────────
 
-# AUTH ROUTES
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-@app.post("/auth/register", response_model=UserOut, summary="Register a new user")
-def register(payload: UserRegister, db: Session = Depends(get_db)):
-    if db.query(User).filter(
-        (User.username == payload.username) | (User.email == payload.email)
-    ).first():
-        raise HTTPException(status_code=400, detail="Username or email already taken")
-
-    user = User(
-        username        = payload.username,
-        email           = payload.email,
-        hashed_password = hash_password(payload.password),
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@app.post("/auth/login", response_model=TokenResponse, summary="Login")
-def login(
-    form: OAuth2PasswordRequestForm = Depends(),
-    db:   Session                   = Depends(get_db),
-):
-    user = db.query(User).filter(User.username == form.username).first()
-    if not user or not verify_password(form.password, str(user.hashed_password)):
-        raise HTTPException(status_code=401, detail="Incorrect username or password")
-    if not user.is_active:
-        raise HTTPException(status_code=403, detail="Account is disabled")
-
-    token_data             = {"sub": str(user.id)}
-    access_token           = create_access_token(token_data)
-    refresh_token_str, exp = create_refresh_token(token_data)
-
-    db.add(RefreshToken(user_id=user.id, token=refresh_token_str, expires_at=exp))
-    db.commit()
-
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token_str)
-
-
-@app.post("/auth/refresh", response_model=TokenResponse, summary="Refresh token pair")
-def refresh_tokens(payload: RefreshRequest, db: Session = Depends(get_db)):
-    data = decode_token(payload.refresh_token)
-    if data.get("type") != "refresh":
-        raise HTTPException(status_code=401, detail="Invalid token type")
-
-    stored = db.query(RefreshToken).filter(
-        RefreshToken.token   == payload.refresh_token,
-        RefreshToken.revoked == False,
-    ).first()
-    if not stored or stored.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=401, detail="Refresh token expired or already used")
-
-    user = db.query(User).filter(User.id == int(data["sub"]), User.is_active == True).first()
-    if not user:
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        user_id = int(payload["sub"])
+    except (JWTError, KeyError, ValueError):
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE id=%s", (user_id,))
+    row = fetchone(cur)
+    cur.close(); con.close()
+    if not row:
         raise HTTPException(status_code=401, detail="User not found")
+    return row
 
-    stored.revoked         = True
-    token_data             = {"sub": str(user.id)}
-    new_access             = create_access_token(token_data)
-    new_refresh_str, exp   = create_refresh_token(token_data)
-    db.add(RefreshToken(user_id=user.id, token=new_refresh_str, expires_at=exp))
-    db.commit()
-
-    return TokenResponse(access_token=new_access, refresh_token=new_refresh_str)
+async def get_admin_user(current: dict = Depends(get_current_user)):
+    if not current.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current
 
 
-@app.post("/auth/logout", summary="Logout")
-def logout_api(payload: RefreshRequest, db: Session = Depends(get_db)):
-    stored = db.query(RefreshToken).filter(RefreshToken.token == payload.refresh_token).first()
-    if stored:
-        stored.revoked = True
-        db.commit()
-    return {"message": "Logged out successfully"}
+# ── SCHEMAS ───────────────────────────────────────────────────────────────────
+
+class RegisterRequest(BaseModel):
+    username: str
+    email:    str
+    password: str
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+class FeedbackRequest(BaseModel):
+    username: str                    # mandatory — display name shown in admin
+    email:    Optional[str] = None   # optional
+    rating:   Optional[int] = None
+    category: str           = "General"
+    message:  str
+
+class SessionEndRequest(BaseModel):
+    session_id:         str
+    average_engagement: float
+    dominant_emotion:   str
+
+class SessionStartRequest(BaseModel):
+    source: str = "webcam"
+
+class SessionStopRequest(BaseModel):
+    session_id:   str
+    total_frames: int = 0
+
+class AdminCreateUserRequest(BaseModel):
+    username: str
+    email:    str
+    password: str
+    is_admin: bool = False
 
 
-@app.get("/auth/me", response_model=UserOut, summary="Get current user")
-def me(current_user: User = Depends(get_current_user)):
-    return current_user
+# ── ML ────────────────────────────────────────────────────────────────────────
 
+EMOTION_LABELS = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
 
-# ML PIPELINE
+ENGAGEMENT_SCORES: dict[str, float] = {
+    "Happiness": 1.0, "Surprise": 1.0, "Neutral": 0.6,
+    "Sadness": 0.3,   "Fear": 0.3,    "Anger": 0.1, "Disgust": 0.1,
+}
+
+def emotion_to_engagement(emotion: str) -> float:
+    return ENGAGEMENT_SCORES.get(emotion, 0.5)
+
+executor = ThreadPoolExecutor(max_workers=1)
 
 def run_pipeline(img_rgb: np.ndarray, use_mtcnn: bool = False):
     import testing
-    idx, confidence, probs = testing.predict_emotion_from_image(
-        img_rgb, use_mtcnn=use_mtcnn
-    )
+    idx, confidence, probs = testing.predict_emotion_from_image(img_rgb, use_mtcnn=use_mtcnn)
     conf = float(confidence)
     if conf > 1.0:
         conf /= 100.0
-
-    norm_probs = [
-        round(float(p) / 100.0 if float(p) > 1.0 else float(p), 4)
-        for p in probs
-    ]
+    norm_probs = [round(float(p)/100.0 if float(p)>1.0 else float(p), 4) for p in probs]
+    emotion = EMOTION_LABELS[idx]
     return {
-        "emotion":           EMOTION_LABELS[idx],
+        "emotion":           emotion,
         "confidence":        round(conf, 4),
         "all_probabilities": norm_probs,
+        "engagement":        emotion_to_engagement(emotion),
+        "timestamp":         datetime.utcnow().isoformat(),
     }, None
 
 
-# HEALTH + PREDICT
+# ── HEALTH ────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
-@app.post("/predict/", summary="Detect emotion from image")
+# ══════════════════════════════════════════════════════════════════════════════
+#  AUTH
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/auth/register")
+async def register(body: RegisterRequest):
+    err = validate_password_strength(body.password)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    un_err = validate_username(body.username)
+    if un_err:
+        raise HTTPException(status_code=400, detail=un_err)
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT id FROM users WHERE username=%s OR email=%s",
+                    (body.username.strip(), body.email.strip()))
+        if cur.fetchone():
+            raise HTTPException(status_code=400, detail="Username or email already taken.")
+        cur.execute("INSERT INTO users (username, email, password_hash) VALUES (%s,%s,%s)",
+                    (body.username.strip(), body.email.strip(), hash_password(body.password)))
+        con.commit()
+        return {"message": "Account created successfully"}
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/login")
+async def login(form: OAuth2PasswordRequestForm = Depends()):
+    """
+    FIX: Removed AND is_admin=FALSE — now works for all active users.
+    is_admin is returned so the frontend can route to admin panel if needed.
+    """
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT * FROM users WHERE username=%s",
+            (form.username,)
+        )
+        row = fetchone(cur)
+        if not row or not verify_password(form.password, row["password_hash"]):
+            raise HTTPException(status_code=401, detail="Incorrect username or password")
+        cur.execute("UPDATE users SET last_login=NOW() WHERE id=%s", (row["id"],))
+        con.commit()
+        return {
+            "access_token":  create_access_token(row["id"], is_admin=bool(row["is_admin"])),
+            "refresh_token": create_refresh_token(row["id"]),
+            "token_type":    "bearer",
+            "is_admin":      bool(row["is_admin"]),
+        }
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/admin/login")
+async def admin_login(form: OAuth2PasswordRequestForm = Depends()):
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT * FROM users WHERE username=%s AND is_admin=TRUE",
+            (form.username,)
+        )
+        row = fetchone(cur)
+        if not row or not verify_password(form.password, row["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid admin credentials")
+        cur.execute("UPDATE users SET last_login=NOW() WHERE id=%s", (row["id"],))
+        con.commit()
+        return {
+            "access_token":  create_access_token(row["id"], is_admin=True),
+            "refresh_token": create_refresh_token(row["id"]),
+            "token_type":    "bearer",
+        }
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/refresh")
+async def refresh_token(body: RefreshRequest):
+    try:
+        payload = decode_token(body.refresh_token)
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        user_id = int(payload["sub"])
+    except (JWTError, KeyError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE id=%s", (user_id,))
+    row = fetchone(cur)
+    cur.close(); con.close()
+    if not row:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
+    return {
+        "access_token": create_access_token(row["id"], is_admin=bool(row["is_admin"])),
+        "token_type":   "bearer",
+    }
+
+
+@app.get("/auth/me")
+async def me(current: dict = Depends(get_current_user)):
+    return {
+        "id":         current["id"],
+        "username":   current["username"],
+        "email":      current["email"],
+        "is_admin":   current["is_admin"],
+        "created_at": current["created_at"],
+        "last_login": current["last_login"],
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  EMOTION DETECTION
+# ══════════════════════════════════════════════════════════════════════════════
+
+# In-memory store of active sessions per user: user_id -> session_id
+# This ensures every /predict call within a continuous webcam session shares
+# the same session_id even when the frontend does not call /sessions/start/ first.
+_active_sessions: dict[int, str] = {}
+
+@app.post("/predict/")
 async def predict(
-    file:         UploadFile  = File(...),
-    fast:         bool        = Query(default=True),
-    save:         bool        = Query(default=True),
-    db:           Session     = Depends(get_db),
-    current_user: User | None = Depends(get_optional_user),
+    file: UploadFile = File(...),
+    fast: bool = Query(False),
+    save: bool = Query(True),
+    session_id: Optional[str] = Query(None),
+    current: dict = Depends(get_current_user),
 ):
+    """
+    Accepts webcam frames for real-time emotion detection.
+
+    Session-ID resolution order:
+      1. Use the session_id query param if the frontend passed one.
+      2. Reuse the in-memory active session for this user (so consecutive frames
+         that don't carry a session_id still group into the same session).
+      3. Create a new UUID and cache it as the active session for this user.
+
+    This means detections will always have a session_id in the DB — no more
+    null/dash rows in the admin detections table.
+    """
     try:
         contents = await file.read()
-        img_pil  = Image.open(io.BytesIO(contents)).convert("RGB")
-        img_pil  = img_pil.resize((320, 240), Image.Resampling.LANCZOS)
-        img      = np.array(img_pil)
-
+        img = Image.open(io.BytesIO(contents)).convert("RGB")
+        img_rgb = np.array(img)
         loop = asyncio.get_event_loop()
-        result, err = await loop.run_in_executor(
-            executor,
-            lambda: run_pipeline(img, use_mtcnn=False),
-        )
+        use_mtcnn = not fast
+        result, _ = await loop.run_in_executor(executor, lambda: run_pipeline(img_rgb, use_mtcnn=use_mtcnn))
 
-        if err:
-            return JSONResponse(status_code=400, content={
-                "error":   "no_face",
-                "message": "No face detected. Please face the camera directly.",
-            })
+        uid = current["id"]
+        if session_id:
+            # Frontend provided explicit session — update the cache
+            sid = session_id
+            _active_sessions[uid] = sid
+        elif uid in _active_sessions:
+            # Reuse the existing active session for this user
+            sid = _active_sessions[uid]
+        else:
+            # No session at all — create one and cache it
+            sid = str(uuid.uuid4())
+            _active_sessions[uid] = sid
 
         if save:
-            record = Detection(
-                user_id    = current_user.id if current_user else None,
-                emotion    = result["emotion"],
-                confidence = result["confidence"],
-                all_scores = json.dumps(
-                    {EMOTION_LABELS[i]: p for i, p in enumerate(result["all_probabilities"])}
-                ),
-            )
-            db.add(record)
-            db.commit()
-            db.refresh(record)
-            result["detection_id"] = record.id
+            _save_detection(uid, sid, result, source="webcam")
+        return {**result, "session_id": sid, "user_id": uid}
+    except Exception as exc:
+        print(f"[EmotionAI] /predict error: {exc}")
+        return JSONResponse(status_code=500, content={"error": "server_error", "message": str(exc)})
 
-        return result
+
+@app.post("/analyze")
+async def analyze_frame(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Query(None),
+    current: dict = Depends(get_current_user),
+):
+    """Legacy alias — kept for backwards compatibility."""
+    try:
+        contents = await file.read()
+        img = Image.open(io.BytesIO(contents)).convert("RGB")
+        img_rgb = np.array(img)
+        loop = asyncio.get_event_loop()
+        result, _ = await loop.run_in_executor(executor, lambda: run_pipeline(img_rgb))
+        sid = session_id or str(uuid.uuid4())
+        _save_detection(current["id"], sid, result, source="webcam")
+        return {**result, "session_id": sid, "user_id": current["id"]}
+    except Exception as exc:
+        print(f"[EmotionAI] analyze error: {exc}")
+        return JSONResponse(status_code=500, content={"error": "server_error", "message": str(exc)})
+
+
+@app.post("/analyze-video")
+async def analyze_video(
+    file: UploadFile = File(...),
+    current: dict = Depends(get_current_user),
+):
+    try:
+        import cv2, tempfile
+        sid = str(uuid.uuid4())
+        contents = await file.read()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+            tmp.write(contents); tmp_path = tmp.name
+
+        cap            = cv2.VideoCapture(tmp_path)
+        fps            = cap.get(cv2.CAP_PROP_FPS) or 25
+        frame_interval = max(1, int(fps))
+        timeline_data: list[dict] = []
+        frame_idx      = 0
+        loop           = asyncio.get_event_loop()
+
+        while True:
+            ret, frame = cap.read()
+            if not ret: break
+            if frame_idx % frame_interval == 0:
+                img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                try:
+                    result, _ = await loop.run_in_executor(
+                        executor, lambda f=img_rgb: run_pipeline(f, use_mtcnn=False)
+                    )
+                    t_offset = round(frame_idx / fps, 2)
+                    timeline_data.append({
+                        "time":       t_offset,
+                        "emotion":    result["emotion"],
+                        "engagement": result["engagement"],
+                    })
+                    _save_detection(current["id"], sid, result, source="upload")
+                except Exception:
+                    pass
+            frame_idx += 1
+
+        cap.release(); os.unlink(tmp_path)
+
+        if not timeline_data:
+            return JSONResponse(status_code=400, content={"error": "no_data", "message": "No frames analyzed."})
+
+        avg_eng  = round(sum(t["engagement"] for t in timeline_data) / len(timeline_data), 3)
+        counts: dict[str, int] = {}
+        for t in timeline_data:
+            counts[t["emotion"]] = counts.get(t["emotion"], 0) + 1
+        dominant = max(counts, key=lambda k: counts[k])
+
+        _save_session_timeline(sid, current["id"], "upload", timeline_data, avg_eng, dominant)
+        return {
+            "session_id":         sid,
+            "timeline":           timeline_data,
+            "average_engagement": avg_eng,
+            "dominant_emotion":   dominant,
+        }
 
     except Exception as exc:
-        print(f"[EmotionAI] Predict error: {exc}")
-        return JSONResponse(status_code=500, content={
-            "error": "server_error", "message": str(exc),
-        })
+        print(f"[EmotionAI] analyze-video error: {exc}")
+        return JSONResponse(status_code=500, content={"error": "server_error", "message": str(exc)})
 
 
-# HISTORY & STATS
-
-@app.get("/history/", summary="Detection history")
-def get_history(
-    limit:        int     = Query(default=20, le=200),
-    db:           Session = Depends(get_db),
-    current_user: User    = Depends(get_current_user),
-):
-    records = (
-        db.query(Detection)
-        .filter(Detection.user_id == current_user.id)
-        .order_by(Detection.detected_at.desc())
-        .limit(limit)
-        .all()
-    )
-    return [
-        {
-            "id":          r.id,
-            "emotion":     r.emotion,
-            "confidence":  r.confidence,
-            "all_scores":  json.loads(str(r.all_scores)) if r.all_scores else {},
-            "detected_at": r.detected_at,
+@app.get("/session-report/{session_id}")
+async def session_report(session_id: str, current: dict = Depends(get_current_user)):
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT * FROM detections WHERE user_id=%s ORDER BY created_at DESC LIMIT 500",
+            (current["id"],)
+        )
+        data = fetchall(cur)
+        if not data:
+            raise HTTPException(status_code=404, detail="Session not found")
+        avg = round(sum(r["engagement"] for r in data) / len(data), 3)
+        counts: dict[str, int] = {}
+        for r in data:
+            counts[r["emotion"]] = counts.get(r["emotion"], 0) + 1
+        dominant = max(counts, key=lambda k: counts[k])
+        return {
+            "session_id":         session_id,
+            "frame_count":        len(data),
+            "average_engagement": avg,
+            "dominant_emotion":   dominant,
+            "emotion_counts":     counts,
+            "detections":         data,
         }
-        for r in records
-    ]
+    finally:
+        cur.close(); con.close()
 
 
-@app.get("/history/stats/", summary="Emotion distribution stats")
-def get_stats(
-    db:           Session = Depends(get_db),
-    current_user: User    = Depends(get_current_user),
-):
-    records = db.query(Detection).filter(Detection.user_id == current_user.id).all()
-    if not records:
-        return {"total": 0, "distribution": {}}
+# ── Session start / end ───────────────────────────────────────────────────────
 
-    counts: dict[str, int] = {}
-    for r in records:
-        counts[str(r.emotion)] = counts.get(str(r.emotion), 0) + 1
-
-    total = len(records)
-    return {
-        "total": total,
-        "distribution": {
-            k: {"count": v, "percent": round(v / total * 100, 1)}
-            for k, v in counts.items()
-        },
-    }
+@app.post("/sessions/start/")
+async def session_start(current: dict = Depends(get_current_user)):
+    """Create a new session UUID and return it so the frontend can tag frames."""
+    sid = str(uuid.uuid4())
+    return {"session_id": sid}
 
 
-# SESSION ROUTES
+@app.post("/sessions/end/")
+async def session_stop(body: SessionStopRequest, current: dict = Depends(get_current_user)):
+    # Clear the in-memory active session so the next start gets a fresh UUID
+    _active_sessions.pop(current["id"], None)
+    """Compute summary from stored detections and write to session_timeline."""
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT emotion, engagement FROM detections "
+            "WHERE user_id=%s ORDER BY created_at DESC LIMIT 500",
+            (current["id"],)
+        )
+        rows = fetchall(cur)
+        if not rows:
+            return {"message": "No detections found for session", "session_id": body.session_id}
 
-@app.post("/sessions/start/", summary="Start a detection session")
-def start_session(
-    db:           Session = Depends(get_db),
-    current_user: User    = Depends(get_current_user),
-):
-    session = SessionLog(user_id=current_user.id)
-    db.add(session)
-    db.commit()
-    db.refresh(session)
-    return {"session_id": session.id, "started_at": session.started_at}
-
-
-@app.post("/sessions/end/", summary="End a detection session")
-def end_session(
-    payload:      SessionEnd,
-    db:           Session = Depends(get_db),
-    current_user: User    = Depends(get_current_user),
-):
-    session = db.query(SessionLog).filter(
-        SessionLog.id      == payload.session_id,
-        SessionLog.user_id == current_user.id,
-    ).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    session.ended_at     = datetime.utcnow()
-    session.total_frames = payload.total_frames
-    db.commit()
-    db.refresh(session)
-    return {
-        "session_id":   session.id,
-        "started_at":   session.started_at,
-        "ended_at":     session.ended_at,
-        "total_frames": session.total_frames,
-    }
-
-# FEEDBACK
-
-@app.post("/feedback/", response_model=FeedbackOut, summary="Submit feedback")
-def submit_feedback(
-    payload:      FeedbackIn,
-    db:           Session     = Depends(get_db),
-    current_user: User | None = Depends(get_optional_user),
-):
-    fb = Feedback(
-        user_id = current_user.id if current_user else None,
-        name    = payload.name  or (current_user.username if current_user else None),
-        email   = payload.email or (current_user.email    if current_user else None),
-        rating  = payload.rating,
-        message = payload.message,
-    )
-    db.add(fb)
-    db.commit()
-    db.refresh(fb)
-    return fb
-
-
-# ADMIN ROUTES
-
-@app.get("/admin/users", response_model=list[AdminUserOut], summary="[Admin] List all users")
-def admin_list_users(
-    db:    Session = Depends(get_db),
-    admin: User    = Depends(get_current_admin),
-):
-    return db.query(User).order_by(User.id).all()
-
-
-@app.patch("/admin/users/{user_id}/toggle", response_model=AdminUserOut, summary="[Admin] Toggle user active state")
-def admin_toggle_user(
-    user_id: int,
-    db:      Session = Depends(get_db),
-    admin:   User    = Depends(get_current_admin),
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.id == admin.id:
-        raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
-    user.is_active = not user.is_active
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@app.get("/admin/detections", summary="[Admin] List all detections")
-def admin_list_detections(
-    limit: int     = Query(default=100, le=1000),
-    db:    Session = Depends(get_db),
-    admin: User    = Depends(get_current_admin),
-):
-    records = (
-        db.query(Detection)
-        .order_by(Detection.detected_at.desc())
-        .limit(limit)
-        .all()
-    )
-    return [
-        {
-            "id":          r.id,
-            "user_id":     r.user_id,
-            "emotion":     r.emotion,
-            "confidence":  r.confidence,
-            "all_scores":  json.loads(str(r.all_scores)) if r.all_scores else {},
-            "detected_at": r.detected_at,
+        timeline_data = [
+            {"time": r.get("time_offset", 0), "emotion": r["emotion"], "engagement": r["engagement"]}
+            for r in rows
+        ]
+        avg_eng = round(sum(r["engagement"] for r in rows) / len(rows), 3)
+        counts: dict = {}
+        for r in rows:
+            counts[r["emotion"]] = counts.get(r["emotion"], 0) + 1
+        dominant = max(counts, key=lambda k: counts[k])
+        _save_session_timeline(body.session_id, current["id"], "webcam", timeline_data, avg_eng, dominant)
+        return {
+            "message":            "Session saved",
+            "session_id":         body.session_id,
+            "average_engagement": avg_eng,
+            "dominant_emotion":   dominant,
         }
-        for r in records
-    ]
+    finally:
+        cur.close(); con.close()
 
 
-@app.get("/admin/feedback", response_model=list[FeedbackOut], summary="[Admin] List all feedback")
-def admin_list_feedback(
-    db:    Session = Depends(get_db),
-    admin: User    = Depends(get_current_admin),
-):
-    return db.query(Feedback).order_by(Feedback.created_at.desc()).all()
+@app.post("/session-end")
+async def session_end(body: SessionEndRequest, current: dict = Depends(get_current_user)):
+    _active_sessions.pop(current["id"], None)
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT emotion, engagement FROM detections "
+            "WHERE user_id=%s ORDER BY created_at DESC LIMIT 500",
+            (current["id"],)
+        )
+        rows = fetchall(cur)
+        timeline_data = [
+            {"time": r.get("time_offset", 0), "emotion": r["emotion"], "engagement": r["engagement"]}
+            for r in rows
+        ]
+        _save_session_timeline(
+            body.session_id, current["id"], "webcam",
+            timeline_data, body.average_engagement, body.dominant_emotion
+        )
+        return {"message": "Session saved"}
+    finally:
+        cur.close(); con.close()
 
 
-@app.delete("/admin/feedback/{feedback_id}", summary="[Admin] Delete a feedback entry")
-def admin_delete_feedback(
-    feedback_id: int,
-    db:          Session = Depends(get_db),
-    admin:       User    = Depends(get_current_admin),
-):
-    fb = db.query(Feedback).filter(Feedback.id == feedback_id).first()
-    if not fb:
-        raise HTTPException(status_code=404, detail="Feedback not found")
-    db.delete(fb)
-    db.commit()
-    return {"message": f"Feedback {feedback_id} deleted"}
+# ══════════════════════════════════════════════════════════════════════════════
+#  FEEDBACK
+# ══════════════════════════════════════════════════════════════════════════════
+
+async def _do_save_feedback(body: FeedbackRequest, request: Request):
+    """Shared: resolve user from Bearer token (or guest) and insert feedback row."""
+    if not body.username or not body.username.strip():
+        raise HTTPException(status_code=400, detail="Username is required.")
+
+    # Resolve user_id from token — non-fatal, falls back to guest
+    user_id = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        try:
+            payload = decode_token(auth_header.split(" ", 1)[1])
+            if payload.get("type") == "access":
+                uid = int(payload["sub"])
+                con_check = db_conn()
+                cur_check = con_check.cursor()
+                cur_check.execute("SELECT id FROM users WHERE id=%s", (uid,))
+                if cur_check.fetchone():
+                    user_id = uid
+                cur_check.close(); con_check.close()
+        except Exception:
+            pass  # treat as guest
+
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO feedback (user_id, username, email, rating, category, message) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            (
+                user_id,
+                body.username.strip(),
+                body.email or None,
+                body.rating if body.rating and 1 <= body.rating <= 5 else None,
+                body.category or "General",
+                body.message.strip(),
+            )
+        )
+        con.commit()
+        return {"message": "Feedback received — thank you!"}
+    except Exception as e:
+        con.rollback()
+        print(f"[EmotionAI] feedback insert error: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not save feedback: {str(e)}")
+    finally:
+        cur.close(); con.close()
 
 
-# FRONTEND ROUTES
+# Register BOTH /feedback and /api/feedback so the POST works regardless of
+# whether the deployed feedback.html has been updated to use /api/feedback yet.
+# FastAPI explicit POST routes ALWAYS take priority over the catch-all
+# StaticFiles mount, so /feedback POST is never intercepted by static serving.
+@app.post("/feedback")
+async def submit_feedback_compat(body: FeedbackRequest, request: Request):
+    return await _do_save_feedback(body, request)
+
+
+@app.post("/api/feedback")
+async def submit_feedback(body: FeedbackRequest, request: Request):
+    return await _do_save_feedback(body, request)
+
+
+@app.post("/api/feedback/guest")
+@app.post("/feedback/guest")
+async def submit_feedback_guest(body: FeedbackRequest, request: Request):
+    """Guest alias (no auth required, user_id always NULL)."""
+    if not body.username or not body.username.strip():
+        raise HTTPException(status_code=400, detail="Username is required.")
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO feedback (user_id, username, email, rating, category, message) "
+            "VALUES (%s,%s,%s,%s,%s,%s)",
+            (None, body.username.strip(), body.email, body.rating, body.category, body.message)
+        )
+        con.commit()
+        return {"message": "Feedback received — thank you!"}
+    finally:
+        cur.close(); con.close()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  ADMIN — STATS + FULL CRUD FOR ALL 4 TABLES
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/admin/stats")
+async def admin_stats(admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT COUNT(*) FROM users WHERE is_admin=FALSE")
+        total_users = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM detections")
+        total_detections = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM session_timeline")
+        total_sessions = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM feedback")
+        total_feedback = cur.fetchone()[0]
+        cur.execute("SELECT AVG(engagement) FROM detections")
+        avg_row = cur.fetchone()[0]
+        cur.execute("SELECT emotion, COUNT(*) as cnt FROM detections GROUP BY emotion ORDER BY cnt DESC")
+        emotion_rows = fetchall(cur)
+        return {
+            "total_users":      total_users,
+            "total_detections": total_detections,
+            "total_sessions":   total_sessions,
+            "total_feedback":   total_feedback,
+            "avg_engagement":   round(avg_row, 3) if avg_row else 0,
+            "emotion_counts":   {r["emotion"]: r["cnt"] for r in emotion_rows},
+        }
+    finally:
+        cur.close(); con.close()
+
+
+# ── Users ─────────────────────────────────────────────────────────────────────
+
+@app.get("/admin/users")
+async def admin_list_users(admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("SELECT id,username,email,is_admin,created_at,last_login FROM users ORDER BY id")
+    rows = fetchall(cur)
+    cur.close(); con.close()
+    return rows
+
+
+@app.post("/admin/users")
+async def admin_create_user(body: AdminCreateUserRequest, admin: dict = Depends(get_admin_user)):
+    """
+    FIX: This endpoint was missing entirely. Without it the admin dashboard had
+    no API to call, so users were added directly to DB without a bcrypt hash,
+    causing all login attempts to fail with 'Incorrect username or password'.
+    """
+    err = validate_password_strength(body.password)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    un_err = validate_username(body.username)
+    if un_err:
+        raise HTTPException(status_code=400, detail=un_err)
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT id FROM users WHERE username=%s OR email=%s",
+                    (body.username.strip(), body.email.strip()))
+        if cur.fetchone():
+            raise HTTPException(status_code=400, detail="Username or email already taken.")
+        cur.execute(
+            "INSERT INTO users (username, email, password_hash, is_admin) VALUES (%s,%s,%s,%s) RETURNING id",
+            (body.username.strip(), body.email.strip(), hash_password(body.password), body.is_admin)
+        )
+        new_id = cur.fetchone()[0]
+        con.commit()
+        return {"message": "User created successfully", "user_id": new_id}
+    finally:
+        cur.close(); con.close()
+
+
+@app.patch("/admin/users/{user_id}/toggle-admin")
+async def toggle_admin(user_id: int, admin: dict = Depends(get_admin_user)):
+    if user_id == admin["id"]:
+        raise HTTPException(status_code=400, detail="Cannot modify your own admin status")
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT is_admin FROM users WHERE id=%s", (user_id,))
+        row = fetchone(cur)
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        new_val = not row["is_admin"]
+        cur.execute("UPDATE users SET is_admin=%s WHERE id=%s", (new_val, user_id))
+        con.commit()
+        return {"user_id": user_id, "is_admin": new_val}
+    finally:
+        cur.close(); con.close()
+
+
+@app.patch("/admin/users/{user_id}/reset-password")
+async def admin_reset_password(user_id: int, body: dict, admin: dict = Depends(get_admin_user)):
+    """Allow admin to reset any user's password."""
+    new_password = body.get("password", "")
+    err = validate_password_strength(new_password)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT id FROM users WHERE id=%s", (user_id,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail="User not found")
+        cur.execute("UPDATE users SET password_hash=%s WHERE id=%s",
+                    (hash_password(new_password), user_id))
+        con.commit()
+        return {"message": f"Password reset for user {user_id}"}
+    finally:
+        cur.close(); con.close()
+
+
+@app.delete("/admin/users/{user_id}")
+async def deactivate_user(user_id: int, admin: dict = Depends(get_admin_user)):
+    if user_id == admin["id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("DELETE FROM users WHERE id=%s AND is_admin=FALSE", (user_id,))
+        con.commit()
+        return {"message": f"User {user_id} deleted"}
+    finally:
+        cur.close(); con.close()
+
+
+# ── Detections ────────────────────────────────────────────────────────────────
+
+@app.get("/admin/detections")
+async def admin_list_detections(admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("""
+        SELECT d.*, u.username
+        FROM detections d
+        LEFT JOIN users u ON d.user_id = u.id
+        ORDER BY d.created_at DESC
+        LIMIT 2000
+    """)
+    rows = fetchall(cur)
+    cur.close(); con.close()
+    return rows
+
+
+@app.delete("/admin/detections/{detection_id}")
+async def delete_detection(detection_id: int, admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("DELETE FROM detections WHERE id=%s", (detection_id,))
+        con.commit()
+        return {"message": "Deleted"}
+    finally:
+        cur.close(); con.close()
+
+
+# ── Feedback ──────────────────────────────────────────────────────────────────
+
+@app.get("/admin/feedback")
+async def admin_list_feedback(admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("""
+        SELECT f.id, f.user_id, f.username, f.email, f.rating,
+               f.category, f.message, f.status, f.created_at,
+               u.username AS registered_username
+        FROM feedback f
+        LEFT JOIN users u ON f.user_id = u.id
+        ORDER BY f.created_at DESC
+    """)
+    rows = fetchall(cur)
+    cur.close(); con.close()
+    return rows
+
+
+@app.delete("/admin/feedback/{feedback_id}")
+async def delete_feedback(feedback_id: int, admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("DELETE FROM feedback WHERE id=%s", (feedback_id,))
+        con.commit()
+        return {"message": "Deleted"}
+    finally:
+        cur.close(); con.close()
+
+
+@app.patch("/admin/feedback/{feedback_id}/status")
+async def update_feedback_status(feedback_id: int, body: dict, admin: dict = Depends(get_admin_user)):
+    """Allow admin to mark feedback as new / read / resolved."""
+    status = body.get("status", "read")
+    if status not in ("new", "read", "resolved"):
+        raise HTTPException(status_code=400, detail="status must be new, read, or resolved")
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("UPDATE feedback SET status=%s WHERE id=%s RETURNING id", (status, feedback_id))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Feedback not found")
+        con.commit()
+        return {"id": feedback_id, "status": status}
+    finally:
+        cur.close(); con.close()
+
+
+# ── Sessions ──────────────────────────────────────────────────────────────────
+
+@app.get("/admin/sessions")
+async def admin_list_sessions(admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("""
+        SELECT st.*, u.username
+        FROM session_timeline st
+        LEFT JOIN users u ON st.user_id = u.id
+        ORDER BY st.started_at DESC
+        LIMIT 2000
+    """)
+    rows = fetchall(cur)
+    cur.close(); con.close()
+    return rows
+
+
+@app.delete("/admin/sessions/{session_row_id}")
+async def delete_session_row(session_row_id: int, admin: dict = Depends(get_admin_user)):
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("DELETE FROM session_timeline WHERE id=%s", (session_row_id,))
+        con.commit()
+        return {"message": "Deleted"}
+    finally:
+        cur.close(); con.close()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  DB HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _save_detection(user_id: int, session_id: Optional[str], result: dict, source: str = "webcam"):
+    try:
+        con = db_conn()
+        cur = con.cursor()
+        cur.execute(
+            "INSERT INTO detections "
+            "(user_id, emotion, confidence, engagement, source, all_probs) "
+            "VALUES (%s,%s,%s,%s,%s,%s)",
+            (user_id, result["emotion"], result["confidence"],
+             result["engagement"], source, json.dumps(result.get("all_probabilities", [])))
+        )
+        con.commit(); cur.close(); con.close()
+    except Exception as e:
+        print(f"[EmotionAI] _save_detection error: {e}")
+
+
+def _save_session_timeline(session_id, user_id, source, timeline_data, avg_engagement, dominant_emotion):
+    try:
+        con = db_conn()
+        cur = con.cursor()
+        for entry in timeline_data:
+            cur.execute(
+                """INSERT INTO session_timeline
+                   (session_id, user_id, source, time_offset, emotion, engagement,
+                    average_engagement, dominant_emotion, frame_count)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (session_id, user_id, source, entry.get("time", 0), entry["emotion"],
+                 entry["engagement"], avg_engagement, dominant_emotion, 1)
+            )
+        con.commit(); cur.close(); con.close()
+    except Exception as e:
+        print(f"[EmotionAI] _save_session_timeline error: {e}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  FRONTEND ROUTES
+# ══════════════════════════════════════════════════════════════════════════════
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -799,6 +1136,11 @@ async def faq_page():
 async def feedback_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "feedback.html"))
 
+@app.get("/admin")
+@app.get("/admin.html")
+async def admin_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
+
 @app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
@@ -806,11 +1148,13 @@ async def logout():
     response.delete_cookie("ea_cookie_consent")
     return response
 
-
+# Static mount MUST be last — it catches everything not matched above.
+# If /predict/ were not defined before this line, POST requests to it would
+# hit StaticFiles which only handles GET → 405 Method Not Allowed.
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 
-# ENTRY POINT
+# ── ENTRY ─────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     uvicorn.run(app, host=APP_HOST, port=APP_PORT)

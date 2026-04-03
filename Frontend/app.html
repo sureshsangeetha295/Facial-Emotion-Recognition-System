@@ -8,99 +8,129 @@
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">
     <div class="logo-icon">😊</div>
     Emotion Analysis
   </div>
   <div class="topbar-right">
-    <div class="live-badge" id="liveBadge">
-      <div class="live-dot"></div> Live
-    </div>
+    <div class="live-badge" id="liveBadge"><div class="live-dot"></div> Live</div>
     <span id="topbarUser" style="font-size:13px;color:#94a3b8;margin-right:4px"></span>
     <button class="back-btn" onclick="history.back()">← Back</button>
     <button class="back-btn" onclick="Auth.logout()" style="margin-left:6px">Sign out</button>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main">
+<div class="app-body">
 
-  <!-- TOP ROW -->
-  <div class="top-row">
+  <!-- ═══ LEFT ~40% : Camera top → Student Engagement Insight bottom ═══ -->
+  <div class="left-col">
 
-    <!-- CAMERA BLOCK -->
-    <div class="camera-block">
-      <div class="camera-wrap">
-        <video id="videoFeed" autoplay muted playsinline></video>
-        <div class="cam-overlay-top">
-          <span class="live-tag" id="liveTag">● LIVE</span>
-          <span class="ms-badge" id="msBadge" style="display:none">— ms</span>
+    <!-- CAMERA -->
+    <div class="cam-pane">
+      <video id="videoFeed" autoplay muted playsinline class="cam-feed"></video>
+
+      <!-- JS-required ghost elements — strictly invisible -->
+      <div id="msBadge"          class="js-ghost"></div>
+      <div id="camResultOverlay" class="js-ghost">
+        <div class="cam-result-emotion">
+          <div class="cam-result-dot" id="resultDot"></div>
+          <span id="resultEmotion"></span>
         </div>
-        <div class="detection-bar" id="detectionBar">Detected: Neutral 98% confidence</div>
-      </div>
-
-      <!-- BUTTONS -->
-      <div class="btn-row" id="btnRow">
-        <button class="btn btn-detect" id="btnDetect" onclick="doDetect()">
-          🎯 Detect
-        </button>
-        <button class="btn btn-golive" id="btnGoLive" onclick="startLive()">
-          📡 Go Live
-        </button>
-        <button class="btn btn-stop" id="btnStop" onclick="stopLive()" style="display:none">
-          ⏹ Stop &amp; Report
-        </button>
-      </div>
-      <div class="shortcut-hint">Space → detect &nbsp;|&nbsp; L → go live</div>
-    </div>
-
-    <!-- RIGHT PANEL -->
-    <div class="right-panel">
-
-      <!-- Result -->
-      <div class="panel-card">
-        <div class="section-label">Result</div>
-        <div class="result-main">
-          <div class="result-dot" id="resultDot"></div>
+        <div class="cam-eng-row">
           <div>
-            <div class="result-emotion" id="resultEmotion">—</div>
-            <div class="result-conf" id="resultConf">No detection yet</div>
+            <div class="cam-eng-float" id="engFloat"></div>
+            <div class="cam-eng-label" id="resultConf"></div>
+          </div>
+          <div>
+            <div class="cam-eng-val"   id="engNum"></div>
+            <div class="cam-eng-pct"   id="engPctSuffix"></div>
           </div>
         </div>
       </div>
 
-      <!-- All Probabilities -->
-      <div class="panel-card">
-        <div class="section-label">All Probabilities</div>
-        <div id="probList"></div>
-      </div>
+      <div class="live-tag" id="liveTag">LIVE</div>
+      <div class="detection-bar" id="detectionBar"></div>
 
-      <!-- Session Timeline -->
-      <div class="panel-card">
-        <div class="section-label">Session Timeline</div>
-        <div id="timelineDots"></div>
-        <div id="timelineTag"></div>
+      <div class="btn-row" id="btnRow">
+        <button class="btn btn-detect" id="btnDetect"      onclick="doDetect()">🔴 Detect</button>
+        <button class="btn btn-live"   id="btnGoLive"      onclick="startLive()">🎬 Go Live</button>
+        <button class="btn btn-stop"   id="btnStop"        onclick="stopLive()" style="display:none">⏹ Stop</button>
+        <button class="btn btn-upload" id="btnUploadVideo" onclick="document.getElementById('videoFileInput').click()">📤 Upload Video</button>
+        <input type="file" id="videoFileInput" accept="video/*" style="display:none"/>
       </div>
-
     </div>
+
+    <!-- STUDENT ENGAGEMENT INSIGHT (below camera, left col) -->
+    <div class="breakdown-pane">
+      <div class="breakdown-hdr">
+        <div class="pane-label">Student Engagement Insight</div>
+        <div class="avg-eng-pill">Avg Eng: <span id="avgEngDisplay">—</span></div>
+      </div>
+      <div id="dominantCard" class="dominant-card empty">
+        <span class="dom-placeholder">Run detection to see engagement insight</span>
+      </div>
+      <!-- tutor log — hidden, kept for JS compat -->
+      <div class="tutor-log" id="tutorLog" style="display:none;"></div>
+    </div>
+
   </div>
 
-  <!-- EMOTION BREAKDOWN — now fully visible via scroll -->
-  <div class="breakdown-section">
-    <div class="breakdown-header">
-      <span class="breakdown-title">Emotion breakdown</span>
-      <span class="last-detected" id="lastDetected">No detection yet</span>
+  <!-- ═══ RIGHT ~60% : Probabilities → Timeline → Notes ═══ -->
+  <div class="right-col">
+
+    <!-- ALL PROBABILITIES -->
+    <div class="prob-pane">
+      <div class="prob-header"><div class="prob-title">All Probabilities</div></div>
+      <div class="prob-list" id="probList"></div>
     </div>
-    <div id="dominantCard" class="dominant-card empty">
-      <span class="dom-placeholder">Run detection to see emotion breakdown</span>
+
+    <!-- SESSION TIMELINE -->
+    <div class="timeline-pane">
+      <div class="timeline-hdr">
+        <div class="pane-label">Session Timeline</div>
+        <span id="lastDetected" style="font-size:11px;color:var(--muted);"></span>
+      </div>
+      <div class="tl-stats-row">
+        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlDetCount">0</div><div class="tl-stat-lbl">Detections</div></div>
+        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlAvgEng">—</div><div class="tl-stat-lbl">Avg Eng</div></div>
+        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlTopEmo">—</div><div class="tl-stat-lbl">Top Emotion</div></div>
+        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlDuration">00:00</div><div class="tl-stat-lbl">Duration</div></div>
+      </div>
+      <div id="timelineTag" class="timeline-tags"></div>
+      <!-- JS-compat hidden -->
+      <div id="timelineDots" style="display:none"></div>
+      <div id="tlEngBar"     style="display:none"></div>
+      <div id="tlConfBar"    style="display:none"></div>
+      <div id="tlEngVal"     style="display:none"></div>
+      <div id="tlConfVal"    style="display:none"></div>
     </div>
+
+    <!-- SESSION NOTES -->
+    <div class="notes-pane">
+      <div class="notes-hdr">
+        <div class="pane-label">Session Notes</div>
+        <button class="notes-add-btn" onclick="toggleNoteInput()">+ Add Note</button>
+      </div>
+      <div class="notes-input-wrap" id="noteInputWrap" style="display:none;">
+        <textarea class="notes-textarea" id="noteTextarea"
+          placeholder="Write anything — observations, numbers, symbols, reminders… (Ctrl+Enter to save)"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        <div class="notes-actions">
+          <button class="notes-cancel-btn" onclick="toggleNoteInput()">Cancel</button>
+          <button class="notes-save-btn"   onclick="saveNote()">Save Note</button>
+        </div>
+      </div>
+      <div class="notes-list" id="notesList">
+        <div class="notes-empty" id="notesEmpty">No notes yet — add observations during the session.</div>
+      </div>
+    </div>
+
   </div>
 
 </div>
 
 <script src="script/auth.js"></script>
-<script src="script/app.js?v=2"></script>
+<script src="script/app.js?v=8"></script>
 </body>
 </html>

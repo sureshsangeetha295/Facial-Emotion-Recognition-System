@@ -10,17 +10,25 @@ const EMOTIONS = [
 ];
 
 const EMOTION_MESSAGES = {
-  happiness: "You're radiating positive energy — keep smiling! 🌟",
-  neutral:   "Calm and composed. You seem focused and steady. 👍",
-  sadness:   "It's okay to feel low sometimes. Take a deep breath. 💙",
-  anger:     "Tension detected. Try taking a moment to cool down. 🧘",
-  fear:      "Something seems unsettling. You're safe here. 🫂",
-  disgust:   "Something's clearly not sitting right with you! 😅",
-  surprise:  "Caught off guard! Something unexpected just happened? 🎉",
+  happiness: "Student is highly engaged and motivated — ideal moment to introduce a harder concept or go deeper into the topic. Keep the energy alive! 🌟",
+  neutral:   "Student appears calm and attentive but passively so. Pose a direct question or invite them to explain a concept back to you to boost active participation. 👍",
+  sadness:   "Student seems low in mood or unmotivated. Pause the content briefly, offer a warm check-in, and give genuine encouragement before continuing. 💙",
+  anger:     "Frustration detected — the student may be struggling or feeling stuck. Slow down, simplify the current explanation, and validate their effort before moving forward. 🧘",
+  fear:      "Anxiety signals present — student may feel overwhelmed. Break the task into very small achievable steps, reassure them, and confirm understanding at each stage. 🫂",
+  disgust:   "Student appears disengaged or uninterested. Try switching the delivery method, linking the topic to something they care about, or introducing a hands-on activity. 😅",
+  surprise:  "Attention is at a peak — the student is highly alert and receptive right now. Use this moment to clarify, reinforce, or introduce the key concept clearly. 🎉",
 };
 
 // Must match EMOTION_LABELS order in backend: ["Anger","Disgust","Fear","Happiness","Neutral","Sadness","Surprise"]
 const PROB_KEYS = ['Anger', 'Disgust', 'Fear', 'Happiness', 'Neutral', 'Sadness', 'Surprise'];
+
+// Client-side engagement score map (mirrors backend ENGAGEMENT_SCORES)
+const ENGAGEMENT_MAP = {
+  Happiness: 1.0, Surprise: 1.0,
+  Neutral:   0.6,
+  Sadness:   0.3, Fear: 0.3,
+  Anger:     0.1, Disgust: 0.1,
+};
 
 const API_URL = '/predict/';
 
@@ -30,12 +38,11 @@ let timeline      = [];
 let currentProbs  = { Anger:0, Disgust:0, Fear:0, Happiness:0, Neutral:0, Sadness:0, Surprise:0 };
 let topEmotion    = null;
 
-// ── FIX 1: AbortController — cancels ALL in-flight requests when Stop is pressed ──
 let currentAbortController = null;
-
-// ── FIX 2: Guard flag — prevents overlapping live detections ──
-// (If inference takes 2 s and interval fires every 1.5 s, requests pile up.)
 let detectionInProgress = false;
+
+let _engagementScores = [];
+let _sessionTimeline  = [];
 
 
 // ── Capture frame from video as JPEG Blob ──
@@ -44,9 +51,6 @@ function captureFrame(quality = 0.75) {
     const video = document.getElementById('videoFeed');
     if (!video || !video.srcObject) return reject(new Error('No camera stream'));
     const canvas = document.createElement('canvas');
-    // FIX 3: Capture at 320×240 instead of native resolution.
-    // The backend resizes to 320×240 anyway for Haar; sending a smaller blob
-    // cuts network/encode time meaningfully on localhost too.
     canvas.width  = 320;
     canvas.height = 240;
     canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
@@ -58,21 +62,17 @@ function captureFrame(quality = 0.75) {
 }
 
 // ── Call real model API ──
-// signal: AbortSignal from the current AbortController (lets stopLive cancel this)
-// fast:   true = Haar (live), false = MTCNN (single detect, higher quality)
 async function callPredict(signal, fast = true) {
   const t0 = performance.now();
 
   const blob = await captureFrame(fast ? 0.75 : 0.90);
-
   const form = new FormData();
   form.append('file', blob, 'frame.jpg');
 
-  // Use ?save=false in live mode (high-FPS) — only save single-shot detections
   const saveParam = fast ? 'false' : 'true';
-  const url = `${API_URL}?fast=${fast}&save=${saveParam}`;
+  const sidParam  = (typeof _sessionId === 'string' && _sessionId) ? '&session_id=' + encodeURIComponent(_sessionId) : '';
+  const url = `${API_URL}?fast=${fast}&save=${saveParam}${sidParam}`;
 
-  // Auth.apiFetch automatically attaches Bearer token + refreshes if expired
   const res = await Auth.apiFetch(url, { method: 'POST', body: form, signal });
 
   if (!res.ok) {
@@ -92,10 +92,11 @@ async function callPredict(signal, fast = true) {
   const total = Object.values(probs).reduce((a, b) => a + b, 0);
   if (total > 0) PROB_KEYS.forEach(k => probs[k] = Math.round(probs[k] / total * 100));
 
-  const emotion = data.emotion;
-  const conf    = Math.round(data.confidence > 1 ? data.confidence : data.confidence * 100);
+  const emotion    = data.emotion;
+  const conf       = Math.round(data.confidence > 1 ? data.confidence : data.confidence * 100);
+  const engagement = (data.engagement != null) ? data.engagement : (ENGAGEMENT_MAP[emotion] ?? 0.5);
 
-  return { probs, emotion, conf, elapsed };
+  return { probs, emotion, conf, elapsed, engagement };
 }
 
 
@@ -108,7 +109,9 @@ function buildProbList() {
     const row = document.createElement('div');
     row.className = 'prob-row';
     row.innerHTML = `
-      <span class="prob-label"><span class="p-icon">${emo ? emo.icon : ''}</span>${k}</span>
+      <span class="prob-label">
+        <span class="p-icon">${emo ? emo.icon : ''}</span>${k}
+      </span>
       <div class="prob-bar-bg"><div class="prob-bar-fill" id="bar-${k}" style="width:0%"></div></div>
       <span class="prob-pct" id="pct-${k}">0%</span>`;
     el.appendChild(row);
@@ -117,43 +120,52 @@ function buildProbList() {
 
 
 // ── Update all UI panels ──
-function updateUI(probs, top, conf) {
+function updateUI(probs, top, conf, engagement) {
   const topLower = top?.toLowerCase();
+  const engPct   = (engagement != null) ? Math.round(engagement * 100) : null;
+  const emoData  = EMOTIONS.find(e => e.label.toLowerCase() === topLower);
 
-  document.getElementById('resultDot').style.background =
-    EMOTIONS.find(e => e.label.toLowerCase() === topLower)?.color || '#94a3b8';
-  document.getElementById('resultEmotion').textContent =
-    top ? (top.charAt(0).toUpperCase() + top.slice(1)) : '—';
-  document.getElementById('resultConf').textContent =
-    top ? `${conf}% confidence` : 'No detection yet';
+  // Camera overlay elements are ghost (hidden) — safe null-guarded writes only
+  const rdot = document.getElementById('resultDot');
+  const remo = document.getElementById('resultEmotion');
+  const rcon = document.getElementById('resultConf');
+  if (rdot) rdot.style.background = emoData?.color || '#94a3b8';
+  if (remo) remo.textContent = top ? (top.charAt(0).toUpperCase() + top.slice(1)) : '—';
+  if (rcon) rcon.textContent = top
+    ? (engPct != null ? `${conf}% conf · Eng ${engPct}%` : `${conf}% confidence`)
+    : 'No detection yet';
 
+  // Probabilities
   PROB_KEYS.forEach(k => {
     const v        = probs[k] || 0;
     const isActive = k.toLowerCase() === topLower;
     const bar      = document.getElementById(`bar-${k}`);
     const pct      = document.getElementById(`pct-${k}`);
-    bar.style.width = v + '%';
-    bar.className   = 'prob-bar-fill' + (isActive ? ' active' : '');
-    pct.textContent = v + '%';
-    pct.className   = 'prob-pct' + (isActive ? ' active' : '');
+    if (bar) { bar.style.width = v + '%'; bar.className = 'prob-bar-fill' + (isActive ? ' active' : ''); }
+    if (pct) { pct.textContent = v + '%'; pct.className = 'prob-pct' + (isActive ? ' active' : ''); }
   });
 
-  // Dominant breakdown card — animated
+  // Dominant insight card
   if (top) {
-    const emo   = EMOTIONS.find(e => e.label.toLowerCase() === topLower);
-    const conf2 = probs[emo ? emo.label : ''] || conf;
-    animateBreakdownCard(top, emo, conf2);
+    const conf2 = probs[emoData ? emoData.label : ''] || conf;
+    animateBreakdownCard(top, emoData, conf2);
   }
 
+  // Detection bar — brief flash only, auto-hides after 2.5s
   if (top) {
     const bar = document.getElementById('detectionBar');
-    bar.textContent = `Detected: ${top.charAt(0).toUpperCase() + top.slice(1)} ${conf}% confidence`;
-    bar.classList.add('visible');
-    document.getElementById('lastDetected').textContent =
-      `Last detected: ${top.charAt(0).toUpperCase() + top.slice(1)}`;
+    if (bar) {
+      bar.textContent = engPct != null
+        ? `Detected: ${top.charAt(0).toUpperCase() + top.slice(1)} · ${conf}% conf · Engagement ${engPct}%`
+        : `Detected: ${top.charAt(0).toUpperCase() + top.slice(1)} · ${conf}% confidence`;
+      bar.classList.add('visible');
+      clearTimeout(bar._hideTimer);
+      bar._hideTimer = setTimeout(() => bar.classList.remove('visible'), 2500);
+    }
+    const lastEl = document.getElementById('lastDetected');
+    if (lastEl) lastEl.textContent = `Last: ${top.charAt(0).toUpperCase() + top.slice(1)}`;
   }
 }
-
 
 
 // ── Avatar faces data ──
@@ -250,7 +262,7 @@ function _buildAvatarSVG(emotionKey) {
     ? `<path d="${f.mouth}" fill="${f.mouthColor}" stroke="${f.mouthColor}" stroke-width="1.5" stroke-linecap="round"/>
        <ellipse cx="44" cy="67" rx="8" ry="4" fill="white" opacity="0.85"/>`
     : `<path d="${f.mouth}" fill="none" stroke="${f.mouthColor}" stroke-width="2.5" stroke-linecap="round"/>`;
-  return `<svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" style="width:88px;height:88px;display:block;">
+  return `<svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" style="width:56px;height:56px;display:block;">
   <defs>
     <radialGradient id="fg_${emotionKey}" cx="45%" cy="40%" r="55%">
       <stop offset="0%" stop-color="white" stop-opacity="0.4"/>
@@ -272,7 +284,8 @@ function _buildAvatarSVG(emotionKey) {
 </svg>`;
 }
 
-// ── Animated breakdown card — avatar version ──
+
+// ── Animated breakdown card ──
 let _typewriterTimer = null;
 let _particleTimers  = [];
 
@@ -311,15 +324,12 @@ function animateBreakdownCard(emotion, emo, conf) {
   });
 
   setTimeout(() => {
-    const lbl  = document.getElementById('avatarLabel');
-    const name = document.getElementById('domName');
-    if (lbl)  lbl.classList.add('visible');
-    if (name) name.classList.add('revealed');
+    document.getElementById('avatarLabel')?.classList.add('visible');
+    document.getElementById('domName')?.classList.add('revealed');
   }, 220);
 
   setTimeout(() => {
-    const pill = document.getElementById('domPill');
-    if (pill) pill.classList.add('revealed');
+    document.getElementById('domPill')?.classList.add('revealed');
   }, 380);
 
   setTimeout(() => typewriteMessage(fullMsg, 0), 560);
@@ -363,8 +373,8 @@ function _spawnParticle(container, icon, idx) {
 
 
 // ── Timeline chip-row ──
-function addTimelineDot(emotion) {
-  timeline.push(emotion);
+function addTimelineDot(emotion, engagement) {
+  timeline.push({ emotion, engagement: engagement ?? null });
 
   const container = document.getElementById('timelineDots');
   const tagEl     = document.getElementById('timelineTag');
@@ -373,34 +383,37 @@ function addTimelineDot(emotion) {
   const colorMap = {};
   EMOTIONS.forEach(e => { colorMap[e.key] = e.color; });
 
-  // Rebuild chip row from full timeline history
-  container.innerHTML = timeline.map((e, i) => {
+  container.innerHTML = timeline.map((entry, i) => {
+    const e      = entry.emotion;
     const c      = colorMap[e] || '#6b7280';
     const isLast = i === timeline.length - 1;
     const label  = e.charAt(0).toUpperCase() + e.slice(1);
+    const engTxt = (entry.engagement != null)
+      ? ` · Eng ${Math.round(entry.engagement * 100)}%` : '';
     const connector = i < timeline.length - 1
       ? `<div class="tl-connector"></div>` : '';
 
     if (isLast) {
       return `<div class="tl-chip tl-chip--active"
-                   style="border-color:${c};background:${c}22;">
+                   style="border-color:${c};background:${c}22;"
+                   title="${label}${engTxt}">
                 <div class="tl-chip-dot" style="background:${c};"></div>
                 <span class="tl-chip-label" style="color:${c};">${label}</span>
               </div>${connector}`;
     }
-    return `<div class="tl-chip tl-chip--done">
+    return `<div class="tl-chip tl-chip--done" title="${label}${engTxt}">
               <div class="tl-chip-dot" style="background:${c};opacity:0.7;"></div>
-              <span class="tl-chip-label">${label}</span>
+              <span class="tl-chip-label">${e}</span>
             </div>${connector}`;
   }).join('');
 
-  // Scroll to show latest chip
   container.scrollLeft = container.scrollWidth;
 
-  // Summary count chips
   if (tagEl) {
     const countMap = {};
-    timeline.forEach(e => { countMap[e] = (countMap[e] || 0) + 1; });
+    timeline.forEach(entry => {
+      countMap[entry.emotion] = (countMap[entry.emotion] || 0) + 1;
+    });
     const top3 = Object.entries(countMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
     tagEl.innerHTML = top3.map(([e, n]) => {
       const c = colorMap[e] || '#6b7280';
@@ -423,37 +436,33 @@ function showError(msg) {
 
 
 // ── Core detection runner ──
-// fast=true  → Haar + 320×240 (live mode)
-// fast=false → MTCNN + higher quality (single detect button)
 async function runDetection(fast = true) {
-  // Abort any in-flight request from a previous call
-  if (currentAbortController) {
-    currentAbortController.abort();
-  }
+  if (currentAbortController) currentAbortController.abort();
   currentAbortController = new AbortController();
 
   try {
-    const { probs, emotion, conf, elapsed } = await callPredict(
-      currentAbortController.signal,
-      fast
+    const { probs, emotion, conf, elapsed, engagement } = await callPredict(
+      currentAbortController.signal, fast
     );
 
-    // If we are no longer live and this was a live call, discard result
     if (fast && !isLive) return;
 
     topEmotion   = emotion;
     currentProbs = probs;
     _frameCount++;
 
-    updateUI(probs, emotion.toLowerCase(), conf);
-    addTimelineDot(emotion.toLowerCase());
+    _engagementScores.push(engagement);
+    _sessionTimeline.push({ emotion, engagement, time: Date.now() });
+
+    updateUI(probs, emotion.toLowerCase(), conf, engagement);
+    addTimelineDot(emotion.toLowerCase(), engagement);
 
     const badge = document.getElementById('msBadge');
     badge.style.display = 'block';
     badge.textContent   = elapsed + ' ms';
 
   } catch (err) {
-    if (err.name === 'AbortError') return;  // Intentionally cancelled — not an error
+    if (err.name === 'AbortError') return;
     console.error('[EmotionAI] Detection error:', err);
     showError(err.message || 'Detection failed');
   } finally {
@@ -462,48 +471,44 @@ async function runDetection(fast = true) {
 }
 
 
-// ── Button: single detect (high quality, MTCNN) ──
+// ── Button: single detect ──
 function doDetect() {
   if (detectionInProgress) return;
   detectionInProgress = true;
-  runDetection(false);   // fast=false → MTCNN for better single-shot accuracy
+  runDetection(false);
 }
 
 
-// ── Live mode: schedules repeated detections safely ──
+// ── Live mode ──
 function scheduleLiveDetection() {
-  // FIX: Use a recursive setTimeout instead of setInterval.
-  // This ensures we only fire the NEXT request AFTER the previous one finishes,
-  // so requests never pile up regardless of how slow inference is.
   liveInterval = setTimeout(async () => {
-    if (!isLive) return;    // Stopped — don't fire
-
+    if (!isLive) return;
     if (!detectionInProgress) {
       detectionInProgress = true;
-      await runDetection(true);  // fast=true → Haar
+      await runDetection(true);
     }
-
-    scheduleLiveDetection();    // Schedule next only after this one completes
-  }, 300);   // 300 ms delay between completions (~3 fps max, adjustable)
+    scheduleLiveDetection();
+  }, 300);
 }
 
 
-let _sessionId    = null;
-let _frameCount   = 0;
+let _sessionId  = null;
+let _frameCount = 0;
 
 async function startLive() {
   if (isLive) return;
   isLive = true;
   detectionInProgress = false;
-  _frameCount = 0;
+  _frameCount       = 0;
+  _engagementScores = [];
+  _sessionTimeline  = [];
 
   document.getElementById('liveTag').classList.add('visible');
   document.getElementById('liveBadge').classList.add('active');
-  document.getElementById('btnGoLive').style.display  = 'none';
-  document.getElementById('btnStop').style.display    = 'flex';
-  document.getElementById('btnDetect').disabled       = true;
+  document.getElementById('btnGoLive').style.display = 'none';
+  document.getElementById('btnStop').style.display   = 'flex';
+  document.getElementById('btnDetect').disabled      = true;
 
-  // Start a DB session for this live run
   try {
     const res  = await Auth.apiFetch('/sessions/start/', { method: 'POST' });
     const data = await res.json();
@@ -537,20 +542,99 @@ async function stopLive() {
   document.getElementById('btnDetect').disabled      = false;
   document.getElementById('detectionBar').classList.remove('visible');
 
-  // End the DB session
+  // Update avg engagement in insight panel pill (no camera overlay text)
+  if (_engagementScores.length > 0) {
+    const avg = Math.round(
+      (_engagementScores.reduce((a, b) => a + b, 0) / _engagementScores.length) * 100
+    );
+
+    // ghost elements — safe null-guarded writes
+    const engFloat  = document.getElementById('engFloat');
+    const engNumEl  = document.getElementById('engNum');
+    const engPctSuf = document.getElementById('engPctSuffix');
+    if (engFloat)  engFloat.classList.add('show');
+    if (engPctSuf) engPctSuf.textContent = '%';
+    if (engNumEl)  engNumEl.textContent  = avg;
+
+    const avgEl = document.getElementById('avgEngDisplay');
+    if (avgEl) avgEl.textContent = avg + '%';
+
+    const lastEl = document.getElementById('lastDetected');
+    if (lastEl) lastEl.textContent = `Avg: ${avg}%`;
+  }
+
   if (_sessionId) {
     try {
       await Auth.apiFetch('/sessions/end/', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body:   JSON.stringify({ session_id: _sessionId, total_frames: _frameCount }),
       });
+      const report = await API.getSessionReport(_sessionId);
+      console.info('[EmotionAI] Session report:', report);
     } catch (e) {
-      console.warn('[EmotionAI] Could not end session:', e);
+      console.warn('[EmotionAI] Could not end session / fetch report:', e);
     }
-    _sessionId  = null;
-    _frameCount = 0;
+    _sessionId        = null;
+    _frameCount       = 0;
+    _engagementScores = [];
+    _sessionTimeline  = [];
   }
 }
+
+
+// ── Video upload handler ──
+async function handleVideoUpload(file) {
+  if (!file) return;
+
+  const bar = document.getElementById('detectionBar');
+  bar.textContent = '⏳ Analyzing video…';
+  bar.classList.add('visible');
+
+  try {
+    const result = await API.analyzeVideo(file);
+
+    const emotion  = result.dominant_emotion || '—';
+    const engPct   = Math.round((result.average_engagement || 0) * 100);
+    const emoLower = emotion.toLowerCase();
+    const emo      = EMOTIONS.find(e => e.label.toLowerCase() === emoLower);
+
+    document.getElementById('resultDot').style.background = emo?.color || '#94a3b8';
+    document.getElementById('resultEmotion').textContent  = emotion;
+
+    const confEl = document.getElementById('resultConf');
+    if (confEl) confEl.textContent = `Video · Avg Engagement ${engPct}%`;
+
+    bar.textContent = `Video done · Dominant: ${emotion} · Avg Engagement ${engPct}%`;
+
+    document.getElementById('lastDetected').textContent =
+      `Video: ${emotion} (${engPct}% avg)`;
+
+    if (result.timeline && result.timeline.length) {
+      result.timeline.forEach(entry => {
+        addTimelineDot((entry.emotion || '').toLowerCase(), entry.engagement);
+      });
+    }
+
+    if (emo) animateBreakdownCard(emoLower, emo, engPct);
+
+  } catch (err) {
+    console.error('[EmotionAI] Video analysis error:', err);
+    showError(err.message || 'Video analysis failed');
+  }
+}
+
+
+// ── Wire up file input ──
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('videoFileInput');
+  if (input) {
+    input.addEventListener('change', () => {
+      if (input.files && input.files[0]) handleVideoUpload(input.files[0]);
+      input.value = '';
+    });
+  }
+});
 
 
 // ── Camera ──
@@ -572,13 +656,165 @@ document.addEventListener('keydown', e => {
 
 
 // ── Init ──
-// Redirect to login if not authenticated
 if (!Auth.requireAuth()) throw new Error('Not authenticated');
 
-// Show logged-in user's name in topbar if element exists
-const _user = Auth.getUser();
+const _user   = Auth.getUser();
 const _userEl = document.getElementById('topbarUser');
 if (_userEl && _user) _userEl.textContent = _user.username || _user.email || '';
 
 buildProbList();
 startCamera();
+
+/* ══════════════════════════════════════════
+   TUTOR MESSAGES + TIMELINE STATS + NOTES
+   ══════════════════════════════════════════ */
+
+const _TUTOR = {
+  happiness: { icon:'🌟', tag:'Happy',      text:'Student is highly engaged — great moment to deepen the topic or raise difficulty.' },
+  neutral:   { icon:'👍', tag:'Neutral',    text:'Calm focus detected. Try an interactive question to boost active participation.' },
+  sadness:   { icon:'💙', tag:'Low Mood',   text:'Low mood signals detected. A quick check-in or encouragement can help re-engage.' },
+  anger:     { icon:'🧘', tag:'Frustrated', text:'Frustration detected. Simplify the current explanation or offer a short break.' },
+  fear:      { icon:'🫂', tag:'Anxious',    text:'Anxiety signals present. Break tasks into smaller steps to rebuild confidence.' },
+  disgust:   { icon:'😅', tag:'Disengaged', text:'Disengagement signals detected. Try varying the approach or connecting to interests.' },
+  surprise:  { icon:'🎉', tag:'Surprised',  text:'Attention is at peak — clarify and reinforce the concept now.' },
+};
+
+let _sessionStart  = null;
+let _durationTimer = null;
+let _detCount      = 0;
+let _notesList     = [];
+let _lastConf      = 0;
+
+function _sessionTime() {
+  if (!_sessionStart) return '00:00';
+  const s = Math.floor((Date.now() - _sessionStart) / 1000);
+  return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+}
+
+function _ensureTimer() {
+  if (_durationTimer) return;
+  _sessionStart = Date.now();
+  _durationTimer = setInterval(() => {
+    const el = document.getElementById('tlDuration');
+    if (el) el.textContent = _sessionTime();
+  }, 1000);
+}
+
+function _addTutorMsg(emotionLower, conf) {
+  const m   = _TUTOR[emotionLower] || _TUTOR.neutral;
+  const log = document.getElementById('tutorLog');
+  if (!log) return;
+  const div = document.createElement('div');
+  div.className = 'tutor-msg';
+  div.innerHTML = `<div class="tutor-msg-icon">${m.icon}</div>
+    <div class="tutor-msg-body">
+      <div class="tutor-msg-meta">
+        <span class="tutor-msg-tag">${m.tag}</span>
+        <span class="tutor-msg-conf">${conf}% conf</span>
+        <span class="tutor-msg-time">${_sessionTime()}</span>
+      </div>
+      <div>${m.text}</div>
+    </div>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function _updateTimelineStats(conf) {
+  _detCount++;
+  _lastConf = conf;
+  _ensureTimer();
+
+  // detection count
+  const cEl = document.getElementById('tlDetCount');
+  if (cEl) cEl.textContent = _detCount;
+
+  // engagement bar + avg
+  if (_engagementScores.length) {
+    const avg = Math.round(_engagementScores.reduce((a,b)=>a+b,0) / _engagementScores.length * 100);
+    const engBar = document.getElementById('tlEngBar');
+    const engVal = document.getElementById('tlEngVal');
+    const avgEl  = document.getElementById('avgEngDisplay');
+    if (engBar) engBar.style.width = avg + '%';
+    if (engVal) engVal.textContent = avg + '%';
+    if (avgEl)  avgEl.textContent  = avg + '%';
+
+    const avgStatEl = document.getElementById('tlAvgEng');
+    if (avgStatEl) avgStatEl.textContent = avg + '%';
+  }
+
+  // confidence bar
+  const cBar = document.getElementById('tlConfBar');
+  const cVal = document.getElementById('tlConfVal');
+  if (cBar) cBar.style.width = conf + '%';
+  if (cVal) cVal.textContent = conf + '%';
+
+  // top emotion
+  if (timeline.length) {
+    const counts = {};
+    timeline.forEach(t => counts[t.emotion] = (counts[t.emotion]||0) + 1);
+    const topKey = Object.keys(counts).sort((a,b) => counts[b]-counts[a])[0];
+    const emo    = EMOTIONS.find(e => e.key === topKey);
+    const topEl  = document.getElementById('tlTopEmo');
+    if (topEl && emo) topEl.textContent = emo.icon + ' ' + emo.label;
+  }
+}
+
+/* Patch updateUI to also fire tutor + stats */
+const _origUpdateUI = updateUI;
+window.updateUI = function(probs, top, conf, engagement) {
+  _origUpdateUI(probs, top, conf, engagement);
+  if (top) {
+    const confPct = Math.round(conf > 1 ? conf : conf * 100);
+    _addTutorMsg(top, confPct);
+    _updateTimelineStats(confPct);
+  }
+};
+
+/* ── NOTES ── */
+function toggleNoteInput() {
+  const wrap = document.getElementById('noteInputWrap');
+  const open = wrap.style.display !== 'none';
+  wrap.style.display = open ? 'none' : 'block';
+  if (!open) document.getElementById('noteTextarea').focus();
+}
+
+function saveNote() {
+  const ta   = document.getElementById('noteTextarea');
+  const text = ta.value.trim();
+  if (!text) return;
+  _notesList.unshift({ text, ts: _sessionTime(), id: Date.now() });
+  ta.value = '';
+  document.getElementById('noteInputWrap').style.display = 'none';
+  _renderNotes();
+}
+
+function deleteNote(id) {
+  _notesList = _notesList.filter(n => n.id !== id);
+  _renderNotes();
+}
+
+function _renderNotes() {
+  const list  = document.getElementById('notesList');
+  const empty = document.getElementById('notesEmpty');
+  if (!_notesList.length) {
+    empty.style.display = 'block';
+    list.innerHTML = '';
+    list.appendChild(empty);
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = _notesList.map(n => `
+    <div class="note-item">
+      <span class="note-ts">${n.ts}</span>
+      <span class="note-text">${n.text.replace(/</g,'&lt;')}</span>
+      <button class="note-delete" onclick="deleteNote(${n.id})" title="Delete">✕</button>
+    </div>`).join('');
+}
+
+/* Allow Ctrl+Enter in textarea to save */
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('noteTextarea');
+  if (ta) ta.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') saveNote();
+  });
+});

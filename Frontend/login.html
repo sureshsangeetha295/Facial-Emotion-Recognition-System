@@ -3,435 +3,332 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Emotion Analysis — Sign In</title>
+<title>EmotionAI — Sign In</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
-  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --bg:#faf9f7;--surface:#fff;
+  --accent:#e8440a;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.22);
   --grad:linear-gradient(135deg,#e8440a,#f59e4a);
   --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
   --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
-  --shadow-sm:0 1px 4px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 8px 32px rgba(0,0,0,0.05);
   --shadow-lg:0 8px 40px rgba(0,0,0,0.10);
   --font-display:'Fraunces',Georgia,serif;
   --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
   --green:#22c55e;--green-dim:rgba(34,197,94,0.08);--green-border:rgba(34,197,94,0.25);
   --red:#dc2626;--red-dim:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.2);
+  --yellow:#f59e0b;
 }
-html{scroll-behavior:smooth}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
-
-/* NAV */
-nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
-.nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
-.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
-
-/* LAYOUT */
-.page{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px}
-.card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:22px;padding:40px;box-shadow:var(--shadow-lg);animation:fadeUp 0.45s ease both}
+html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden}
+.card{width:100%;max-width:430px;background:var(--surface);border:1px solid var(--border2);border-radius:22px;padding:36px 36px 28px;box-shadow:var(--shadow-lg);animation:fadeUp .45s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-
-.card-header{text-align:center;margin-bottom:32px}
-.card-icon{width:52px;height:52px;border-radius:14px;background:var(--grad);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 6px 18px var(--accent-glow)}
-.card-title{font-family:var(--font-display);font-size:1.75rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:6px}
+.header{text-align:center;margin-bottom:22px}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.logo-box{width:34px;height:34px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px var(--accent-glow)}
+.logo-title{font-size:1.7rem;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+.card-title{font-family:var(--font-display);font-size:1.4rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}
 .card-title em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.card-sub{font-size:13px;color:var(--text2);line-height:1.6}
-
-/* TABS */
-.tabs{display:flex;background:var(--elevated);border-radius:10px;padding:3px;margin-bottom:28px}
-.tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;color:var(--text3);transition:all 0.2s;border:none;background:transparent;font-family:var(--font-body)}
-.tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm)}
-
-/* FORM */
-.field{margin-bottom:16px}
-.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:0.02em}
-
-/* PASSWORD WRAPPER */
+.sub{font-size:13px;color:var(--text3)}
+/* Tabs */
+.tabs{display:flex;background:#f4f2ef;border-radius:12px;padding:4px;gap:2px;margin-bottom:20px}
+.tab-btn{flex:1;padding:9px 0;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text3);background:none;transition:all .18s}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.10)}
+.tab-btn.admin-tab.active{background:var(--grad);color:#fff;box-shadow:0 2px 10px var(--accent-glow)}
+.panel{display:none}.panel.active{display:block}
+/* Fields */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.02em}
 .pw-wrap{position:relative}
+.field input,.pw-wrap input{width:100%;padding:11px 14px;border:1.5px solid var(--border2);border-radius:10px;font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s}
 .pw-wrap input{padding-right:42px}
-.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;padding:2px;transition:color 0.15s;border-radius:4px}
+.field input:focus,.pw-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.field input::placeholder,.pw-wrap input::placeholder{color:var(--text3)}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);display:flex;align-items:center;padding:2px;border-radius:4px;transition:color .15s}
 .eye-btn:hover{color:var(--accent)}
-.eye-btn svg{width:16px;height:16px;pointer-events:none}
-
-.field input{width:100%;padding:11px 14px;border:1.5px solid var(--border2);border-radius:10px;font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--surface);outline:none;transition:border-color 0.15s,box-shadow 0.15s}
-.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-.field input::placeholder{color:var(--text3)}
-.field input.valid{border-color:var(--green)}
-.field input.invalid{border-color:var(--red)}
-
-/* PASSWORD RULES */
-.pw-rules{background:var(--elevated);border-radius:10px;padding:12px 14px;margin-top:8px;display:none;flex-direction:column;gap:6px}
-.pw-rules.visible{display:flex}
-.rule{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);transition:color 0.2s}
-.rule.met{color:var(--green)}
-.rule-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;background:transparent}
-.rule.met .rule-dot{border-color:var(--green);background:var(--green)}
-.rule-dot svg{display:none;width:8px;height:8px;stroke:#fff;stroke-width:3}
-.rule.met .rule-dot svg{display:block}
-
-/* STRENGTH BAR */
-.strength-bar-wrap{margin-top:8px;display:none}
-.strength-bar-wrap.visible{display:block}
-.strength-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between}
-.strength-label span:last-child{font-weight:600;transition:color 0.3s}
-.strength-track{height:4px;background:var(--elevated);border-radius:2px;overflow:hidden}
-.strength-fill{height:100%;border-radius:2px;width:0;transition:width 0.4s ease,background 0.4s ease}
-
-.btn-submit{width:100%;padding:13px;border-radius:10px;background:var(--grad);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);box-shadow:0 4px 14px var(--accent-glow);transition:all 0.2s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.eye-btn svg{width:15px;height:15px;pointer-events:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Password strength */
+.strength-wrap{margin-top:7px}
+.strength-bars{display:flex;gap:3px;margin-bottom:5px}
+.strength-bar{flex:1;height:3px;border-radius:2px;background:#e5e7eb;transition:background .3s}
+.s-weak{background:#dc2626}.s-fair{background:#f59e0b}.s-good{background:#84cc16}.s-strong{background:#22c55e}
+.strength-label{font-size:11px;color:var(--text3);font-weight:500}
+.sl-weak{color:#dc2626}.sl-fair{color:#f59e0b}.sl-good{color:#65a30d}.sl-strong{color:#16a34a}
+/* Inline field errors */
+.field-error{font-size:12px;color:var(--red);margin-top:5px;min-height:0;display:none}
+.field-error.visible{display:block}
+/* Submit */
+.btn-submit{width:100%;padding:13px;border-radius:10px;background:var(--grad);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);box-shadow:0 4px 14px var(--accent-glow);transition:all .2s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
 .btn-submit:active{transform:translateY(0)}
-.btn-submit.loading{opacity:0.7;pointer-events:none}
-
-/* SPINNER */
-.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.btn-submit.loading{opacity:.7;pointer-events:none}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
 .btn-submit.loading .spinner{display:block}
 .btn-submit.loading .btn-txt{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ERROR/SUCCESS */
-.msg{font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:14px;display:none;align-items:center;gap:7px}
+/* Messages */
+.msg{font-size:12px;padding:10px 13px;border-radius:8px;margin-bottom:14px;display:none;align-items:center;gap:7px;line-height:1.5}
 .msg.error{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red);display:flex}
 .msg.success{background:var(--green-dim);border:1px solid var(--green-border);color:#15803d;display:flex}
-.msg svg{width:14px;height:14px;flex-shrink:0}
-
-/* TRUST */
-.trust-row{display:flex;justify-content:center;gap:18px;margin-top:28px;flex-wrap:wrap}
-.trust-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
-.trust-item svg{width:11px;height:11px;stroke:#22c55e}
-
-footer{border-top:1px solid var(--border);padding:20px 48px;text-align:center}
-.foot-copy{font-size:12px;color:var(--text3)}
+.msg svg{width:14px;height:14px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.admin-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-dim);border:1px solid rgba(232,68,10,.2);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;color:var(--accent);margin-bottom:14px}
+.admin-badge svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.terms-note{font-size:11px;color:var(--text3);text-align:center;margin-top:10px;line-height:1.5}
+.terms-note a{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
-
-<nav>
-  <a href="/" class="nav-logo">
-    <div class="logo-box">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
+<div class="card">
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+      <span class="logo-title">EmotionAI</span>
     </div>
-    EmotionAI
-  </a>
-</nav>
+    <h1 class="card-title">Welcome <em>to</em></h1>
+    <p class="sub">Sign in to continue to your dashboard</p>
+  </div>
 
-<div class="page">
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
-      </div>
-      <h1 class="card-title">Welcome to </h1>
-      <h1 class="card-title"><em>Emotion Analysis</em></h1>
-      <p class="card-sub">Sign in to access real-time facial emotion analysis</p>
-    </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('signin')">Sign In</button>
+    <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+    <button class="tab-btn admin-tab" onclick="switchTab('admin')">Admin</button>
+  </div>
 
-    <!-- TABS -->
-    <div class="tabs">
-      <button class="tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
-      <button class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+  <!-- SIGN IN -->
+  <div class="panel active" id="panel-signin">
+    <div class="msg" id="msg-signin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="msg-signin-txt"></span></div>
+    <div class="field"><label>Username</label><input type="text" id="si-username" placeholder="Enter your username" autocomplete="username"/></div>
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="si-password" placeholder="Enter your password" autocomplete="current-password"/>
+        <button class="eye-btn" type="button" onclick="togglePw('si-password',this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
     </div>
+    <button class="btn-submit" id="btn-signin" onclick="handleSignIn()"><div class="spinner"></div><span class="btn-txt">Sign In</span></button>
+  </div>
 
-    <!-- SIGN IN FORM -->
-    <div id="form-signin">
-      <div class="msg" id="signin-msg">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="signin-msg-txt"></span>
-      </div>
-      <div class="field">
-        <label for="username">Username</label>
-        <input type="text" id="username" placeholder="Your username" autocomplete="username"/>
-      </div>
-      <div class="field">
-        <label for="signin-password">Password</label>
-        <div class="pw-wrap">
-          <input type="password" id="signin-password" placeholder="Enter your password" autocomplete="current-password"/>
-          <button class="eye-btn" type="button" onclick="togglePw('signin-password', this)" aria-label="Toggle password visibility">
-            <svg id="eye-show-signin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg id="eye-hide-signin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </div>
-      </div>
-      <button class="btn-submit" id="btn-signin" onclick="handleSignIn()">
-        <div class="spinner"></div>
-        <span class="btn-txt">Sign In</span>
-      </button>
+  <!-- SIGN UP -->
+  <div class="panel" id="panel-signup">
+    <div class="msg" id="msg-signup"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="msg-signup-txt"></span></div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="su-username" placeholder="e.g. john_doe or JohnDoe99" autocomplete="username" oninput="checkUsername(this.value)"/>
+      <div class="field-error" id="un-error"></div>
     </div>
+    <div class="field"><label>Email</label><input type="email" id="su-email" placeholder="your@email.com" autocomplete="email"/></div>
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="su-password" placeholder="Create a strong password" autocomplete="new-password" oninput="checkStrength(this.value)"/>
+        <button class="eye-btn" type="button" onclick="togglePw('su-password',this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <div class="strength-wrap">
+        <div class="strength-bars"><div class="strength-bar" id="sb1"></div><div class="strength-bar" id="sb2"></div><div class="strength-bar" id="sb3"></div><div class="strength-bar" id="sb4"></div></div>
+        <span class="strength-label" id="strength-label">Enter a password</span>
+      </div>
+      <div class="field-error" id="pw-error"></div>
+    </div>
+    <div class="field">
+      <label>Confirm Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="su-confirm" placeholder="Repeat your password" autocomplete="new-password" oninput="checkConfirm(this.value)"/>
+        <button class="eye-btn" type="button" onclick="togglePw('su-confirm',this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <div class="field-error" id="confirm-error"></div>
+    </div>
+    <button class="btn-submit" id="btn-signup" onclick="handleSignUp()"><div class="spinner"></div><span class="btn-txt">Create Account</span></button>
+    <p class="terms-note">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
+  </div>
 
-    <!-- SIGN UP FORM -->
-    <div id="form-signup" style="display:none">
-      <div class="msg" id="signup-msg">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="signup-msg-txt"></span>
+  <!-- ADMIN -->
+  <div class="panel" id="panel-admin">
+    <div class="msg" id="msg-admin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="msg-admin-txt"></span></div>
+    <div style="text-align:center;margin-bottom:14px"><span class="admin-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Access</span></div>
+    <div class="field"><label>Admin Username</label><input type="text" id="ad-username" placeholder="Enter admin username" autocomplete="username"/></div>
+    <div class="field">
+      <label>Admin Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="ad-password" placeholder="Enter admin password" autocomplete="current-password"/>
+        <button class="eye-btn" type="button" onclick="togglePw('ad-password',this)"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
-      <div class="field">
-        <label for="signup-name">Full name</label>
-        <input type="text" id="signup-name" placeholder="Your name" autocomplete="name"/>
-      </div>
-      <div class="field">
-        <label for="signup-email">Email address</label>
-        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
-      </div>
-      <div class="field">
-        <label for="signup-password">Password</label>
-        <div class="pw-wrap">
-          <input type="password" id="signup-password" placeholder="Create a password" autocomplete="new-password" oninput="onSignupPwInput(this)"/>
-          <button class="eye-btn" type="button" onclick="togglePw('signup-password', this)" aria-label="Toggle password visibility">
-            <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </div>
-        <!-- PASSWORD RULES -->
-        <div class="pw-rules" id="pw-rules">
-          <div class="rule" id="rule-len">
-            <span class="rule-dot"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></span>
-            At least 8 characters
-          </div>
-          <div class="rule" id="rule-num">
-            <span class="rule-dot"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></span>
-            Contains a number (0–9)
-          </div>
-          <div class="rule" id="rule-special">
-            <span class="rule-dot"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></span>
-            Contains a special character (!@#$…)
-          </div>
-          <div class="rule" id="rule-upper">
-            <span class="rule-dot"><svg viewBox="0 0 10 10" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></span>
-            Contains an uppercase letter (A–Z)
-          </div>
-        </div>
-        <!-- STRENGTH BAR -->
-        <div class="strength-bar-wrap" id="strength-bar-wrap">
-          <div class="strength-label"><span>Password strength</span><span id="strength-txt">—</span></div>
-          <div class="strength-track"><div class="strength-fill" id="strength-fill"></div></div>
-        </div>
-      </div>
-      <div class="field">
-        <label for="signup-confirm">Confirm password</label>
-        <div class="pw-wrap">
-          <input type="password" id="signup-confirm" placeholder="Re-enter your password" autocomplete="new-password" oninput="onConfirmInput(this)"/>
-          <button class="eye-btn" type="button" onclick="togglePw('signup-confirm', this)" aria-label="Toggle password visibility">
-            <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </div>
-        <div id="confirm-hint" style="font-size:11px;margin-top:5px;display:none"></div>
-      </div>
-      <button class="btn-submit" id="btn-signup" onclick="handleSignUp()">
-        <div class="spinner"></div>
-        <span class="btn-txt">Create Account</span>
-      </button>
     </div>
-
-    <div class="trust-row">
-      <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Secure login</span>
-      <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Privacy-first</span>
-      <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>No data stored</span>
-    </div>
+    <button class="btn-submit" id="btn-admin" onclick="handleAdmin()"><div class="spinner"></div><span class="btn-txt">Admin Sign In</span></button>
   </div>
 </div>
 
-<footer>
-  <span class="foot-copy">© Emotion Analysis</span>
-</footer>
-
-<script src="script/auth.js"></script>
 <script>
-// ── Tab switching ─────────────────────────────────────────────────────────────
+const EYE_OPEN  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_CLOSE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+const ICON_OK  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const ICON_DOT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>`;
+
+let activeTab = 'signin';
+
 function switchTab(tab) {
-  const isSignin = tab === 'signin';
-  document.getElementById('tab-signin').classList.toggle('active', isSignin);
-  document.getElementById('tab-signup').classList.toggle('active', !isSignin);
-  document.getElementById('form-signin').style.display = isSignin ? '' : 'none';
-  document.getElementById('form-signup').style.display = isSignin ? 'none' : '';
+  activeTab = tab;
+  ['signin','signup','admin'].forEach((t,i) => document.querySelectorAll('.tab-btn')[i].classList.toggle('active', t===tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
 }
 
-// ── Loading state ─────────────────────────────────────────────────────────────
-function setLoading(btnId, on) {
-  document.getElementById(btnId).classList.toggle('loading', on);
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const hidden = inp.type === 'password';
+  inp.type = hidden ? 'text' : 'password';
+  btn.innerHTML = hidden ? EYE_CLOSE : EYE_OPEN;
 }
 
-// ── Message display ───────────────────────────────────────────────────────────
-function showMsg(id, type, text) {
-  const el = document.getElementById(id);
-  const txt = document.getElementById(id + '-txt');
-  el.className = 'msg ' + type;
-  txt.textContent = text;
+function checkStrength(pw) {
+  const rules = { len: pw.length>=8, upper:/[A-Z]/.test(pw), lower:/[a-z]/.test(pw), num:/[0-9]/.test(pw), special:/[^A-Za-z0-9]/.test(pw) };
+  const score = Object.values(rules).filter(Boolean).length;
+  const cls   = ['','s-weak','s-fair','s-good','s-strong'];
+  const slCls = ['','sl-weak','sl-fair','sl-good','sl-strong'];
+  const txt   = ['Enter a password','Weak','Fair','Good','Strong'];
+  [1,2,3,4].forEach(i => {
+    const b = document.getElementById('sb'+i);
+    b.className = 'strength-bar';
+    if (i<=score && score>0) b.classList.add(cls[score]);
+  });
+  const lbl = document.getElementById('strength-label');
+  lbl.className = 'strength-label' + (score>0?' '+slCls[score]:'');
+  lbl.textContent = txt[score];
+  // Inline error on password field while typing
+  const errEl = document.getElementById('pw-error');
+  if (!pw) { errEl.textContent=''; errEl.classList.remove('visible'); return; }
+  const msg = validatePassword(pw);
+  if (msg) { errEl.textContent = msg; errEl.classList.add('visible'); }
+  else { errEl.textContent=''; errEl.classList.remove('visible'); }
 }
 
-// ── Toggle password visibility ────────────────────────────────────────────────
-function togglePw(inputId, btn) {
-  const input = document.getElementById(inputId);
-  const isHidden = input.type === 'password';
-  input.type = isHidden ? 'text' : 'password';
-  const showIcon = btn.querySelector('.eye-show') || btn.querySelector('#eye-show-signin');
-  const hideIcon = btn.querySelector('.eye-hide') || btn.querySelector('#eye-hide-signin');
-  if (showIcon) showIcon.style.display = isHidden ? 'none' : '';
-  if (hideIcon) hideIcon.style.display = isHidden ? '' : 'none';
+// ── Username rules ──────────────────────────────────────────────────────────
+function checkUsername(val) {
+  const errEl = document.getElementById('un-error');
+  if (!val) { errEl.textContent=''; errEl.classList.remove('visible'); return; }
+  const msg = validateUsername(val);
+  if (msg) { errEl.textContent = msg; errEl.classList.add('visible'); }
+  else { errEl.textContent=''; errEl.classList.remove('visible'); }
 }
 
-// ── Password rules ────────────────────────────────────────────────────────────
-const RULES = {
-  len:     v => v.length >= 8,
-  num:     v => /\d/.test(v),
-  special: v => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(v),
-  upper:   v => /[A-Z]/.test(v)
-};
-
-function checkRule(id, passed) {
-  const el = document.getElementById('rule-' + id);
-  el.classList.toggle('met', passed);
+function checkConfirm(val) {
+  const pw = document.getElementById('su-password').value;
+  const errEl = document.getElementById('confirm-error');
+  if (!val) { errEl.textContent=''; errEl.classList.remove('visible'); return; }
+  if (val !== pw) { errEl.textContent = 'Passwords do not match.'; errEl.classList.add('visible'); }
+  else { errEl.textContent=''; errEl.classList.remove('visible'); }
 }
 
-function getStrength(v) {
-  const score = Object.values(RULES).filter(fn => fn(v)).length;
-  if (score === 0) return { pct: 0, label: '—', color: '' };
-  if (score === 1) return { pct: 25, label: 'Weak', color: '#ef4444' };
-  if (score === 2) return { pct: 50, label: 'Fair', color: '#f97316' };
-  if (score === 3) return { pct: 75, label: 'Good', color: '#eab308' };
-  return { pct: 100, label: 'Strong', color: '#22c55e' };
+function validateUsername(val) {
+  if (!val || val.length < 3)              return 'Too short — min 3 characters.';
+  if (val.length > 30)                     return 'Too long — max 30 characters.';
+  if (!/^[A-Za-z0-9._ -]+$/.test(val))    return 'Invalid character — only letters, numbers, space, _ . - allowed.';
+  if (!/^[A-Za-z0-9]/.test(val))          return 'Must start with a letter or number.';
+  if (!/[A-Za-z0-9]$/.test(val))          return 'Must end with a letter or number.';
+  if (!/[A-Za-z]/.test(val))              return 'Use alphanumeric — must include at least one letter.';
+  return null;
 }
 
-function onSignupPwInput(input) {
-  const v = input.value;
-  const rulesEl = document.getElementById('pw-rules');
-  const barWrap = document.getElementById('strength-bar-wrap');
-
-  if (v.length > 0) {
-    rulesEl.classList.add('visible');
-    barWrap.classList.add('visible');
-  } else {
-    rulesEl.classList.remove('visible');
-    barWrap.classList.remove('visible');
-  }
-
-  Object.keys(RULES).forEach(id => checkRule(id, RULES[id](v)));
-
-  const s = getStrength(v);
-  document.getElementById('strength-fill').style.width = s.pct + '%';
-  document.getElementById('strength-fill').style.background = s.color;
-  const txt = document.getElementById('strength-txt');
-  txt.textContent = s.label;
-  txt.style.color = s.color;
-
-  // re-validate confirm if already typed
-  const confirm = document.getElementById('signup-confirm');
-  if (confirm.value) onConfirmInput(confirm);
+function validatePassword(pw) {
+  if (pw.length<8)               return 'Min 8 characters required.';
+  if (!/[A-Z]/.test(pw))        return 'Add an uppercase letter (A-Z).';
+  if (!/[a-z]/.test(pw))        return 'Add a lowercase letter (a-z).';
+  if (!/[0-9]/.test(pw))        return 'Add a number (0–9).';
+  if (!/[^A-Za-z0-9]/.test(pw)) return 'Add a special character (!@#$…).';
+  return null;
 }
 
-function onConfirmInput(input) {
-  const pw = document.getElementById('signup-password').value;
-  const hint = document.getElementById('confirm-hint');
-  if (!input.value) {
-    hint.style.display = 'none';
-    input.classList.remove('valid', 'invalid');
-    return;
-  }
-  hint.style.display = 'block';
-  if (input.value === pw) {
-    input.classList.add('valid');
-    input.classList.remove('invalid');
-    hint.style.color = '#15803d';
-    hint.textContent = '✓ Passwords match';
-  } else {
-    input.classList.add('invalid');
-    input.classList.remove('valid');
-    hint.style.color = '#dc2626';
-    hint.textContent = '✗ Passwords do not match';
-  }
+function showMsg(panel, type, text) {
+  const el = document.getElementById('msg-'+panel);
+  el.className = 'msg '+type;
+  document.getElementById('msg-'+panel+'-txt').textContent = text;
 }
+function clearMsg(p) { document.getElementById('msg-'+p).className='msg'; }
 
-// ── Sign In ───────────────────────────────────────────────────────────────────
 async function handleSignIn() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('signin-password').value;
-
-  if (!username || !password) {
-    showMsg('signin-msg', 'error', 'Please enter your username and password.');
-    return;
-  }
-
-  setLoading('btn-signin', true);
-
+  const username = document.getElementById('si-username').value.trim();
+  const password = document.getElementById('si-password').value;
+  if (!username||!password) { showMsg('signin','error','Please enter your username and password.'); return; }
+  clearMsg('signin');
+  const btn = document.getElementById('btn-signin');
+  btn.classList.add('loading');
   try {
-    const user = await Auth.login(username, password);
-    showMsg('signin-msg', 'success', 'Signed in! Redirecting…');
-    // Redirect to /app if came from there, otherwise /home
-    const next = new URLSearchParams(window.location.search).get('next') || '/home';
-    setTimeout(() => { window.location.href = next; }, 700);
-  } catch (err) {
-    setLoading('btn-signin', false);
-    showMsg('signin-msg', 'error', err.message || 'Incorrect username or password.');
-  }
+    const res  = await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username,password})});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail||'Incorrect username or password');
+    localStorage.setItem('ea_access_token', data.access_token);
+    localStorage.setItem('ea_refresh_token',data.refresh_token);
+    showMsg('signin','success','Signed in! Redirecting…');
+    setTimeout(()=>{ window.location.href='/home'; },700);
+  } catch(err) { btn.classList.remove('loading'); showMsg('signin','error',err.message); }
 }
 
-// ── Sign Up ───────────────────────────────────────────────────────────────────
 async function handleSignUp() {
-  const name     = document.getElementById('signup-name').value.trim();
-  const email    = document.getElementById('signup-email').value.trim();
-  const password = document.getElementById('signup-password').value;
-  const confirm  = document.getElementById('signup-confirm').value;
-
-  if (!name || !email || !password || !confirm) {
-    showMsg('signup-msg', 'error', 'Please fill in all fields.');
-    return;
-  }
-  if (!/\S+@\S+\.\S+/.test(email)) {
-    showMsg('signup-msg', 'error', 'Please enter a valid email address.');
-    return;
-  }
-
-  const failedRules = Object.keys(RULES).filter(id => !RULES[id](password));
-  if (failedRules.length > 0) {
-    showMsg('signup-msg', 'error', 'Your password does not meet the requirements below.');
-    document.getElementById('pw-rules').classList.add('visible');
-    return;
-  }
-
-  if (password !== confirm) {
-    showMsg('signup-msg', 'error', 'Passwords do not match. Please re-enter.');
-    return;
-  }
-
-  setLoading('btn-signup', true);
-
+  const username = document.getElementById('su-username').value.trim();
+  const email    = document.getElementById('su-email').value.trim();
+  const password = document.getElementById('su-password').value;
+  const confirm  = document.getElementById('su-confirm').value;
+  if (!username||!email||!password) { showMsg('signup','error','All fields are required.'); return; }
+  const unErr = validateUsername(username);
+  if (unErr) { showMsg('signup','error',unErr); return; }
+  const pwErr = validatePassword(password);
+  if (pwErr) { showMsg('signup','error',pwErr); return; }
+  if (password!==confirm) { showMsg('signup','error','Passwords do not match.'); return; }
+  clearMsg('signup');
+  const btn = document.getElementById('btn-signup');
+  btn.classList.add('loading');
   try {
-    // username = name (display name), email = email, password = password
-    await Auth.register(name, email, password);
-    showMsg('signup-msg', 'success', 'Account created! Please sign in to continue.');
-    setLoading('btn-signup', false);
-
-    document.getElementById('signup-name').value = '';
-    document.getElementById('signup-email').value = '';
-    document.getElementById('signup-password').value = '';
-    document.getElementById('signup-confirm').value = '';
-    document.getElementById('pw-rules').classList.remove('visible');
-    document.getElementById('strength-bar-wrap').classList.remove('visible');
-    document.getElementById('confirm-hint').style.display = 'none';
-
-    setTimeout(() => { switchTab('signin'); }, 1400);
-  } catch (err) {
-    setLoading('btn-signup', false);
-    showMsg('signup-msg', 'error', err.message || 'Registration failed. Try a different username.');
-  }
+    const res  = await fetch('/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,email,password})});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail||'Registration failed');
+    // Auto-login
+    const lr   = await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username,password})});
+    const ld   = await lr.json();
+    // Always redirect to sign-in tab after successful registration
+    showMsg('signup','success','Account created! Please sign in to continue.');
+    btn.classList.remove('loading');
+    setTimeout(()=>{
+      switchTab('signin');
+      document.getElementById('si-username').value = username;
+    }, 1200);
+  } catch(err) { btn.classList.remove('loading'); showMsg('signup','error',err.message); }
 }
 
-// ── Enter key support ─────────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const active = document.getElementById('tab-signin').classList.contains('active');
-  if (active) handleSignIn(); else handleSignUp();
+async function handleAdmin() {
+  const username = document.getElementById('ad-username').value.trim();
+  const password = document.getElementById('ad-password').value;
+  if (!username||!password) { showMsg('admin','error','Please enter admin credentials.'); return; }
+  clearMsg('admin');
+  const btn = document.getElementById('btn-admin');
+  btn.classList.add('loading');
+  try {
+    const res  = await fetch('/auth/admin/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username,password})});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail||'Invalid admin credentials');
+    localStorage.setItem('ea_access_token', data.access_token);
+    localStorage.setItem('ea_refresh_token',data.refresh_token);
+    localStorage.setItem('ea_is_admin','1');
+    showMsg('admin','success','Admin access granted! Redirecting…');
+    setTimeout(()=>{ window.location.href='/admin'; },700);
+  } catch(err) { btn.classList.remove('loading'); showMsg('admin','error',err.message); }
+}
+
+document.addEventListener('keydown',e=>{
+  if (e.key!=='Enter') return;
+  if (activeTab==='signin') handleSignIn();
+  else if (activeTab==='signup') handleSignUp();
+  else handleAdmin();
 });
 
-// ── Already logged in → go straight to /home ─────────────────────────────────
-(function() {
-  Auth.redirectIfLoggedIn();
-  // Show session-expired message if redirected here with ?reason=session_expired
-  if (new URLSearchParams(window.location.search).get('reason') === 'session_expired') {
-    showMsg('signin-msg', 'error', 'Your session expired. Please sign in again.');
-  }
+if (new URLSearchParams(window.location.search).get('reason')==='session_expired')
+  showMsg('signin','error','Your session expired. Please sign in again.');
+
+(function(){
+  const t = localStorage.getItem('ea_access_token');
+  if (!t) return;
+  fetch('/auth/me',{headers:{'Authorization':'Bearer '+t}})
+    .then(r=>r.json())
+    .then(me=>{ if (me&&me.id) window.location.href=me.is_admin?'/admin':'/home'; })
+    .catch(()=>{});
 })();
 </script>
 </body>

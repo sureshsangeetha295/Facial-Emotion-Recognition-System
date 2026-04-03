@@ -44,13 +44,20 @@ nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;backgrou
 .chip.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);font-weight:600;}
 .field{margin-bottom:18px;}
 .field label{display:block;font-size:11px;font-weight:700;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;}
+.field .label-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.field .label-row label{margin-bottom:0;}
+.required-badge{font-size:10px;font-weight:700;color:#fff;background:var(--accent);padding:1px 6px;border-radius:4px;letter-spacing:.03em}
+.optional-badge{font-size:10px;font-weight:600;color:var(--text3);background:var(--elevated);padding:1px 6px;border-radius:4px;letter-spacing:.03em}
 .field input,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border2);border-radius:9px;font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--surface);transition:all 0.15s;outline:none;resize:none;}
 .field input:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
 .field input::placeholder,.field textarea::placeholder{color:var(--text3);}
 .field textarea{height:120px;line-height:1.6;}
 .submit-btn{width:100%;padding:13px;border-radius:10px;background:var(--grad);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);box-shadow:0 4px 14px var(--accent-glow);transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
-.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow);}
+.submit-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow);}
+.submit-btn:disabled{opacity:0.65;cursor:not-allowed;transform:none;}
 .submit-btn svg{width:15px;height:15px;stroke:white;stroke-width:2;}
+.error-msg{display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:#dc2626;font-size:12px;font-weight:500;}
+.error-msg.show{display:block;}
 .success-state{display:none;text-align:center;padding:24px 0;}
 .success-state.show{display:block;}
 .success-icon{width:60px;height:60px;border-radius:50%;background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
@@ -66,8 +73,18 @@ footer{border-top:1px solid var(--border);padding:24px 48px;margin-top:40px;}
 .foot-links a{font-size:12px;color:var(--text3);text-decoration:none;}
 .foot-links a:hover{color:var(--accent);}
 .foot-copy{font-size:12px;color:var(--text3);}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
 </style>
-<script src="script/auth.js"></script>
+<script>
+// Load auth.js gracefully — feedback works even if auth.js is absent
+(function(){
+  var s = document.createElement('script');
+  s.src = 'script/auth.js';
+  s.onerror = function(){ window.__authJsFailed = true; };
+  document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 <nav>
@@ -82,6 +99,7 @@ footer{border-top:1px solid var(--border);padding:24px 48px;margin-top:40px;}
   </ul>
   <a href="app.html" class="btn-sm">Launch App</a>
 </nav>
+
 <div class="page-wrap">
   <div class="page-header">
     <h1>Share your<br/><em>thoughts.</em></h1>
@@ -89,6 +107,25 @@ footer{border-top:1px solid var(--border);padding:24px 48px;margin-top:40px;}
   </div>
   <div class="form-card">
     <div id="formContent">
+
+      <!-- Username — mandatory -->
+      <div class="field">
+        <div class="label-row">
+          <label for="usernameInput">Username</label>
+          <span class="required-badge">Required</span>
+        </div>
+        <input type="text" id="usernameInput" placeholder="Your username" autocomplete="username"/>
+      </div>
+
+      <!-- Email — optional -->
+      <div class="field">
+        <div class="label-row">
+          <label for="emailInput">Email</label>
+          <span class="optional-badge">Optional</span>
+        </div>
+        <input type="email" id="emailInput" placeholder="you@example.com (optional)"/>
+      </div>
+
       <div class="rating-wrap">
         <span class="field-label">Overall experience</span>
         <div class="stars" id="stars">
@@ -99,6 +136,7 @@ footer{border-top:1px solid var(--border);padding:24px 48px;margin-top:40px;}
           <button class="star-btn" onclick="setRating(5)">⭐</button>
         </div>
       </div>
+
       <div class="cat-wrap">
         <span class="field-label">Category</span>
         <div class="chips">
@@ -110,19 +148,19 @@ footer{border-top:1px solid var(--border);padding:24px 48px;margin-top:40px;}
           <button class="chip" onclick="selectChip(this)">UI / Design</button>
         </div>
       </div>
+
       <div class="field">
         <label for="feedbackText">Your feedback</label>
         <textarea id="feedbackText" placeholder="Tell us what you think — what worked well, what didn't, and what you'd like to see improved..."></textarea>
       </div>
-      <div class="field">
-        <label for="feedbackEmail">Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
-        <input type="email" id="feedbackEmail" placeholder="For us to follow up with you"/>
-      </div>
-      <button class="submit-btn" onclick="submitFeedback()">
+
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="submit-btn" id="submitBtn" onclick="submitFeedback()">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Send Feedback
       </button>
     </div>
+
     <div class="success-state" id="successState">
       <div class="success-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -133,32 +171,192 @@ footer{border-top:1px solid var(--border);padding:24px 48px;margin-top:40px;}
     </div>
   </div>
 </div>
+
 <footer>
   <div class="foot-inner">
     <div class="foot-logo"><div class="logo-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>EmotionAI</div>
-    <div class="foot-links"><a href="index.html">Home</a><a href="faq.html">FAQ</a><a href="feedback.html">Feedback</a><a href="#">Privacy</a></div>
+    <div class="foot-links">
+      <a href="index.html">Home</a>
+      <a href="faq.html">FAQ</a>
+      <a href="feedback.html">Feedback</a>
+      <a href="privacy.html">Privacy</a>
+    </div>
     <span class="foot-copy">© 2025 EmotionAI</span>
   </div>
 </footer>
+
 <script>
-let rating=0,category="General";
-function setRating(r){rating=r;document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('lit',i<r));}
-function selectChip(el){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');category=el.textContent.trim();}
-function submitFeedback(){
-  const text=document.getElementById('feedbackText').value.trim();
-  if(!text){document.getElementById('feedbackText').focus();document.getElementById('feedbackText').style.borderColor='var(--accent)';return;}
-  document.getElementById('formContent').style.display='none';
-  document.getElementById('successState').classList.add('show');
+let rating = 0, category = "General";
+
+// Pre-fill username from logged-in user if available
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const token = localStorage.getItem('ea_access_token');
+    if (token) {
+      // Decode JWT payload (no verification — just for UX pre-fill)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Fetch the username from /auth/me
+      fetch('/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.ok ? r.json() : null)
+        .then(me => {
+          if (me && me.username) {
+            const inp = document.getElementById('usernameInput');
+            inp.value = me.username;
+            inp.readOnly = true;
+            inp.style.background = 'var(--elevated)';
+            inp.style.color = 'var(--text2)';
+            inp.title = 'Logged in as ' + me.username;
+          }
+        })
+        .catch(() => {});
+    }
+  } catch (_) {}
+});
+
+function setRating(r) {
+  rating = r;
+  document.querySelectorAll('.star-btn').forEach((b, i) => b.classList.toggle('lit', i < r));
 }
-function resetForm(){
-  rating=0;category='General';
-  document.getElementById('feedbackText').value='';
-  document.getElementById('feedbackEmail').value='';
-  document.getElementById('feedbackText').style.borderColor='';
-  document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('lit'));
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+
+function selectChip(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  category = el.textContent.trim();
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideError() {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '';
+  el.classList.remove('show');
+}
+
+function setLoading(loading) {
+  const btn = document.getElementById('submitBtn');
+  if (loading) {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Sending…';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Feedback';
+  }
+}
+
+async function submitFeedback() {
+  hideError();
+
+  const username = document.getElementById('usernameInput').value.trim();
+  const email    = document.getElementById('emailInput').value.trim();
+  const text     = document.getElementById('feedbackText').value.trim();
+
+  // Validate username (mandatory)
+  if (!username) {
+    document.getElementById('usernameInput').focus();
+    document.getElementById('usernameInput').style.borderColor = 'var(--accent)';
+    showError('Please enter your username before submitting.');
+    return;
+  }
+  document.getElementById('usernameInput').style.borderColor = '';
+
+  // Validate message
+  if (!text) {
+    document.getElementById('feedbackText').focus();
+    document.getElementById('feedbackText').style.borderColor = 'var(--accent)';
+    showError('Please write your feedback before submitting.');
+    return;
+  }
+  document.getElementById('feedbackText').style.borderColor = '';
+
+  // Validate email format if provided
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('emailInput').focus();
+    document.getElementById('emailInput').style.borderColor = 'var(--accent)';
+    showError('Please enter a valid email address, or leave it blank.');
+    return;
+  }
+  document.getElementById('emailInput').style.borderColor = '';
+
+  const payload = {
+    username: username,
+    email:    email || null,
+    rating:   rating > 0 ? rating : null,
+    category: category,
+    message:  text,
+  };
+
+  setLoading(true);
+  try {
+    // Get token safely — works whether or not auth.js loaded
+    let token = null;
+    try {
+      if (typeof Auth !== 'undefined' && Auth.getAccessToken) {
+        token = Auth.getAccessToken();
+      }
+    } catch(_) {}
+    if (!token) token = localStorage.getItem('ea_access_token');
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    // Try /api/feedback first, fall back to /feedback
+    let res;
+    try {
+      res = await fetch('/api/feedback', {
+        method:  'POST',
+        headers: headers,
+        body:    JSON.stringify(payload),
+      });
+    } catch (networkErr) {
+      // If /api/feedback fails at network level, try /feedback
+      res = await fetch('/feedback', {
+        method:  'POST',
+        headers: headers,
+        body:    JSON.stringify(payload),
+      });
+    }
+
+    if (!res.ok) {
+      let errMsg = `Server error (${res.status}). Please try again.`;
+      try {
+        const errData = await res.json();
+        if (errData.detail) errMsg = errData.detail;
+        else if (errData.message) errMsg = errData.message;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
+
+    // Success
+    document.getElementById('formContent').style.display = 'none';
+    document.getElementById('successState').classList.add('show');
+
+  } catch (err) {
+    showError(err.message || 'Failed to submit feedback. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function resetForm() {
+  rating = 0;
+  category = 'General';
+  hideError();
+  document.getElementById('feedbackText').value = '';
+  document.getElementById('feedbackText').style.borderColor = '';
+  // Only clear username if it wasn't auto-filled (readOnly)
+  const unameInp = document.getElementById('usernameInput');
+  if (!unameInp.readOnly) unameInp.value = '';
+  unameInp.style.borderColor = '';
+  document.getElementById('emailInput').value = '';
+  document.getElementById('emailInput').style.borderColor = '';
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('lit'));
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   document.querySelector('.chip').classList.add('active');
-  document.getElementById('formContent').style.display='block';
+  document.getElementById('formContent').style.display = 'block';
   document.getElementById('successState').classList.remove('show');
 }
 </script>
