@@ -21,8 +21,8 @@
 }
 html{scroll-behavior:smooth}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-nav{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
-.nav-logo-wrap{display:flex;flex-direction:column;justify-content:center;gap:1px;margin-right:auto;flex-shrink:0}
+nav{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);overflow:visible}
+.nav-logo-wrap{display:flex;flex-direction:column;justify-content:center;gap:0;margin-right:auto;flex-shrink:0;position:relative}
 .nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
 .logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
 .nav-links{display:flex;gap:28px;list-style:none}
@@ -247,10 +247,12 @@ footer{border-top:1px solid var(--border);padding:28px 48px}
 .foot-links a{font-size:12px;color:var(--text3);text-decoration:none;transition:color 0.15s}
 .foot-links a:hover{color:var(--accent)}
 .foot-copy{font-size:12px;color:var(--text3)}
-/* greeting typewriter */
-.nav-greeting{font-size:11px;color:var(--accent);font-weight:500;padding-left:38px;letter-spacing:0.01em;min-height:15px;line-height:1}
-.nav-cursor{display:inline-block;width:1.5px;height:10px;background:var(--accent);margin-left:1px;vertical-align:middle;animation:navblink 0.65s step-end infinite}
-@keyframes navblink{0%,100%{opacity:1}50%{opacity:0}}
+/* greeting typewriter — floating pill below the logo */
+.nav-greeting{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--text2);letter-spacing:0.01em;line-height:1;white-space:nowrap;position:absolute;top:calc(100% + 10px);left:0;padding:4px 12px;background:var(--surface);border:1px solid var(--border);border-radius:99px;box-shadow:0 2px 10px rgba(0,0,0,0.07);width:fit-content;min-height:22px;opacity:0;transform:translateY(3px);animation:navGreetAppear 0.4s ease 0.3s forwards;z-index:99}
+@keyframes navGreetAppear{to{opacity:1;transform:translateY(0)}}
+.nav-greeting--done{color:var(--text2)}
+.nav-cursor{display:inline-block;width:1.5px;height:0.88em;background:var(--accent);border-radius:1px;margin-left:1px;vertical-align:middle;animation:navblink 0.72s step-start infinite}
+@keyframes navblink{50%{opacity:0}}
 </style>
 </head>
 <body>
@@ -493,63 +495,74 @@ footer{border-top:1px solid var(--border);padding:28px 48px}
 
 
 
-<script src="script/auth.js"></script>
+<script src="script/auth.js" onerror="window.__authMissing=true"></script>
 <script>
 // ── Auth guard: check JWT before allowing /app access ─────────────────────────
 function launchApp(e) {
   if (e) e.preventDefault();
   if (Auth.isLoggedIn()) {
-    window.location.href = '/app';
+    window.location.href = '/livecam';
   } else {
     window.location.href = '/login';
   }
 }
 
-// ── If already logged in: swap hero "Sign in" button → "Launch App" ───────────
-function runGreeting(name) {
-  const greetingEl = document.getElementById('navGreeting');
-  if (!greetingEl || !name) return;
-  const text = `Hi, ${name.charAt(0).toUpperCase() + name.slice(1)} 👋`;
-  let i = 0;
-  function typeGreeting() {
-    if (i <= text.length) {
-      const done = i === text.length;
-      greetingEl.innerHTML = text.slice(0, i) + (done ? '' : '<span class="nav-cursor"></span>');
-      i++;
-      if (!done) {
-        const ch = text[i - 2] || '';
-        setTimeout(typeGreeting, ch === ',' ? 200 : ch === ' ' ? 60 : 75);
-      }
-    }
-  }
-  setTimeout(typeGreeting, 800);
-}
-
-(function checkAuthState() {
+// ── Auth state: fetch username from /auth/me → drive greeting ───────────────
+document.addEventListener('DOMContentLoaded', function () {
+  // Collect token — try every key auth.js might use
+  var token = null;
   try {
-    if (Auth.isLoggedIn()) {
-      const heroBtn = document.querySelector('.hero-ctas .btn-primary');
-      if (heroBtn) {
-        heroBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>Launch App';
-        heroBtn.href = '#';
-        heroBtn.onclick = launchApp;
-      }
-      const user = Auth.getUser();
-      const name = user ? (user.username || user.email || '') : '';
-      runGreeting(name);
-      const navActions = document.querySelector('.nav-actions');
-      if (navActions) {
-        navActions.innerHTML = `
-          <a href="#" onclick="Auth.logout()" class="btn-ghost-sm" style="display:flex;align-items:center;gap:6px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
-          </a>`;
+    var keys = ['access_token','token','ea_token','authToken','jwt','ea_access_token'];
+    for (var k = 0; k < keys.length; k++) {
+      token = localStorage.getItem(keys[k]);
+      if (token) break;
+    }
+    if (!token && typeof Auth !== 'undefined') {
+      if (Auth.getToken) token = Auth.getToken();
+      else if (Auth.getAccessToken) token = Auth.getAccessToken();
+    }
+  } catch(e) {}
+
+  // Try Auth.getUser() cache first (instant — no network)
+  try {
+    if (!token && typeof Auth !== 'undefined' && Auth.isLoggedIn && Auth.isLoggedIn()) {
+      var cached = Auth.getUser ? Auth.getUser() : null;
+      if (cached && cached.username) {
+        var el = document.getElementById('navGreeting');
+        if (el) { el.dataset.username = cached.username.split(' ')[0]; }
+        if (window.__startGreeting) window.__startGreeting();
       }
     }
-  } catch(e) {
-    // Auth not available (preview) — show fallback
-    runGreeting('there');
+  } catch(e) {}
+
+  if (!token) return;
+
+  // Swap hero CTA to Launch App
+  var heroBtn = document.querySelector('.hero-ctas .btn-primary');
+  if (heroBtn) {
+    heroBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>Launch App';
+    heroBtn.href = '#';
+    heroBtn.onclick = launchApp;
   }
-})();
+  // Swap logout button
+  var navActions = document.querySelector('.nav-actions');
+  if (navActions) {
+    navActions.innerHTML = '<a href="#" onclick="Auth.logout()" class="btn-ghost-sm" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>';
+  }
+
+  // Fetch real username from API — authoritative source
+  fetch('/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(user) {
+      if (!user || !user.username) return;
+      var el = document.getElementById('navGreeting');
+      if (!el) return;
+      // Use only the first word of the username (handles "Dayana Priya" → "Dayana")
+      el.dataset.username = user.username.split(' ')[0];
+      if (window.__startGreeting) window.__startGreeting();
+    })
+    .catch(function() {});
+});
 
 </script>
 
@@ -649,5 +662,74 @@ document.querySelectorAll('.uc-card').forEach(c=>{
   observer.observe(c);
 });
 </script>
+
+<script>
+// ── Time-aware typewriter greeting — self-contained, no emoji, no icon ──────
+(function () {
+  // Returns greeting word based on current hour — no emoji
+  function getPhrase() {
+    var h = new Date().getHours();
+    if (h >= 5  && h < 12) return "Good morning";
+    if (h >= 12 && h < 17) return "Good afternoon";
+    if (h >= 17 && h < 21) return "Good evening";
+    return "Good night";
+  }
+
+  // "Good morning, Alex" or just "Good morning" if no name yet
+  function buildText(username) {
+    var phrase = getPhrase();
+    var name   = (username || "").trim();
+    if (name) {
+      return phrase + ", " + name.charAt(0).toUpperCase() + name.slice(1);
+    }
+    return phrase;
+  }
+
+  function typewrite(el, text, delay) {
+    el.textContent = "";
+    el.classList.remove("nav-greeting--done");
+    var i = 0;
+    function step() {
+      if (i >= text.length) {
+        el.textContent = text;
+        el.classList.add("nav-greeting--done");
+        return;
+      }
+      el.innerHTML = text.slice(0, i) + '<span class="nav-cursor" aria-hidden="true"></span>';
+      i++;
+      var last = text[i - 2] || "";
+      var wait = last === "," ? 200 : last === " " ? 50 : 68;
+      setTimeout(step, wait);
+    }
+    setTimeout(step, delay || 0);
+  }
+
+  function startGreeting() {
+    var el = document.getElementById("navGreeting");
+    if (!el) return;
+    var name = el.dataset.username || window.__username || "";
+    typewrite(el, buildText(name), 350);
+  }
+
+  function scheduleHourly() {
+    var now = new Date();
+    var ms  = (60 - now.getMinutes()) * 60000
+              - now.getSeconds() * 1000
+              - now.getMilliseconds();
+    setTimeout(function () {
+      startGreeting();
+      setInterval(startGreeting, 3600000);
+    }, ms);
+  }
+
+  window.__startGreeting = startGreeting;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    startGreeting();
+    scheduleHourly();
+  });
+})();
+</script>
+
 </body>
 </html>

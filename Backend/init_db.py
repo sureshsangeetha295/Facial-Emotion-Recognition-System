@@ -10,12 +10,21 @@ Set DATABASE_URL=postgresql://user:pass@host/db for Postgres.
 """
 
 import os
-from datetime import datetime
+import re as _re
 from dotenv import load_dotenv
+from passlib.context import CryptContext
 
 load_dotenv()
 
-DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///emotionai.db")
+DATABASE_URL:   str = os.getenv("DATABASE_URL",   "sqlite:///emotionai.db")
+ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "Admin@1234")
+ADMIN_EMAIL:    str = os.getenv("ADMIN_EMAIL",    "admin@emotionai.local").strip().lower()
+
+_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _hash(pw: str) -> str:
+    return _pwd_ctx.hash(pw)
 
 IS_SQLITE   = DATABASE_URL.startswith("sqlite")
 IS_POSTGRES = DATABASE_URL.startswith("postgresql") or DATABASE_URL.startswith("postgres")
@@ -34,13 +43,18 @@ PRAGMA foreign_keys=ON;
 
 -- 1. users
 CREATE TABLE IF NOT EXISTS users (
-    id            INTEGER  PRIMARY KEY AUTOINCREMENT,
-    username      TEXT     NOT NULL UNIQUE,
-    email         TEXT     NOT NULL UNIQUE,
-    password_hash TEXT     NOT NULL,
-    is_admin      INTEGER  NOT NULL DEFAULT 0,
-    created_at    TEXT     NOT NULL DEFAULT (datetime('now')),
-    last_login    TEXT
+    id                INTEGER  PRIMARY KEY AUTOINCREMENT,
+    username          TEXT     NOT NULL UNIQUE,
+    email             TEXT     NOT NULL UNIQUE,
+    password_hash     TEXT     NOT NULL,
+    is_admin          INTEGER  NOT NULL DEFAULT 0,
+    created_at        TEXT     NOT NULL DEFAULT (datetime('now')),
+    last_login        TEXT,
+    security_q1       TEXT,
+    security_a1       TEXT,
+    security_q2       TEXT,
+    security_a2       TEXT,
+    password_reset_at TEXT
 );
 
 -- 2. detections
@@ -93,6 +107,24 @@ CREATE TABLE IF NOT EXISTS session_timeline (
 CREATE INDEX IF NOT EXISTS idx_stl_session ON session_timeline(session_id);
 CREATE INDEX IF NOT EXISTS idx_stl_user    ON session_timeline(user_id);
 CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
+
+-- 5. password_reset_log
+CREATE TABLE IF NOT EXISTS password_reset_log (
+    id           INTEGER  PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER  REFERENCES users(id) ON DELETE SET NULL,
+    email        TEXT     NOT NULL,
+    security_q1  TEXT,
+    security_q2  TEXT,
+    step1_at     TEXT,
+    step2_at     TEXT,
+    step2_passed INTEGER  NOT NULL DEFAULT 0,
+    step3_at     TEXT,
+    completed    INTEGER  NOT NULL DEFAULT 0,
+    ip_address   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_prl_user   ON password_reset_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_prl_step1  ON password_reset_log(step1_at);
     """)
     # ── Migrate existing tables (add columns introduced after initial deploy) ──
     sqlite_migrations = [
@@ -101,6 +133,12 @@ CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
         "ALTER TABLE feedback ADD COLUMN rating    INTEGER",
         "ALTER TABLE feedback ADD COLUMN category  TEXT NOT NULL DEFAULT 'General'",
         "ALTER TABLE feedback ADD COLUMN status    TEXT NOT NULL DEFAULT 'new'",
+        # Security question columns + reset timestamp on users
+        "ALTER TABLE users ADD COLUMN security_q1       TEXT",
+        "ALTER TABLE users ADD COLUMN security_a1       TEXT",
+        "ALTER TABLE users ADD COLUMN security_q2       TEXT",
+        "ALTER TABLE users ADD COLUMN security_a2       TEXT",
+        "ALTER TABLE users ADD COLUMN password_reset_at TEXT",
     ]
     for _sql in sqlite_migrations:
         try:
@@ -108,6 +146,32 @@ CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
         except Exception:
             pass  # column already exists — safe to ignore
     con.commit()
+
+    # ── Sync admin account ────────────────────────────────────────────────────
+    con2 = sqlite3.connect(_db_path)
+    con2.row_factory = sqlite3.Row
+    cur2 = con2.cursor()
+    cur2.execute(
+        "SELECT id FROM users WHERE is_admin=1 AND (username=? OR LOWER(email)=?) LIMIT 1",
+        (ADMIN_USERNAME, ADMIN_EMAIL)
+    )
+    existing = cur2.fetchone()
+    pw_hash = _hash(ADMIN_PASSWORD)
+    if not existing:
+        cur2.execute(
+            "INSERT INTO users (username, email, password_hash, is_admin) VALUES (?,?,?,1)",
+            (ADMIN_USERNAME, ADMIN_EMAIL, pw_hash)
+        )
+        print(f"[init_db] Admin created  ->  email: {ADMIN_EMAIL}")
+    else:
+        cur2.execute(
+            "UPDATE users SET password_hash=?, email=? WHERE id=?",
+            (pw_hash, ADMIN_EMAIL, existing["id"])
+        )
+        print(f"[init_db] Admin synced   ->  email: {ADMIN_EMAIL}")
+    con2.commit()
+    con2.close()
+
     con.close()
     print("[init_db] SQLite tables created/verified:", _db_path)
 
@@ -121,13 +185,18 @@ elif IS_POSTGRES:
     ddl = """
 -- 1. users
 CREATE TABLE IF NOT EXISTS users (
-    id            BIGSERIAL    PRIMARY KEY,
-    username      VARCHAR(80)  NOT NULL UNIQUE,
-    email         VARCHAR(254) NOT NULL UNIQUE,
-    password_hash TEXT         NOT NULL,
-    is_admin      BOOLEAN      NOT NULL DEFAULT FALSE,
-    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    last_login    TIMESTAMPTZ
+    id                BIGSERIAL    PRIMARY KEY,
+    username          VARCHAR(80)  NOT NULL UNIQUE,
+    email             VARCHAR(254) NOT NULL UNIQUE,
+    password_hash     TEXT         NOT NULL,
+    is_admin          BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    last_login        TIMESTAMPTZ,
+    security_q1       TEXT,
+    security_a1       TEXT,
+    security_q2       TEXT,
+    security_a2       TEXT,
+    password_reset_at TIMESTAMPTZ
 );
 
 -- 2. detections
@@ -180,6 +249,24 @@ CREATE TABLE IF NOT EXISTS session_timeline (
 CREATE INDEX IF NOT EXISTS idx_stl_session ON session_timeline(session_id);
 CREATE INDEX IF NOT EXISTS idx_stl_user    ON session_timeline(user_id);
 CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
+
+-- 5. password_reset_log
+CREATE TABLE IF NOT EXISTS password_reset_log (
+    id           BIGSERIAL    PRIMARY KEY,
+    user_id      BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+    email        VARCHAR(254) NOT NULL,
+    security_q1  TEXT,
+    security_q2  TEXT,
+    step1_at     TIMESTAMPTZ,
+    step2_at     TIMESTAMPTZ,
+    step2_passed BOOLEAN      NOT NULL DEFAULT FALSE,
+    step3_at     TIMESTAMPTZ,
+    completed    BOOLEAN      NOT NULL DEFAULT FALSE,
+    ip_address   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_prl_user  ON password_reset_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_prl_step1 ON password_reset_log(step1_at);
     """
 
     cur.execute(ddl)
@@ -192,6 +279,13 @@ CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS rating    SMALLINT",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS category  VARCHAR(60)  NOT NULL DEFAULT 'General'",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS status    VARCHAR(20)  NOT NULL DEFAULT 'new'",
+        # Security question columns on users (added for password reset flow)
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q1 TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a1 TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q2 TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a2 TEXT",
+        # Tracks when password was last reset (NULL = never reset, only registered)
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_at TIMESTAMPTZ",
     ]
     for _sql in pg_migrations:
         try:
@@ -201,6 +295,27 @@ CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
             con.rollback()
             print(f"[init_db] migration skipped (already applied): {_e}")
 
+    # ── Sync admin account ────────────────────────────────────────────────────
+    cur.execute(
+        "SELECT id FROM users WHERE is_admin=TRUE AND (username=%s OR LOWER(email)=%s) LIMIT 1",
+        (ADMIN_USERNAME, ADMIN_EMAIL)
+    )
+    existing = cur.fetchone()
+    pw_hash = _hash(ADMIN_PASSWORD)
+    if not existing:
+        cur.execute(
+            "INSERT INTO users (username, email, password_hash, is_admin) VALUES (%s,%s,%s,TRUE)",
+            (ADMIN_USERNAME, ADMIN_EMAIL, pw_hash)
+        )
+        print(f"[init_db] Admin created  ->  email: {ADMIN_EMAIL}")
+    else:
+        cur.execute(
+            "UPDATE users SET password_hash=%s, email=%s WHERE id=%s",
+            (pw_hash, ADMIN_EMAIL, existing[0])
+        )
+        print(f"[init_db] Admin synced   ->  email: {ADMIN_EMAIL}")
+    con.commit()
+
     cur.close()
     con.close()
     print("[init_db] Postgres tables created/verified.")
@@ -208,4 +323,4 @@ CREATE INDEX IF NOT EXISTS idx_stl_started ON session_timeline(started_at);
 else:
     raise ValueError(f"Unsupported DATABASE_URL scheme: {DATABASE_URL}")
 
-print("[init_db] Done — all 4 tables ready: users, detections, feedback, session_timeline")
+print("[init_db] Done — all 5 tables ready: users, detections, feedback, session_timeline, password_reset_log")

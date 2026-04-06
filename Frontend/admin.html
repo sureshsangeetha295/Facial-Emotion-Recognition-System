@@ -3,123 +3,396 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EmotionAI — Admin Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,300&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<title>Emotion Analysis — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f5f4f0;--surface:#fff;--panel:#fff;
-  --accent:#e8440a;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.22);
-  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
-  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
-  --border:#e2e0da;--border2:rgba(0,0,0,0.12);
-  --shadow:0 2px 12px rgba(0,0,0,0.07);
+  --bg:#f4f3ef;
+  --surface:#ffffff;
+  --surface2:#faf9f6;
+  --accent:#e8440a;
+  --accent2:#f59e4a;
+  --accent-dim:rgba(232,68,10,0.08);
+  --accent-glow:rgba(232,68,10,0.22);
+  --grad:linear-gradient(135deg,#e8440a 0%,#f59e4a 100%);
+  --grad-subtle:linear-gradient(135deg,rgba(232,68,10,0.06) 0%,rgba(245,158,74,0.04) 100%);
+  --text:#17130f;
+  --text2:#6b6057;
+  --text3:#aba49c;
+  --border:rgba(0,0,0,0.08);
+  --border-strong:rgba(0,0,0,0.13);
+  --shadow-xs:0 1px 3px rgba(0,0,0,0.06);
+  --shadow:0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.13);
+  --shadow-xl:0 24px 64px rgba(0,0,0,0.18);
+  --green:#16a34a;--green-dim:rgba(22,163,74,0.10);--green-bg:#f0fdf4;
+  --red:#dc2626;--red-dim:rgba(220,38,38,0.08);--red-bg:#fef2f2;
+  --yellow:#d97706;--blue:#2563eb;
+  --radius:16px;--radius-sm:10px;--radius-xs:7px;
   --font-display:'Fraunces',Georgia,serif;
-  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
-  --green:#22c55e;--red:#dc2626;--yellow:#f59e0b;--blue:#3b82f6;
+  --font-body:'DM Sans',system-ui,sans-serif;
 }
 html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh}
 
-/* ── TOPBAR ── */
-.topbar{height:54px;display:flex;align-items:center;gap:16px;padding:0 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--border)}
-.logo-row{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.1rem;margin-right:auto;text-decoration:none;color:var(--text)}
-.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
-.admin-chip{background:var(--accent-dim);border:1px solid rgba(232,68,10,.2);color:var(--accent);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.04em}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.user-info{font-size:13px;color:var(--text2)}
-.logout-btn{font-size:13px;font-weight:600;padding:7px 16px;border-radius:8px;background:none;border:1px solid var(--border2);cursor:pointer;color:var(--text2);font-family:var(--font-body);transition:all .15s}
-.logout-btn:hover{background:#fee2e2;border-color:#fca5a5;color:var(--red)}
+/* ────────── TOPBAR ────────── */
+.topbar{
+  height:62px;display:flex;align-items:center;gap:14px;padding:0 32px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+  box-shadow:0 1px 0 var(--border),0 4px 24px rgba(0,0,0,0.05);
+  backdrop-filter:blur(12px);
+}
+.logo-row{
+  display:flex;align-items:center;gap:11px;margin-right:auto;
+  text-decoration:none;color:var(--text);
+}
+.logo-box{
+  width:36px;height:36px;border-radius:11px;
+  background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px var(--accent-glow);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s;
+  flex-shrink:0;
+}
+.logo-row:hover .logo-box{transform:scale(1.1) rotate(-6deg);box-shadow:0 8px 24px var(--accent-glow)}
+.logo-name{font-family:var(--font-display);font-size:1.15rem;font-weight:700;letter-spacing:-0.02em;line-height:1}
+.logo-name span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.topbar-divider{width:1px;height:22px;background:var(--border-strong);margin:0 4px}
+.admin-chip{
+  background:linear-gradient(135deg,rgba(232,68,10,0.10),rgba(245,158,74,0.10));
+  border:1px solid rgba(232,68,10,.2);
+  color:var(--accent);font-size:10px;font-weight:800;
+  padding:4px 12px;border-radius:20px;letter-spacing:.1em;text-transform:uppercase;
+  white-space:nowrap;
+}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.topbar-time{font-size:12px;color:var(--text3);font-weight:500;padding:0 8px}
+.logout-btn{
+  font-size:12.5px;font-weight:600;padding:8px 18px;border-radius:var(--radius-xs);
+  background:none;border:1.5px solid var(--border-strong);cursor:pointer;
+  color:var(--text2);font-family:var(--font-body);
+  transition:all .2s;display:flex;align-items:center;gap:6px;
+}
+.logout-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.logout-btn:hover{background:var(--red-bg);border-color:#fca5a5;color:var(--red)}
+.logout-btn:hover svg{transform:translateX(3px)}
 
-/* ── STATS ROW ── */
-.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:20px 28px 0}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
-.stat-val{font-size:1.8rem;font-weight:800;color:var(--text);line-height:1}
-.stat-lbl{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
-.stat-card.accent .stat-val{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* ────────── HERO BAND ────────── */
+.hero-band{
+  padding:22px 32px 0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:12px;
+}
+.hero-title{
+  font-family:var(--font-display);font-size:1.55rem;font-weight:600;
+  letter-spacing:-0.025em;color:var(--text);line-height:1.1;
+}
+.hero-title span{
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:12.5px;color:var(--text3);margin-top:4px;font-weight:400}
 
-/* ── MAIN CONTENT ── */
-.content{padding:20px 28px 40px}
+/* ────────── STATS ROW ────────── */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+  padding:18px 32px 0;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px 22px 18px;
+  box-shadow:var(--shadow-xs);position:relative;overflow:hidden;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,border-color .2s;
+  cursor:default;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;
+  background:var(--grad-subtle);opacity:0;
+  transition:opacity .25s;pointer-events:none;
+}
+.stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:rgba(232,68,10,0.18)}
+.stat-card:hover::before{opacity:1}
+.stat-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.stat-card-icon{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  flex-shrink:0;
+}
+.stat-card:hover .stat-card-icon{transform:scale(1.15) rotate(-8deg)}
+.stat-card-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stat-trend{
+  font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;
+  display:flex;align-items:center;gap:3px;
+}
+.stat-trend.up{background:var(--green-bg);color:var(--green)}
+.stat-trend.neutral{background:#f1f5f9;color:#64748b}
+.stat-val{font-size:2.2rem;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.04em}
+.stat-lbl{font-size:10.5px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.stat-bar{height:3px;border-radius:2px;margin-top:14px;overflow:hidden;background:rgba(0,0,0,0.06)}
+.stat-bar-fill{height:100%;border-radius:2px;background:var(--grad);transition:width .8s cubic-bezier(.4,0,.2,1)}
+.s-users .stat-card-icon{background:rgba(232,68,10,0.10);color:var(--accent)}
+.s-users .stat-val{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s-detections .stat-card-icon{background:#fff7ed;color:#ea580c}
+.s-detections .stat-val{color:#ea580c}
+.s-feedback .stat-card-icon{background:var(--green-bg);color:var(--green)}
+.s-feedback .stat-val{color:var(--green)}
+.s-engagement .stat-card-icon{background:#eff6ff;color:var(--blue)}
+.s-engagement .stat-val{color:var(--blue)}
 
-/* ── TABLE TABS ── */
-.table-tabs{display:flex;gap:4px;margin-bottom:16px;background:#eceae5;border-radius:10px;padding:4px;width:fit-content}
-.ttab{padding:8px 18px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text3);background:none;transition:all .15s;display:flex;align-items:center;gap:6px}
-.ttab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.09)}
-.ttab-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--accent-dim);color:var(--accent)}
-.ttab.active .ttab-badge{background:var(--accent);color:#fff}
+/* ────────── CONTENT ────────── */
+.content{padding:22px 32px 56px}
 
-/* ── TOOLBAR ── */
-.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+/* ────────── PANEL ────────── */
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-xs);
+  overflow:hidden;
+}
+.panel-header{
+  padding:18px 22px 0;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+
+/* ────────── TABS ────────── */
+.table-tabs{
+  display:flex;gap:0;flex:1;
+}
+.ttab{
+  padding:12px 20px 14px;border:none;
+  font-size:13px;font-weight:600;cursor:pointer;
+  font-family:var(--font-body);color:var(--text3);
+  background:none;transition:all .18s;
+  display:flex;align-items:center;gap:8px;
+  position:relative;border-bottom:2px solid transparent;
+  margin-bottom:-1px;
+}
+.ttab:hover:not(.active){color:var(--text2);background:var(--bg)}
+.ttab.active{color:var(--text);border-bottom-color:var(--accent)}
+.ttab-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
+  background:rgba(0,0,0,0.06);color:var(--text3);
+  transition:all .2s;min-width:20px;text-align:center;
+}
+.ttab.active .ttab-badge{background:var(--grad);color:#fff;box-shadow:0 2px 8px var(--accent-glow)}
+.ttab-icon{opacity:.6;transition:opacity .18s}
+.ttab.active .ttab-icon{opacity:1}
+
+/* ────────── TOOLBAR ────────── */
+.toolbar{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 22px;border-bottom:1px solid var(--border);
+  flex-wrap:wrap;background:var(--surface2);
+}
 .search-wrap{position:relative;flex:1;min-width:200px;max-width:340px}
-.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--text3);fill:none;pointer-events:none}
-.search-input{width:100%;padding:9px 12px 9px 34px;border:1.5px solid var(--border2);border-radius:9px;font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s}
+.search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--text3);fill:none;pointer-events:none;transition:stroke .15s;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.search-wrap:focus-within .search-icon{stroke:var(--accent)}
+.search-input{
+  width:100%;padding:9px 32px 9px 36px;
+  border:1.5px solid var(--border-strong);border-radius:var(--radius-xs);
+  font-size:13px;font-family:var(--font-body);color:var(--text);
+  background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.search-clear{
+  position:absolute;right:9px;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;border-radius:50%;
+  background:var(--text3);border:none;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  transition:background .15s,transform .15s;padding:0;flex-shrink:0;
+}
+.search-clear svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;pointer-events:none}
+.search-clear:hover{background:var(--accent);transform:translateY(-50%) scale(1.15)}
+.search-wrap.has-value .search-clear{display:flex}
 .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
 .search-input::placeholder{color:var(--text3)}
-.filter-select{padding:9px 12px;border:1.5px solid var(--border2);border-radius:9px;font-size:13px;font-family:var(--font-body);color:var(--text2);background:var(--surface);outline:none;cursor:pointer;transition:border-color .15s}
-.filter-select:focus{border-color:var(--accent)}
-.refresh-btn{padding:9px 14px;border:1.5px solid var(--border2);border-radius:9px;background:var(--surface);cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;font-family:var(--font-body);transition:all .15s}
-.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
-.refresh-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.count-badge{margin-left:auto;font-size:12px;color:var(--text3)}
+.filter-select{
+  padding:9px 13px;border:1.5px solid var(--border-strong);border-radius:var(--radius-xs);
+  font-size:13px;font-family:var(--font-body);color:var(--text2);
+  background:var(--surface);outline:none;cursor:pointer;transition:border-color .15s,box-shadow .15s;
+}
+.filter-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.refresh-btn{
+  padding:9px 16px;border:1.5px solid var(--border-strong);border-radius:var(--radius-xs);
+  background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;
+  color:var(--text2);display:flex;align-items:center;gap:6px;
+  font-family:var(--font-body);transition:all .2s;white-space:nowrap;
+}
+.refresh-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .5s ease}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.refresh-btn:hover svg,.refresh-btn.spinning svg{transform:rotate(360deg)}
+.count-badge{
+  margin-left:auto;font-size:12px;color:var(--text3);font-weight:500;
+  background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;
+  white-space:nowrap;
+}
 
-/* ── TABLE ── */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+/* ────────── TABLE ────────── */
 .data-table{width:100%;border-collapse:collapse;font-size:13px}
-.data-table thead th{padding:11px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);background:#f8f7f4;border-bottom:1px solid var(--border);white-space:nowrap}
-.data-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+.data-table thead th{
+  padding:11px 18px;text-align:left;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);
+  white-space:nowrap;position:sticky;top:62px;
+}
+.data-table thead th:first-child{padding-left:22px}
+.data-table thead th:last-child{padding-right:22px}
+.data-table tbody tr{
+  border-bottom:1px solid var(--border);
+  transition:background .15s,transform .1s;
+}
 .data-table tbody tr:last-child{border-bottom:none}
-.data-table tbody tr:hover{background:#faf9f7}
-.data-table td{padding:11px 14px;color:var(--text);vertical-align:middle;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.data-table tbody tr:hover{
+  background:linear-gradient(90deg,rgba(232,68,10,0.035) 0%,rgba(245,158,74,0.015) 60%,transparent 100%);
+}
+.data-table td{
+  padding:13px 18px;color:var(--text);vertical-align:middle;
+  max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.data-table td:first-child{padding-left:22px}
+.data-table td:last-child{padding-right:22px}
 .data-table td.wrap{white-space:normal;word-break:break-word}
+.data-table tbody tr td .row-num{
+  font-size:11px;color:var(--text3);font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
 
-/* Chips */
-.chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid transparent}
-.chip-admin{background:rgba(232,68,10,.1);color:var(--accent);border-color:rgba(232,68,10,.2)}
+/* ────────── CHIPS ────────── */
+.chip{
+  display:inline-flex;align-items:center;padding:3px 10px;
+  border-radius:20px;font-size:11px;font-weight:600;
+  border:1px solid transparent;transition:all .15s;white-space:nowrap;
+}
+.chip-admin{background:rgba(232,68,10,.08);color:var(--accent);border-color:rgba(232,68,10,.18)}
+.chip-admin:hover{background:rgba(232,68,10,.15)}
 .chip-user{background:#f1f5f9;color:#475569;border-color:#e2e8f0}
-.chip-active{background:rgba(34,197,94,.1);color:#16a34a;border-color:rgba(34,197,94,.25)}
-.chip-inactive{background:rgba(239,68,68,.08);color:var(--red);border-color:rgba(239,68,68,.2)}
-.chip-emotion{background:var(--accent-dim);color:var(--accent);border-color:rgba(232,68,10,.2)}
+.chip-user:hover{background:#e8edf5}
+.chip-source{background:#f8f4ff;color:#7c3aed;border-color:#e9d5ff}
+.chip-emotion{border:none;font-weight:700;font-size:10.5px;padding:3px 9px}
+.chip-emotion.happiness{background:#fef9c3;color:#a16207}
+.chip-emotion.sadness{background:#e0f2fe;color:#0369a1}
+.chip-emotion.anger{background:#fee2e2;color:#b91c1c}
+.chip-emotion.fear{background:#f3e8ff;color:#7c3aed}
+.chip-emotion.neutral{background:#f1f5f9;color:#475569}
+.chip-emotion.surprise{background:#fff7ed;color:#c2410c}
+.chip-emotion.disgust{background:#ecfdf5;color:#065f46}
 .chip-cat{background:#f0f9ff;color:#0369a1;border-color:#bae6fd}
-.chip-star{color:var(--yellow)}
+.chip-star{color:var(--yellow);font-size:13px;letter-spacing:1px}
 
-/* Delete btn */
-.del-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .15s}
-.del-btn:hover{background:#fee2e2;border-color:#fca5a5;color:var(--red)}
-.del-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-.toggle-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .15s}
-.toggle-btn:hover{background:var(--accent-dim);border-color:rgba(232,68,10,.3);color:var(--accent)}
-.toggle-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+/* ────────── BUTTONS ────────── */
+.del-btn,.toggle-btn{
+  width:32px;height:32px;border-radius:var(--radius-xs);
+  border:1.5px solid var(--border-strong);background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:var(--text3);
+  transition:all .18s;
+}
+.del-btn:hover{background:var(--red-bg);border-color:#fca5a5;color:var(--red);transform:scale(1.1)}
+.del-btn svg,.toggle-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.toggle-btn:hover{background:var(--accent-dim);border-color:rgba(232,68,10,.3);color:var(--accent);transform:scale(1.1) rotate(10deg)}
+.action-group{display:flex;gap:6px;align-items:center}
 
-/* Empty / Loading */
-.empty-row td{text-align:center;padding:40px;color:var(--text3);font-size:13px}
-.loading-row td{text-align:center;padding:32px;color:var(--text3)}
-.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+/* ────────── USER AVATAR ────────── */
+.user-cell{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--grad);display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
+  letter-spacing:0;box-shadow:0 2px 8px var(--accent-glow);
+}
+.user-name{font-weight:600;font-size:13px}
+.user-email{font-size:11px;color:var(--text3)}
+
+/* ────────── ENGAGEMENT BAR ────────── */
+.eng-wrap{display:flex;align-items:center;gap:8px}
+.eng-bar-bg{flex:1;height:5px;background:rgba(0,0,0,0.07);border-radius:3px;overflow:hidden;min-width:56px}
+.eng-bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.eng-val{font-size:11px;font-weight:700;width:30px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ────────── EMPTY / LOADING ────────── */
+.empty-row td,.loading-row td{text-align:center;padding:64px 24px;color:var(--text3);font-size:13px}
+.empty-icon{font-size:2.8rem;margin-bottom:12px;display:block;opacity:.35}
+.empty-label{font-weight:500;color:var(--text3)}
+.spin{
+  display:inline-block;width:28px;height:28px;
+  border:2.5px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Pagination */
-.pagination{display:flex;align-items:center;gap:6px;padding:14px 16px;border-top:1px solid var(--border);justify-content:flex-end;flex-wrap:wrap}
-.page-btn{padding:5px 11px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text2);transition:all .15s}
-.page-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.page-btn:disabled{opacity:.4;cursor:not-allowed}
-.page-info{font-size:12px;color:var(--text3);margin-right:auto}
+/* ────────── PAGINATION ────────── */
+.pagination{
+  display:flex;align-items:center;gap:6px;
+  padding:14px 22px;border-top:1px solid var(--border);
+  justify-content:flex-end;flex-wrap:wrap;background:var(--surface2);
+}
+.page-btn{
+  padding:5px 12px;border-radius:var(--radius-xs);
+  border:1.5px solid var(--border-strong);background:var(--surface);
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:var(--font-body);color:var(--text2);transition:all .15s;
+}
+.page-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.page-btn.active{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 3px 10px var(--accent-glow)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+.page-info{font-size:12px;color:var(--text3);margin-right:auto;font-weight:500}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;right:24px;background:#1a1612;color:#fff;font-size:13px;font-weight:500;padding:12px 18px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;max-width:320px}
-.toast.show{transform:translateY(0);opacity:1}
-.toast.success{background:#15803d}
-.toast.error{background:var(--red)}
+/* ────────── TOAST ────────── */
+.toast{
+  position:fixed;bottom:28px;right:28px;color:#fff;
+  font-size:13px;font-weight:600;padding:14px 22px;
+  border-radius:12px;box-shadow:var(--shadow-xl);
+  transform:translateY(90px) scale(.95);opacity:0;
+  transition:all .32s cubic-bezier(.34,1.56,.64,1);
+  z-index:999;max-width:320px;background:#17130f;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:translateY(0) scale(1);opacity:1}
+.toast.success{background:linear-gradient(135deg,#14532d,#16a34a)}
+.toast.error{background:linear-gradient(135deg,#7f1d1d,#dc2626)}
 
-/* Confirm modal */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none;align-items:center;justify-content:center}
+/* ────────── MODAL ────────── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
 .modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:16px;padding:28px 28px 24px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
-.modal h3{font-family:var(--font-display);font-size:1.15rem;margin-bottom:8px}
-.modal p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px}
+.modal{
+  background:var(--surface);border-radius:20px;padding:32px 30px 26px;width:380px;
+  box-shadow:var(--shadow-xl);animation:modalIn .28s cubic-bezier(.34,1.56,.64,1);
+  border:1px solid var(--border);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.9) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:var(--red-bg);border:1px solid #fca5a5;
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+}
+.modal-icon svg{width:22px;height:22px;fill:none;stroke:var(--red);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modal h3{font-family:var(--font-display);font-size:1.2rem;margin-bottom:8px;font-weight:600}
+.modal p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:24px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.modal-cancel{padding:9px 18px;border-radius:8px;border:1px solid var(--border2);background:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text2)}
+.modal-cancel{padding:9px 22px;border-radius:var(--radius-xs);border:1.5px solid var(--border-strong);background:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text2);transition:all .15s}
 .modal-cancel:hover{background:var(--bg)}
-.modal-confirm{padding:9px 18px;border-radius:8px;border:none;background:#dc2626;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body)}
-.modal-confirm:hover{background:#b91c1c}
+.modal-confirm{padding:9px 22px;border-radius:var(--radius-xs);border:none;background:linear-gradient(135deg,#b91c1c,#dc2626);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all .18s;box-shadow:0 3px 12px rgba(220,38,38,.28)}
+.modal-confirm:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(220,38,38,.4)}
+
+/* ────────── ANIMATIONS ────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.topbar{animation:fadeUp .3s ease both}
+.hero-band{animation:fadeUp .35s .05s ease both;opacity:0}
+.stats-row .stat-card:nth-child(1){animation:fadeUp .38s .08s ease both;opacity:0}
+.stats-row .stat-card:nth-child(2){animation:fadeUp .38s .14s ease both;opacity:0}
+.stats-row .stat-card:nth-child(3){animation:fadeUp .38s .20s ease both;opacity:0}
+.stats-row .stat-card:nth-child(4){animation:fadeUp .38s .26s ease both;opacity:0}
+.content{animation:fadeUp .42s .22s ease both;opacity:0}
+
+/* ────────── RESPONSIVE ────────── */
+@media(max-width:900px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .topbar-time{display:none}
+}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr}
+  .topbar,.stats-row,.content,.hero-band{padding-left:16px;padding-right:16px}
+  .hero-band{display:none}
+}
 </style>
 </head>
 <body>
@@ -127,60 +400,133 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
 <!-- TOPBAR -->
 <div class="topbar">
   <a href="/home" class="logo-row">
-    <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
-    EmotionAI
+    <div class="logo-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+        <circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/>
+      </svg>
+    </div>
+    <span class="logo-name">Emotion <span>Analysis</span></span>
   </a>
-  <span class="admin-chip">ADMIN</span>
+  <div class="topbar-divider"></div>
+  <span class="admin-chip">Admin</span>
   <div class="topbar-right">
-    <span class="user-info" id="admin-name">—</span>
-    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    <span class="topbar-time" id="topbar-time"></span>
+    <button class="logout-btn" onclick="doLogout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </button>
+  </div>
+</div>
+
+<!-- HERO BAND -->
+<div class="hero-band">
+  <div>
+    <div class="hero-title">Overview <span>Dashboard</span></div>
+    <div class="hero-sub">Real-time emotion analytics and user management</div>
   </div>
 </div>
 
 <!-- STATS -->
 <div class="stats-row" id="stats-row">
-  <div class="stat-card accent"><div class="stat-val" id="s-users">—</div><div class="stat-lbl">Total Users</div></div>
-  <div class="stat-card"><div class="stat-val" id="s-detections">—</div><div class="stat-lbl">Detections</div></div>
-  <div class="stat-card"><div class="stat-val" id="s-sessions">—</div><div class="stat-lbl">Sessions</div></div>
-  <div class="stat-card"><div class="stat-val" id="s-feedback">—</div><div class="stat-lbl">Feedback</div></div>
-  <div class="stat-card"><div class="stat-val" id="s-engagement">—</div><div class="stat-lbl">Avg Engagement</div></div>
+  <div class="stat-card s-users">
+    <div class="stat-card-top">
+      <div class="stat-card-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <span class="stat-trend neutral">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+        Active
+      </span>
+    </div>
+    <div class="stat-val" id="s-users">—</div>
+    <div class="stat-lbl">Total Users</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-users" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card s-detections">
+    <div class="stat-card-top">
+      <div class="stat-card-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </div>
+      <span class="stat-trend up">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+        Live
+      </span>
+    </div>
+    <div class="stat-val" id="s-detections">—</div>
+    <div class="stat-lbl">Detections</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-detections" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card s-feedback">
+    <div class="stat-card-top">
+      <div class="stat-card-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <span class="stat-trend neutral">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Received
+      </span>
+    </div>
+    <div class="stat-val" id="s-feedback">—</div>
+    <div class="stat-lbl">Feedback</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-feedback" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card s-engagement">
+    <div class="stat-card-top">
+      <div class="stat-card-icon">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span class="stat-trend up">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+        Avg
+      </span>
+    </div>
+    <div class="stat-val" id="s-engagement">—</div>
+    <div class="stat-lbl">Avg Engagement</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-engagement" style="width:0%"></div></div>
+  </div>
 </div>
 
 <!-- CONTENT -->
 <div class="content">
-  <div class="table-tabs">
-    <button class="ttab active" onclick="switchTable('users')" id="ttab-users">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Users <span class="ttab-badge" id="badge-users">0</span>
-    </button>
-    <button class="ttab" onclick="switchTable('detections')" id="ttab-detections">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      Detections <span class="ttab-badge" id="badge-detections">0</span>
-    </button>
-    <button class="ttab" onclick="switchTable('feedback')" id="ttab-feedback">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Feedback <span class="ttab-badge" id="badge-feedback">0</span>
-    </button>
-    <button class="ttab" onclick="switchTable('sessions')" id="ttab-sessions">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Sessions <span class="ttab-badge" id="badge-sessions">0</span>
-    </button>
-  </div>
-
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" id="search-input" placeholder="Search…" oninput="onSearch()"/>
+  <div class="panel">
+    <!-- Panel header with tabs -->
+    <div class="panel-header">
+      <div class="table-tabs">
+        <button class="ttab active" onclick="switchTable('users')" id="ttab-users">
+          <svg class="ttab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users <span class="ttab-badge" id="badge-users">—</span>
+        </button>
+        <button class="ttab" onclick="switchTable('detections')" id="ttab-detections">
+          <svg class="ttab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          Detections <span class="ttab-badge" id="badge-detections">—</span>
+        </button>
+        <button class="ttab" onclick="switchTable('feedback')" id="ttab-feedback">
+          <svg class="ttab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Feedback <span class="ttab-badge" id="badge-feedback">—</span>
+        </button>
+      </div>
     </div>
-    <select class="filter-select" id="filter-select" onchange="onFilter()"><option value="">All</option></select>
-    <button class="refresh-btn" onclick="loadTable()">
-      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      Refresh
-    </button>
-    <span class="count-badge" id="count-badge"></span>
-  </div>
 
-  <div class="table-wrap">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap" id="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="search-input" placeholder="Search…" oninput="onSearch()"/>
+        <button class="search-clear" id="search-clear" onclick="clearSearch()" title="Clear search">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <select class="filter-select" id="filter-select" onchange="onFilter()"><option value="">All</option></select>
+      <button class="refresh-btn" id="refresh-btn" onclick="onRefresh()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <span class="count-badge" id="count-badge"></span>
+    </div>
+
+    <!-- Table -->
     <table class="data-table" id="data-table">
       <thead id="table-head"></thead>
       <tbody id="table-body"><tr class="loading-row"><td colspan="10"><div class="spin"></div></td></tr></tbody>
@@ -195,36 +541,43 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
 <!-- Confirm Modal -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </div>
     <h3 id="modal-title">Confirm Delete</h3>
     <p id="modal-body">This action cannot be undone.</p>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-      <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmDelete()">Delete</button>
+      <button class="modal-confirm" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── State ──
 const TOKEN = () => localStorage.getItem('ea_access_token');
 let currentTable = 'users';
-let allData = [];
-let filteredData = [];
-let page = 1;
-const PAGE_SIZE = 20;   // 20 rows per page
+let allData = [], filteredData = [], page = 1;
+const PAGE_SIZE = 10;
 let pendingDelete = null;
+const HEADERS = { Authorization: () => ({ 'Authorization': 'Bearer ' + TOKEN() }) };
 
-const HEADERS = {
-  Authorization: () => ({ 'Authorization': 'Bearer ' + TOKEN() })
-};
+/* ── Clock ── */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('topbar-time').textContent =
+    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}) + ' · ' +
+    now.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+updateClock(); setInterval(updateClock, 30000);
 
-// ── Boot ──
+/* ── Boot ── */
 async function boot() {
   if (!TOKEN()) { window.location.href = '/login'; return; }
   const me = await apiFetch('/auth/me');
   if (!me || !me.is_admin) { window.location.href = '/login'; return; }
-  document.getElementById('admin-name').textContent = me.username;
+  // Load stats AND all badge counts in parallel
   loadStats();
+  loadAllBadges();  // ← FIX: pre-fetch all badge counts upfront
   loadTable();
 }
 
@@ -236,59 +589,119 @@ async function apiFetch(url, opts={}) {
   } catch { return null; }
 }
 
-// ── Stats ──
+/* ── FIX: Load all badge counts upfront so tabs show correct values immediately ── */
+async function loadAllBadges() {
+  const [users, detections, feedback] = await Promise.all([
+    apiFetch('/admin/users'),
+    apiFetch('/admin/detections'),
+    apiFetch('/admin/feedback'),
+  ]);
+  if (Array.isArray(users))      document.getElementById('badge-users').textContent      = users.length;
+  if (Array.isArray(detections)) document.getElementById('badge-detections').textContent = detections.length;
+  if (Array.isArray(feedback))   document.getElementById('badge-feedback').textContent   = feedback.length;
+}
+
+/* ── Stats ── */
 async function loadStats() {
   const d = await apiFetch('/admin/stats');
   if (!d) return;
-  document.getElementById('s-users').textContent = d.total_users ?? '—';
-  document.getElementById('s-detections').textContent = d.total_detections ?? '—';
-  document.getElementById('s-sessions').textContent = d.total_sessions ?? '—';
-  document.getElementById('s-feedback').textContent = d.total_feedback ?? '—';
-  document.getElementById('s-engagement').textContent = d.avg_engagement != null ? (d.avg_engagement*100).toFixed(1)+'%' : '—';
+  const u  = d.total_users      ?? 0;
+  const de = d.total_detections ?? 0;
+  const fb = d.total_feedback   ?? 0;
+  const en = d.avg_engagement   != null ? d.avg_engagement * 100 : null;
+  animateCount('s-users',      u);
+  animateCount('s-detections', de);
+  animateCount('s-feedback',   fb);
+  if (en !== null) {
+    animateDecimal('s-engagement', en, '%');
+    setTimeout(() => {
+      document.getElementById('bar-engagement').style.width = Math.min(en,100) + '%';
+    }, 200);
+  } else {
+    document.getElementById('s-engagement').textContent = '—';
+  }
+  // Animate bars (relative to detections as reference)
+  const maxVal = Math.max(u, de, fb, 1);
+  setTimeout(() => {
+    document.getElementById('bar-users').style.width      = (u  / maxVal * 90) + '%';
+    document.getElementById('bar-detections').style.width = (de / maxVal * 90) + '%';
+    document.getElementById('bar-feedback').style.width   = (fb / maxVal * 90) + '%';
+  }, 300);
 }
 
-// ── Table switch ──
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  const duration = 800, startTime = performance.now();
+  function step(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = Math.round(eased * target);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function animateDecimal(id, target, suffix='') {
+  const el = document.getElementById(id);
+  const duration = 800, startTime = performance.now();
+  function step(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = (eased * target).toFixed(1) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ── Table switching ── */
 function switchTable(name) {
-  currentTable = name;
-  page = 1;
+  currentTable = name; page = 1;
   document.getElementById('search-input').value = '';
+  document.getElementById('search-wrap').classList.remove('has-value');
   document.querySelectorAll('.ttab').forEach(b => b.classList.remove('active'));
   document.getElementById('ttab-'+name).classList.add('active');
   loadTable();
 }
 
-// ── Load table data ──
 async function loadTable() {
   showLoading();
-  const endpoints = {
-    users:      '/admin/users',
-    detections: '/admin/detections',
-    feedback:   '/admin/feedback',
-    sessions:   '/admin/sessions',
-  };
+  const endpoints = { users:'/admin/users', detections:'/admin/detections', feedback:'/admin/feedback' };
   const data = await apiFetch(endpoints[currentTable]);
   allData = Array.isArray(data) ? data : [];
-
-  // For detections and sessions: newest first (DESC by created_at / started_at).
-  // The API already returns DESC, so index 0 = newest. We keep that order.
-  // Badge shows total count from the full dataset.
+  allData.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+  // Update the badge for current tab (keep others at whatever loadAllBadges set)
   document.getElementById('badge-'+currentTable).textContent = allData.length;
-  setupFilters();
-  applyFilters();
+  setupFilters(); applyFilters();
 }
 
-// ── Filters ──
+async function onRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  await Promise.all([loadStats(), loadAllBadges()]);
+  await loadTable();
+  setTimeout(() => btn.classList.remove('spinning'), 500);
+}
+
 function setupFilters() {
   const sel = document.getElementById('filter-select');
-  let options = [['', 'All']];
-  if (currentTable === 'users')      options = [['','All'],['admin','Admin'],['user','User']];
-  if (currentTable === 'detections') options = [['','All'],['Happiness','Happiness'],['Sadness','Sadness'],['Anger','Anger'],['Fear','Fear'],['Neutral','Neutral'],['Surprise','Surprise'],['Disgust','Disgust'],['webcam','Webcam'],['upload','Upload']];
-  if (currentTable === 'feedback')   options = [['','All'],['General','General'],['Bug report','Bug report'],['Feature request','Feature request'],['Accuracy','Accuracy'],['Performance','Performance'],['UI / Design','UI / Design']];
-  if (currentTable === 'sessions')   options = [['','All'],['webcam','Webcam'],['upload','Upload']];
-  sel.innerHTML = options.map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
+  let opts = [['','All']];
+  if (currentTable==='users')      opts = [['','All'],['admin','Admin'],['user','User']];
+  if (currentTable==='detections') opts = [['','All'],['Happiness','Happiness'],['Sadness','Sadness'],['Anger','Anger'],['Fear','Fear'],['Neutral','Neutral'],['Surprise','Surprise'],['Disgust','Disgust'],['webcam','Webcam'],['upload','Upload']];
+  if (currentTable==='feedback')   opts = [['','All'],['General','General'],['Bug report','Bug report'],['Feature request','Feature request'],['Accuracy','Accuracy'],['Performance','Performance'],['UI / Design','UI / Design']];
+  sel.innerHTML = opts.map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
 }
 
-function onSearch() { page=1; applyFilters(); }
+function onSearch() {
+  const val = document.getElementById('search-input').value;
+  document.getElementById('search-wrap').classList.toggle('has-value', val.length > 0);
+  page=1; applyFilters();
+}
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-wrap').classList.remove('has-value');
+  document.getElementById('search-input').focus();
+  page=1; applyFilters();
+}
 function onFilter() { page=1; applyFilters(); }
 
 function applyFilters() {
@@ -298,163 +711,154 @@ function applyFilters() {
     const str = Object.values(row).join(' ').toLowerCase();
     if (q && !str.includes(q)) return false;
     if (!f) return true;
-    if (currentTable==='users') {
-      if (f==='admin') return row.is_admin;
-      if (f==='user')  return !row.is_admin;
-    }
+    if (currentTable==='users') { if (f==='admin') return row.is_admin; if (f==='user') return !row.is_admin; }
     return str.includes(f);
   });
   document.getElementById('count-badge').textContent = `${filteredData.length} record${filteredData.length!==1?'s':''}`;
-  renderTable();
-  renderPagination();
+  renderTable(); renderPagination();
 }
 
-// ── Render helpers ──
 function showLoading() {
   document.getElementById('table-body').innerHTML = '<tr class="loading-row"><td colspan="10"><div class="spin"></div></td></tr>';
   document.getElementById('table-head').innerHTML = '';
   document.getElementById('pagination').innerHTML = '';
+  document.getElementById('count-badge').textContent = '';
 }
 
-function fmt(v) {
-  if (v==null) return '<span style="color:var(--text3)">—</span>';
-  if (typeof v === 'boolean') return v ? '✓' : '✗';
-  return String(v);
-}
 function fmtDate(s) {
   if (!s) return '<span style="color:var(--text3)">—</span>';
-  try { return new Date(s).toLocaleString(); } catch { return s; }
+  try {
+    const d = new Date(s);
+    return `${String(d.getDate()).padStart(2,'0')} ${d.toLocaleString('default',{month:'long'})} ${d.getFullYear()}`;
+  } catch { return s; }
 }
+
+function emotionChipClass(e) {
+  if (!e) return '';
+  const map = {happiness:'happiness',sadness:'sadness',anger:'anger',fear:'fear',neutral:'neutral',surprise:'surprise',disgust:'disgust'};
+  return map[e.toLowerCase()] || '';
+}
+
 function engBar(v) {
-  if (v==null) return '—';
+  if (v==null) return '<span style="color:var(--text3)">—</span>';
   const pct = Math.round(v*100);
   const col = pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)';
-  return `<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:#eee;border-radius:3px;overflow:hidden;min-width:50px"><div style="height:100%;width:${pct}%;background:${col};border-radius:3px;transition:width .3s"></div></div><span style="font-size:11px;color:${col};font-weight:700">${pct}%</span></div>`;
+  return `<div class="eng-wrap">
+    <div class="eng-bar-bg"><div class="eng-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+    <span class="eng-val" style="color:${col}">${pct}%</span>
+  </div>`;
 }
-function stars(n) {
-  if (!n) return '—';
-  return '★'.repeat(n)+'☆'.repeat(5-n);
-}
-function shortId(s) {
-  if (!s) return '—';
-  return `<span title="${s}" style="font-family:monospace;font-size:11px">${s.substring(0,8)}…</span>`;
-}
-const DEL_ICON = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
 
-// ── Render table ──
+function stars(n) {
+  if (!n) return '<span style="color:var(--text3)">—</span>';
+  return `<span class="chip-star">${'★'.repeat(n)}<span style="opacity:.2">${'★'.repeat(5-n)}</span></span>`;
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+const DEL_ICON    = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+const SHIELD_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+
 function renderTable() {
   const head = document.getElementById('table-head');
   const body = document.getElementById('table-body');
-  // slice for current page — data is already sorted newest-first from API
   const slice = filteredData.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  const base = (page-1)*PAGE_SIZE+1;
 
   if (currentTable === 'users') {
-    head.innerHTML = `<tr><th>#</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Last Login</th><th>Actions</th></tr>`;
-    body.innerHTML = slice.length === 0
-      ? `<tr class="empty-row"><td colspan="7">No users found</td></tr>`
-      : slice.map(r => `<tr>
-          <td style="color:var(--text3)">${r.id}</td>
-          <td><b>${r.username}</b></td>
-          <td>${r.email}</td>
-          <td><span class="chip ${r.is_admin?'chip-admin':'chip-user'}">${r.is_admin?'Admin':'User'}</span></td>
-          <td>${fmtDate(r.created_at)}</td>
-          <td>${fmtDate(r.last_login)}</td>
+    head.innerHTML = `<tr>
+      <th>#</th><th>User</th><th>Role</th><th>Joined</th><th>Last Login</th><th>Actions</th>
+    </tr>`;
+    body.innerHTML = slice.length===0
+      ? `<tr class="empty-row"><td colspan="6"><span class="empty-icon">👥</span><span class="empty-label">No users found</span></td></tr>`
+      : slice.map((r,i) => `<tr>
+          <td><span class="row-num">${base+i}</span></td>
           <td>
-            <div style="display:flex;gap:5px">
-              <button class="toggle-btn" title="Toggle Admin" onclick="toggleAdmin(${r.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+            <div class="user-cell">
+              <div class="avatar">${initials(r.username)}</div>
+              <div>
+                <div class="user-name">${r.username}</div>
+                <div class="user-email">${r.email||'—'}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="chip ${r.is_admin?'chip-admin':'chip-user'}">${r.is_admin?'Admin':'User'}</span></td>
+          <td style="color:var(--text2)">${fmtDate(r.created_at)}</td>
+          <td style="color:var(--text2)">${fmtDate(r.last_login)}</td>
+          <td>
+            <div class="action-group">
+              <button class="toggle-btn" title="Toggle Admin" onclick="toggleAdmin(${r.id})">${SHIELD_ICON}</button>
               <button class="del-btn" title="Delete user" onclick="askDelete('users',${r.id},'user &ldquo;${r.username}&rdquo;')">${DEL_ICON}</button>
             </div>
           </td>
         </tr>`).join('');
   }
-
   else if (currentTable === 'detections') {
-    // Newest first: API returns ORDER BY created_at DESC so row[0] is newest.
-    // Page 1 shows the most recent 20, page 2 shows older 20, etc.
-    head.innerHTML = `<tr><th>#</th><th>User</th><th>Emotion</th><th>Confidence</th><th>Engagement</th><th>Source</th><th>Time</th><th>Del</th></tr>`;
-    body.innerHTML = slice.length === 0
-      ? `<tr class="empty-row"><td colspan="8">No detections found</td></tr>`
-      : slice.map(r => `<tr>
-          <td style="color:var(--text3)">${r.id}</td>
-          <td>${r.username ?? (r.user_id ?? '—')}</td>
-          <td><span class="chip chip-emotion">${r.emotion}</span></td>
-          <td>${r.confidence!=null?Math.round(r.confidence*100)+'%':'—'}</td>
+    head.innerHTML = `<tr>
+      <th>#</th><th>User</th><th>Emotion</th><th>Confidence</th><th>Engagement</th><th>Source</th><th>Time</th><th>Del</th>
+    </tr>`;
+    body.innerHTML = slice.length===0
+      ? `<tr class="empty-row"><td colspan="8"><span class="empty-icon">😶</span><span class="empty-label">No detections found</span></td></tr>`
+      : slice.map((r,i) => `<tr>
+          <td><span class="row-num">${base+i}</span></td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar" style="font-size:10px">${initials(r.username??String(r.user_id??'?'))}</div>
+              <b>${r.username??(r.user_id??'—')}</b>
+            </div>
+          </td>
+          <td><span class="chip chip-emotion ${emotionChipClass(r.emotion)}">${r.emotion}</span></td>
+          <td style="font-weight:700;font-variant-numeric:tabular-nums">${r.confidence!=null?Math.round(r.confidence*100)+'%':'—'}</td>
           <td>${engBar(r.engagement)}</td>
-          <td><span class="chip chip-user">${r.source}</span></td>
-          <td>${fmtDate(r.created_at)}</td>
-          <td><button class="del-btn" onclick="askDelete('detections',${r.id},'detection #${r.id}')">${DEL_ICON}</button></td>
+          <td><span class="chip chip-source">${r.source}</span></td>
+          <td style="color:var(--text2)">${fmtDate(r.created_at)}</td>
+          <td><button class="del-btn" title="Delete" onclick="askDelete('detections',${r.id},'detection #${r.id}')">${DEL_ICON}</button></td>
         </tr>`).join('');
   }
-
   else if (currentTable === 'feedback') {
-    head.innerHTML = `<tr><th>#</th><th>Username</th><th>Rating</th><th>Category</th><th>Message</th><th>Time</th><th>Del</th></tr>`;
-    body.innerHTML = slice.length === 0
-      ? `<tr class="empty-row"><td colspan="7">No feedback yet</td></tr>`
-      : slice.map(r => `<tr>
-          <td style="color:var(--text3)">${r.id}</td>
-          <td><b>${r.username ?? 'Guest'}</b></td>
-          <td><span class="chip-star">${stars(r.rating)}</span></td>
+    head.innerHTML = `<tr>
+      <th>#</th><th>User</th><th>Rating</th><th>Category</th><th>Message</th><th>Time</th><th>Del</th>
+    </tr>`;
+    body.innerHTML = slice.length===0
+      ? `<tr class="empty-row"><td colspan="7"><span class="empty-icon">💬</span><span class="empty-label">No feedback yet</span></td></tr>`
+      : slice.map((r,i) => `<tr>
+          <td><span class="row-num">${base+i}</span></td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar" style="font-size:10px">${initials(r.username??'Guest')}</div>
+              <b>${r.username??'Guest'}</b>
+            </div>
+          </td>
+          <td>${stars(r.rating)}</td>
           <td><span class="chip chip-cat">${r.category}</span></td>
-          <td class="wrap" style="max-width:200px">${r.message}</td>
-          <td>${fmtDate(r.created_at)}</td>
-          <td><button class="del-btn" onclick="askDelete('feedback',${r.id},'feedback #${r.id}')">${DEL_ICON}</button></td>
-        </tr>`).join('');
-  }
-
-  else if (currentTable === 'sessions') {
-    head.innerHTML = `<tr><th>#</th><th>Session ID</th><th>User</th><th>Source</th><th>Dominant</th><th>Avg Engagement</th><th>Frames</th><th>Started</th><th>Del</th></tr>`;
-    body.innerHTML = slice.length === 0
-      ? `<tr class="empty-row"><td colspan="9">No sessions found</td></tr>`
-      : slice.map(r => `<tr>
-          <td style="color:var(--text3)">${r.id}</td>
-          <td>${shortId(r.session_id)}</td>
-          <td>${r.username ?? (r.user_id ?? '—')}</td>
-          <td><span class="chip chip-user">${r.source}</span></td>
-          <td><span class="chip chip-emotion">${r.dominant_emotion??'—'}</span></td>
-          <td>${engBar(r.average_engagement)}</td>
-          <td>${r.frame_count??'—'}</td>
-          <td>${fmtDate(r.started_at)}</td>
-          <td><button class="del-btn" onclick="askDelete('sessions',${r.id},'session #${r.id}')">${DEL_ICON}</button></td>
+          <td class="wrap" style="max-width:200px;color:var(--text2)">${r.message}</td>
+          <td style="color:var(--text2)">${fmtDate(r.created_at)}</td>
+          <td><button class="del-btn" title="Delete" onclick="askDelete('feedback',${r.id},'feedback #${r.id}')">${DEL_ICON}</button></td>
         </tr>`).join('');
   }
 }
 
-// ── Pagination ──
 function renderPagination() {
-  const total = Math.ceil(filteredData.length / PAGE_SIZE);
+  const total = Math.max(1, Math.ceil(filteredData.length/PAGE_SIZE));
   const pg = document.getElementById('pagination');
-  if (total <= 1) { pg.innerHTML = ''; return; }
-
-  let html = `<span class="page-info">Page ${page} of ${total} &nbsp;·&nbsp; ${filteredData.length} records</span>`;
-  html += `<button class="page-btn" onclick="goPage(1)" ${page<=1?'disabled':''}>« First</button>`;
-  html += `<button class="page-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>‹ Prev</button>`;
-
-  // Show up to 5 page buttons centred on current page
-  const radius = 2;
-  const start  = Math.max(1, page - radius);
-  const end    = Math.min(total, page + radius);
-  if (start > 1) html += `<span style="color:var(--text3);font-size:12px;padding:0 2px">…</span>`;
-  for (let i = start; i <= end; i++) {
-    html += `<button class="page-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
-  }
-  if (end < total) html += `<span style="color:var(--text3);font-size:12px;padding:0 2px">…</span>`;
-
-  html += `<button class="page-btn" onclick="goPage(${page+1})" ${page>=total?'disabled':''}>Next ›</button>`;
-  html += `<button class="page-btn" onclick="goPage(${total})" ${page>=total?'disabled':''}>Last »</button>`;
-  pg.innerHTML = html;
+  if (filteredData.length===0) { pg.innerHTML=''; return; }
+  pg.innerHTML = `
+    <span class="page-info">${filteredData.length} record${filteredData.length!==1?'s':''}</span>
+    <button class="page-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>←</button>
+    <span style="font-size:12px;color:var(--text2);padding:0 6px;font-weight:600">${page} / ${total}</span>
+    <button class="page-btn" onclick="goPage(${page+1})" ${page>=total?'disabled':''}>→</button>`;
 }
 
 function goPage(p) {
-  const total = Math.ceil(filteredData.length / PAGE_SIZE);
-  if (p < 1 || p > total) return;
-  page = p;
-  renderTable();
-  renderPagination();
-  // Scroll table into view smoothly
-  document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const total = Math.ceil(filteredData.length/PAGE_SIZE);
+  if (p<1||p>total) return;
+  page=p; renderTable(); renderPagination();
+  document.querySelector('.panel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ── Delete flow ──
 function askDelete(table, id, label) {
   pendingDelete = {table, id};
   document.getElementById('modal-title').textContent = 'Confirm Delete';
@@ -465,50 +869,32 @@ function closeModal() { document.getElementById('modal-bg').classList.remove('op
 
 async function confirmDelete() {
   if (!pendingDelete) return;
-  const {table, id} = pendingDelete;
-  closeModal();
-  const urlMap = {
-    users:      `/admin/users/${id}`,
-    detections: `/admin/detections/${id}`,
-    feedback:   `/admin/feedback/${id}`,
-    sessions:   `/admin/sessions/${id}`,
-  };
-  const res = await fetch(urlMap[table], { method: 'DELETE', headers: HEADERS.Authorization() });
-  if (res && res.ok) {
-    showToast('Deleted successfully', 'success');
-    loadStats();
-    loadTable();
-  } else {
-    showToast('Delete failed', 'error');
-  }
+  const {table, id} = pendingDelete; closeModal();
+  const urlMap = { users:`/admin/users/${id}`, detections:`/admin/detections/${id}`, feedback:`/admin/feedback/${id}` };
+  const res = await fetch(urlMap[table], { method:'DELETE', headers:HEADERS.Authorization() });
+  if (res&&res.ok) { showToast('✓  Deleted successfully','success'); loadStats(); loadAllBadges(); loadTable(); }
+  else showToast('✕  Delete failed','error');
 }
 
-// ── Toggle admin ──
 async function toggleAdmin(userId) {
-  const res = await fetch(`/admin/users/${userId}/toggle-admin`, { method: 'PATCH', headers: HEADERS.Authorization() });
-  if (res && res.ok) { showToast('Admin status updated', 'success'); loadTable(); loadStats(); }
-  else showToast('Failed to update', 'error');
+  const res = await fetch(`/admin/users/${userId}/toggle-admin`, { method:'PATCH', headers:HEADERS.Authorization() });
+  if (res&&res.ok) { showToast('✓  Admin status updated','success'); loadTable(); loadStats(); }
+  else showToast('✕  Failed to update','error');
 }
 
-// ── Toast ──
 let toastTimer;
 function showToast(msg, type='') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.className = 'toast show' + (type ? ' '+type : '');
+  el.className = 'toast show'+(type?' '+type:'');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.className = 'toast'; }, 2800);
+  toastTimer = setTimeout(()=>{ el.className='toast'; }, 2800);
 }
 
-// ── Logout ──
-function doLogout() {
-  localStorage.clear();
-  window.location.href = '/login';
-}
+function doLogout() { localStorage.clear(); window.location.href='/login'; }
 
-// ── Close modal on bg click ──
 document.getElementById('modal-bg').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal-bg')) closeModal();
+  if (e.target===document.getElementById('modal-bg')) closeModal();
 });
 
 boot();

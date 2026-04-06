@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EmotionAI — Detect</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
+  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
+  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 8px 32px rgba(0,0,0,0.05);
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;background:rgba(250,249,247,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);flex-shrink:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1rem;text-decoration:none;color:var(--text)}
+.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;font-family:var(--font-body)}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.back-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-launch-wrap{position:relative;display:inline-flex}
+.nav-launch-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:7px 16px;border-radius:99px;background:var(--accent);color:#fff;border:none;cursor:pointer;box-shadow:0 3px 10px var(--accent-glow);transition:all 0.15s;font-family:var(--font-body)}
+.nav-launch-btn:hover{background:var(--accent2)}
+.nav-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.12);min-width:200px;padding:6px;z-index:200;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.18s ease,transform 0.18s ease;transform-origin:top right}
+.nav-launch-wrap.open .nav-dropdown{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+.nav-dd-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--text);font-size:13px;font-weight:500;transition:background 0.12s}
+.nav-dd-item:hover{background:var(--accent-dim);color:var(--accent)}
+.nav-dd-item:hover .nav-dd-icon{background:var(--accent);color:#fff}
+.nav-dd-icon{width:30px;height:30px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.12s,color 0.12s;color:var(--accent)}
+.nav-dd-icon svg{width:15px;height:15px;stroke-width:2;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nav-dd-label{font-weight:600;font-size:13px}
+.nav-dd-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.nav-dd-divider{height:1px;background:var(--border);margin:4px 0}
+
+/* ── MAIN LAYOUT ── */
+.main-row{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0;overflow:hidden}
+
+/* ── LEFT ── */
+.left-col{background:var(--surface);padding:16px 24px;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.left-col::-webkit-scrollbar{width:3px}
+.left-col::-webkit-scrollbar-track{background:transparent}
+.left-col::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.info-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.info-title{font-family:var(--font-display);font-size:clamp(1.2rem,1.8vw,1.7rem);font-weight:600;line-height:1.15;letter-spacing:-0.01em;margin-bottom:10px}
+.info-title em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.info-box{background:linear-gradient(135deg,#fff9f5,#fff);border:1px solid rgba(232,68,10,0.12);border-radius:14px;padding:14px 18px;box-shadow:0 4px 16px rgba(232,68,10,0.06)}
+.bullets{display:flex;flex-direction:column;gap:7px;margin-top:3px}
+.bullet{display:flex;gap:9px;font-size:12px;color:var(--text2);line-height:1.5}
+.bdot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+.guide-label{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.guide-section{display:flex;flex-direction:column;gap:5px}
+.guide-step{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface);transition:all 0.25s}
+.guide-step.active{border-color:rgba(232,68,10,0.35);background:var(--accent-dim);box-shadow:0 2px 10px rgba(232,68,10,0.08)}
+.guide-step.done{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--elevated);color:var(--text3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex-shrink:0;transition:all 0.25s}
+.guide-step.active .step-num{background:var(--accent);color:#fff}
+.guide-step.done .step-num{background:#22c55e;color:#fff}
+.step-text{font-size:12px;font-weight:500;color:var(--text2);transition:color 0.25s;line-height:1.35;flex:1}
+.guide-step.active .step-text{color:var(--accent)}
+.guide-step.done .step-text{color:#15803d}
+.step-icon{width:26px;height:26px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto;transition:all 0.25s}
+.step-icon svg{width:13px;height:13px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke 0.25s}
+.guide-step.active .step-icon{background:rgba(232,68,10,0.15)}
+.guide-step.active .step-icon svg{stroke:var(--accent)}
+.guide-step.done .step-icon{background:rgba(34,197,94,0.12)}
+.guide-step.done .step-icon svg{stroke:#22c55e}
+
+/* ── RIGHT: Camera ── */
+.right-col{background:#f2f1ee;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 20px;gap:10px;overflow:hidden}
+.cam-box{position:relative;width:100%;max-width:100%;aspect-ratio:16/10;background:#1c1a18;border:3px solid var(--accent);border-radius:18px;overflow:hidden;box-shadow:0 10px 60px rgba(232,68,10,.3),0 4px 20px rgba(0,0,0,0.35);transition:box-shadow 0.4s;flex-shrink:1;min-height:0}
+.cam-box.pulsing{animation:camPulse 0.8s ease-in-out}
+@keyframes camPulse{0%,100%{box-shadow:0 10px 40px rgba(232,68,10,.22)}50%{box-shadow:0 10px 60px rgba(232,68,10,.6)}}
+#videoEl{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+#captureImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+
+/* Idle avatar */
+.cam-idle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#2b2927,#1c1a18);transition:opacity 0.4s;overflow:hidden;padding:0 28px}
+.idle-inner{display:flex;align-items:center;width:100%;max-width:560px}
+.avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;flex-shrink:0}
+.avatar-svg-container{width:200px;height:230px;position:relative}
+.idle-text-side{flex:1;display:flex;flex-direction:column;gap:8px;padding-left:20px}
+@keyframes float{0%,100%{transform:translateY(0px)}50%{transform:translateY(-6px)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
+@keyframes eyeMove{0%,30%{transform:translateX(0)}35%,55%{transform:translateX(2px)}60%,100%{transform:translateX(0)}}
+@keyframes breathe{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.04)}}
+.avatar-group{animation:float 3.5s ease-in-out infinite}
+.avatar-face{fill:#f5d0a9;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))}
+.avatar-hair{fill:#2a1a0a}
+.avatar-eye{fill:#2a1a0a;animation:blink 4s ease-in-out infinite}
+.avatar-pupil{fill:#5b3a1a;animation:eyeMove 5s ease-in-out infinite}
+.avatar-nose{stroke:#c9956a;stroke-width:1.5;fill:none}
+.avatar-mouth{stroke:#c06040;stroke-width:2;fill:none;stroke-linecap:round}
+.avatar-ear{fill:#f5d0a9}
+.avatar-neck{fill:#f5d0a9}
+.avatar-shirt{fill:#e8440a}
+.avatar-cheek{fill:rgba(255,100,80,0.15)}
+.avatar-body{animation:breathe 3.5s ease-in-out infinite}
+.greeting-line{font-size:15px;font-weight:700;color:#fff;letter-spacing:0.01em;font-family:var(--font-body);line-height:1.3;text-shadow:0 1px 8px rgba(0,0,0,0.7)}
+.greeting-sub{font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.04em;margin-top:2px}
+.typewriter-label{font-size:12px;color:rgba(255,255,255,0.72);letter-spacing:0.02em;font-family:var(--font-body);min-height:18px;line-height:1.5}
+.typewriter-cursor{display:inline-block;width:1px;height:12px;background:var(--accent);margin-left:2px;vertical-align:middle;animation:cursorBlink 0.8s step-end infinite}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+.idle-hint{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.07em;text-transform:uppercase}
+.idle-hint-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:0.7}
+.bk{position:absolute;width:22px;height:22px;border-color:rgba(255,255,255,0.55);border-style:solid;z-index:4;transition:border-color 0.4s}
+.bk.tl{top:12px;left:12px;border-width:2.5px 0 0 2.5px;border-radius:4px 0 0 0}
+.bk.tr{top:12px;right:12px;border-width:2.5px 2.5px 0 0;border-radius:0 4px 0 0}
+.bk.bl{bottom:12px;left:12px;border-width:0 0 2.5px 2.5px;border-radius:0 0 0 4px}
+.bk.br{bottom:12px;right:12px;border-width:0 2.5px 2.5px 0;border-radius:0 0 4px 0}
+.cam-scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(232,68,10,0.9),transparent);z-index:5;opacity:0;pointer-events:none}
+.cam-scan.active{animation:scanAnim 1.4s ease-in-out forwards}
+@keyframes scanAnim{0%{top:5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:95%;opacity:0}}
+.cam-status{position:absolute;top:10px;left:10px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border-radius:20px;padding:4px 11px;border:1px solid rgba(255,255,255,0.1)}
+.cam-status-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;flex-shrink:0}
+.cam-status-dot.ready{background:#22c55e;animation:pip 1.4s ease-in-out infinite}
+.cam-status-dot.processing{background:var(--accent);animation:pip 0.5s ease-in-out infinite}
+@keyframes pip{0%,100%{opacity:1}50%{opacity:0.3}}
+.cam-status-txt{font-size:10px;font-weight:700;color:#fff;letter-spacing:0.07em}
+.countdown-overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(28,26,24,0.7);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity 0.3s}
+.countdown-overlay.show{opacity:1}
+.countdown-num{font-family:var(--font-display);font-size:72px;font-weight:600;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,0.5);animation:countPop 1s ease-in-out infinite}
+@keyframes countPop{0%{transform:scale(0.8);opacity:0}20%{transform:scale(1.1);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(0.95);opacity:0.6}}
+.process-overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(28,26,24,0.75);backdrop-filter:blur(4px);gap:14px;opacity:0;pointer-events:none;transition:opacity 0.3s}
+.process-overlay.show{opacity:1}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.15);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.process-txt{font-size:13px;font-weight:600;color:#fff;letter-spacing:0.04em}
+
+/* ── BUTTON ROW ── */
+.btn-row{display:flex;gap:10px;width:100%}
+.btn{flex:1;padding:11px 16px;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.2s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 14px var(--accent-glow)}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border2)}
+.btn-ghost:hover:not(:disabled){background:var(--accent-dim);color:var(--accent);border-color:rgba(232,68,10,0.3);transform:translateY(-1px);box-shadow:none}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── BOTTOM ROW ── */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);flex-shrink:0;min-height:0;max-height:230px}
+.bottom-col{padding:12px 16px;overflow:hidden;display:flex;flex-direction:column}
+.bottom-col+.bottom-col{border-left:1px solid var(--border)}
+.col-hdr{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.col-hdr svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Donut chart */
+.prob-pie-wrap{display:flex;align-items:center;justify-content:center;flex:1;overflow:hidden;position:relative}
+.prob-pie-svg{width:100%;height:100%;overflow:visible}
+
+/* Detected emotion */
+.detected-panel{display:flex;align-items:center;gap:14px;flex:1;overflow:hidden}
+.det-avatar-wrap{flex-shrink:0;width:90px;height:108px;position:relative}
+.det-avatar-wrap svg{width:90px;height:108px}
+@keyframes detFloat{0%,100%{transform:translateY(0px)}50%{transform:translateY(-4px)}}
+@keyframes detBlink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
+@keyframes detBreath{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.05)}}
+.det-av-group{animation:detFloat 3s ease-in-out infinite}
+.det-av-body{animation:detBreath 3s ease-in-out infinite}
+.det-av-eye{animation:detBlink 4s ease-in-out infinite}
+.det-info{flex:1;min-width:0}
+.det-name{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);transition:color 0.3s;line-height:1.0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.det-conf-badge{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(232,68,10,0.2)}
+.det-conf-badge.hidden{display:none}
+.det-desc{font-size:11px;color:var(--text2);line-height:1.5;margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;line-clamp:4}
+.det-awaiting-txt{font-size:12px;color:var(--text3);font-style:italic;margin-top:4px}
+
+/* Insight */
+.insight-box{font-size:12px;line-height:1.65;color:var(--text2);flex:1;overflow:hidden;display:flex;flex-direction:row;align-items:center;gap:10px}
+.insight-awaiting{font-size:12px;color:var(--text3);font-style:italic}
+.insight-head{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px}
+.insight-text-content{flex:1;display:flex;flex-direction:column;justify-content:center}
+.coping-avatar-wrap{flex-shrink:0;width:90px;height:108px;position:relative;display:flex;align-items:center;justify-content:center}
+.coping-avatar-wrap svg{width:90px;height:108px}
+@keyframes copingFloat{0%,100%{transform:translateY(0px)}50%{transform:translateY(-3px)}}
+@keyframes copingBlink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.08)}}
+@keyframes penWrite{0%,100%{transform:rotate(-5deg) translateY(0px)}30%{transform:rotate(-3deg) translateY(-1.5px)}60%{transform:rotate(-6deg) translateY(1px)}}
+@keyframes noteLines{0%,100%{opacity:0.4}50%{opacity:1}}
+.cop-av-group{animation:copingFloat 3.2s ease-in-out infinite}
+.cop-av-eye{animation:copingBlink 4.5s ease-in-out infinite}
+.cop-pen-group{animation:penWrite 1.2s ease-in-out infinite;transform-origin:54px 62px}
+.cop-note-line{animation:noteLines 1.2s ease-in-out infinite}
+.cop-note-line:nth-child(2){animation-delay:0.4s}
+.cop-note-line:nth-child(3){animation-delay:0.8s}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/home">
+    <div class="logo-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
+    </div>
+    Emotion Analysis
+  </a>
+  <div class="nav-right">
+    <span id="topbarUser" style="font-size:13px;color:var(--text3);margin-right:4px"></span>
+    <div class="nav-launch-wrap" id="navLaunchWrap">
+      <button class="nav-launch-btn" onclick="toggleLaunchMenu(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        Switch Mode
+        <svg viewBox="0 0 10 6" style="width:10px;height:6px;fill:#fff;flex-shrink:0;transition:transform 0.2s" id="launchChevron"><path d="M0 0l5 6 5-6z"/></svg>
+      </button>
+      <div class="nav-dropdown" id="navDropdown">
+        <a class="nav-dd-item" href="/detect" style="opacity:0.5;pointer-events:none;cursor:default">
+          <div class="nav-dd-icon"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><div class="nav-dd-label">Detect</div><div class="nav-dd-sub">Current page</div></div>
+        </a>
+        <div class="nav-dd-divider"></div>
+        <a class="nav-dd-item" href="/livecam">
+          <div class="nav-dd-icon"><svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.07A1 1 0 0 1 21 8.845v6.31a1 1 0 0 1-1.447.914L15 14"/><rect x="2" y="7" width="13" height="10" rx="2"/></svg></div>
+          <div><div class="nav-dd-label">Live Cam</div><div class="nav-dd-sub">Real-time emotion stream</div></div>
+        </a>
+      </div>
+    </div>
+    <a class="back-btn" href="/home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back</a>
+    <a class="back-btn" href="#" onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</a>
+  </div>
+</nav>
+
+<div class="main-row">
+  <!-- LEFT -->
+  <div class="left-col">
+    <div class="info-box">
+      <div class="info-label">Snapshot Detection</div>
+      <div class="info-title">Analyse emotions<br/><em>in one shot.</em></div>
+      <div class="bullets">
+        <div class="bullet"><div class="bdot"></div><span>Captures a single frame from your live camera feed and runs it through the AI model for a precise emotional reading.</span></div>
+        <div class="bullet"><div class="bdot"></div><span>Returns a full probability distribution across all 7 emotion classes with millisecond-level inference speed.</span></div>
+        <div class="bullet"><div class="bdot"></div><span>Ideal for spot checks, structured interviews, or any scenario where a single snapshot is sufficient.</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="guide-label">Guide</div>
+      <div class="guide-section">
+        <div class="guide-step active" id="step1">
+          <div class="step-num" id="stepNum1">1</div>
+          <div class="step-text">Click <strong>Start</strong> to enable your camera</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+        </div>
+        <div class="guide-step" id="step2">
+          <div class="step-num" id="stepNum2">2</div>
+          <div class="step-text">Hold steady — 3-second countdown begins</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        </div>
+        <div class="guide-step" id="step3">
+          <div class="step-num" id="stepNum3">3</div>
+          <div class="step-text">Frame captured &amp; analyzed by AI instantly</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        </div>
+        <div class="guide-step" id="step4">
+          <div class="step-num" id="stepNum4">4</div>
+          <div class="step-text">Hit <strong>Reset</strong> to run another detection</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Camera -->
+  <div class="right-col">
+    <div class="cam-box" id="camBox">
+      <!-- Idle avatar -->
+      <div class="cam-idle" id="camIdle">
+        <div class="idle-inner">
+          <div class="avatar-wrap">
+            <div class="avatar-svg-container">
+              <svg id="avatarSvg" viewBox="0 0 150 180" xmlns="http://www.w3.org/2000/svg" width="200" height="240">
+                <g class="avatar-group">
+                  <rect class="avatar-neck" x="63" y="118" width="24" height="22" rx="4"/>
+                  <g class="avatar-body">
+                    <ellipse class="avatar-shirt" cx="75" cy="158" rx="38" ry="28"/>
+                    <path fill="#c73208" d="M66 136 L75 148 L84 136 Q78 140 75 141 Q72 140 66 136Z"/>
+                  </g>
+                  <ellipse class="avatar-ear" cx="30" cy="88" rx="7" ry="9"/>
+                  <ellipse class="avatar-ear" cx="120" cy="88" rx="7" ry="9"/>
+                  <ellipse class="avatar-face" cx="75" cy="85" rx="44" ry="50"/>
+                  <ellipse class="avatar-hair" cx="75" cy="46" rx="44" ry="22"/>
+                  <rect class="avatar-hair" x="31" y="44" width="88" height="16" rx="0"/>
+                  <ellipse class="avatar-hair" cx="31" cy="65" rx="8" ry="18"/>
+                  <ellipse class="avatar-hair" cx="119" cy="65" rx="8" ry="18"/>
+                  <ellipse class="avatar-cheek" cx="44" cy="96" rx="12" ry="8"/>
+                  <ellipse class="avatar-cheek" cx="106" cy="96" rx="12" ry="8"/>
+                  <g class="avatar-eye" style="transform-origin:56px 82px">
+                    <ellipse cx="56" cy="82" rx="8" ry="9" fill="#fff"/>
+                    <ellipse class="avatar-pupil" cx="57" cy="83" rx="4.5" ry="5" style="transform-origin:57px 83px"/>
+                    <ellipse cx="58.5" cy="80.5" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+                  </g>
+                  <g class="avatar-eye" style="transform-origin:94px 82px">
+                    <ellipse cx="94" cy="82" rx="8" ry="9" fill="#fff"/>
+                    <ellipse class="avatar-pupil" cx="95" cy="83" rx="4.5" ry="5" style="transform-origin:95px 83px"/>
+                    <ellipse cx="96.5" cy="80.5" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+                  </g>
+                  <path stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round" d="M48 72 Q56 69 64 72" id="browL"/>
+                  <path stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round" d="M86 72 Q94 69 102 72" id="browR"/>
+                  <path class="avatar-nose" d="M75 88 Q72 96 69 98 Q75 101 81 98 Q78 96 75 88"/>
+                  <path class="avatar-mouth" id="avatarMouth" d="M 63 108 Q 75 115 87 108"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="idle-text-side">
+            <div class="greeting-line" id="greetingLine"></div>
+            <div class="greeting-sub">EmotionAI · Snapshot Mode</div>
+            <div class="typewriter-label"><span id="typewriterText"></span><span class="typewriter-cursor"></span></div>
+            <div class="idle-hint"><div class="idle-hint-dot"></div>Press Start or Spacebar</div>
+          </div>
+        </div>
+      </div>
+
+      <video id="videoEl" autoplay muted playsinline></video>
+      <img id="captureImg" alt="captured frame"/>
+      <canvas id="captureCanvas" style="display:none"></canvas>
+      <div class="cam-scan" id="camScan"></div>
+      <div class="bk tl"></div><div class="bk tr"></div><div class="bk bl"></div><div class="bk br"></div>
+      <div class="cam-status" id="camStatus">
+        <div class="cam-status-dot" id="camStatusDot"></div>
+        <span class="cam-status-txt" id="camStatusTxt">READY</span>
+      </div>
+      <div class="countdown-overlay" id="countdownOverlay"><div class="countdown-num" id="countdownNum">3</div></div>
+      <div class="process-overlay" id="processOverlay"><div class="spinner"></div><div class="process-txt">Analyzing…</div></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btnStart" onclick="doStart()">
+        <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        Start
+      </button>
+      <button class="btn btn-ghost" id="btnRefresh" onclick="doRefresh()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM: Detected Emotion | Donut | Insight -->
+<div class="bottom-row">
+
+  <!-- Detected Emotion -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      Detected Emotion
+    </div>
+    <div class="detected-panel" id="detectedBox">
+      <div class="det-avatar-wrap">
+        <svg id="detAvatarSvg" viewBox="0 0 150 180" xmlns="http://www.w3.org/2000/svg">
+          <g class="det-av-group">
+            <rect fill="#f5d0a9" x="63" y="118" width="24" height="22" rx="4"/>
+            <g class="det-av-body">
+              <ellipse fill="#e8440a" cx="75" cy="158" rx="38" ry="28"/>
+              <path fill="#c73208" d="M66 136 L75 148 L84 136 Q78 140 75 141 Q72 140 66 136Z"/>
+            </g>
+            <ellipse fill="#f5d0a9" cx="30" cy="88" rx="7" ry="9"/>
+            <ellipse fill="#f5d0a9" cx="120" cy="88" rx="7" ry="9"/>
+            <ellipse fill="#f5d0a9" cx="75" cy="85" rx="44" ry="50"/>
+            <ellipse fill="#2a1a0a" cx="75" cy="46" rx="44" ry="22"/>
+            <rect fill="#2a1a0a" x="31" y="44" width="88" height="16" rx="0"/>
+            <ellipse fill="#2a1a0a" cx="31" cy="65" rx="8" ry="18"/>
+            <ellipse fill="#2a1a0a" cx="119" cy="65" rx="8" ry="18"/>
+            <ellipse fill="rgba(255,100,80,0.15)" cx="44" cy="96" rx="12" ry="8"/>
+            <ellipse fill="rgba(255,100,80,0.15)" cx="106" cy="96" rx="12" ry="8"/>
+            <g class="det-av-eye" style="transform-origin:56px 82px">
+              <ellipse cx="56" cy="82" rx="8" ry="9" fill="#fff"/>
+              <ellipse cx="57" cy="83" rx="4.5" ry="5" fill="#5b3a1a"/>
+              <ellipse cx="58.5" cy="80.5" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+            </g>
+            <g class="det-av-eye" style="transform-origin:94px 82px">
+              <ellipse cx="94" cy="82" rx="8" ry="9" fill="#fff"/>
+              <ellipse cx="95" cy="83" rx="4.5" ry="5" fill="#5b3a1a"/>
+              <ellipse cx="96.5" cy="80.5" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+            </g>
+            <path stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round" d="M48 72 Q56 69 64 72" id="detBrowL"/>
+            <path stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round" d="M86 72 Q94 69 102 72" id="detBrowR"/>
+            <path stroke="#c9956a" stroke-width="1.5" fill="none" d="M75 88 Q72 96 69 98 Q75 101 81 98 Q78 96 75 88"/>
+            <path stroke="#c06040" stroke-width="2" fill="none" stroke-linecap="round" id="detMouth" d="M 63 108 Q 75 115 87 108"/>
+          </g>
+        </svg>
+      </div>
+      <div class="det-info">
+        <div class="det-name" id="detName">Awaiting</div>
+        <div class="det-awaiting-txt" id="detAwaitTxt">Run detection to see results</div>
+        <div class="det-conf-badge hidden" id="detConf">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="13 2 13 9 20 9"/><path d="M21 3L13 11 9 7 3 13"/></svg>
+          <span id="detConfVal"></span>
+        </div>
+        <div class="det-desc" id="detDesc"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emotion Distribution -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+      Emotion Distribution
+    </div>
+    <div class="prob-pie-wrap" id="probPieWrap">
+      <svg id="pieSvg" class="prob-pie-svg" viewBox="0 0 420 200" preserveAspectRatio="xMidYMid meet">
+        <text x="210" y="100" text-anchor="middle" dominant-baseline="middle" fill="#a8a29e" font-size="11" font-family="Plus Jakarta Sans,sans-serif" font-style="italic">Run detection to see distribution</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Insight / Coping Strategies -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/></svg>
+      Coping Strategies
+    </div>
+    <div class="insight-box" id="insightBox">
+      <div class="coping-avatar-wrap" id="copingAvatarWrap">
+        <svg viewBox="0 0 90 110" xmlns="http://www.w3.org/2000/svg">
+          <g class="cop-av-group">
+            <rect fill="#f5d0a9" x="38" y="52" width="14" height="11" rx="3"/>
+            <ellipse fill="#e8440a" cx="45" cy="78" rx="22" ry="17"/>
+            <path fill="#c73208" d="M40 63 L45 72 L50 63 Q47 66 45 67 Q43 66 40 63Z"/>
+            <ellipse fill="#f5d0a9" cx="18" cy="38" rx="4" ry="5.5"/>
+            <ellipse fill="#f5d0a9" cx="72" cy="38" rx="4" ry="5.5"/>
+            <ellipse fill="#f5d0a9" cx="45" cy="36" rx="27" ry="30"/>
+            <ellipse fill="#2a1a0a" cx="45" cy="15" rx="27" ry="13"/>
+            <rect fill="#2a1a0a" x="18" y="13" width="54" height="10" rx="0"/>
+            <ellipse fill="#2a1a0a" cx="18" cy="26" rx="5" ry="11"/>
+            <ellipse fill="#2a1a0a" cx="72" cy="26" rx="5" ry="11"/>
+            <ellipse fill="rgba(255,100,80,0.18)" cx="28" cy="43" rx="7" ry="5"/>
+            <ellipse fill="rgba(255,100,80,0.18)" cx="62" cy="43" rx="7" ry="5"/>
+            <g class="cop-av-eye" style="transform-origin:34px 33px"><ellipse cx="34" cy="33" rx="5" ry="5.5" fill="#fff"/><ellipse cx="35" cy="34" rx="2.8" ry="3" fill="#5b3a1a"/><ellipse cx="36" cy="32" rx="1" ry="1" fill="#fff" opacity="0.8"/></g>
+            <g class="cop-av-eye" style="transform-origin:56px 33px"><ellipse cx="56" cy="33" rx="5" ry="5.5" fill="#fff"/><ellipse cx="57" cy="34" rx="2.8" ry="3" fill="#5b3a1a"/><ellipse cx="58" cy="32" rx="1" ry="1" fill="#fff" opacity="0.8"/></g>
+            <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M29 25 Q34 22.5 39 24.5"/>
+            <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M51 24.5 Q56 22.5 61 25"/>
+            <path stroke="#c9956a" stroke-width="1" fill="none" d="M45 38 Q43 43 41 44 Q45 46 49 44 Q47 43 45 38"/>
+            <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="copMouth" d="M 38 51 Q 45 53 52 51"/>
+            <rect fill="#fffbf5" stroke="#d4c4a8" stroke-width="1.2" x="4" y="58" width="30" height="36" rx="3"/>
+            <rect fill="#f59e4a" x="4" y="58" width="5" height="36" rx="2"/>
+            <line class="cop-note-line" x1="13" y1="66" x2="30" y2="66" stroke="#d4bfa0" stroke-width="1.3" stroke-linecap="round"/>
+            <line class="cop-note-line" x1="13" y1="72" x2="30" y2="72" stroke="#d4bfa0" stroke-width="1.3" stroke-linecap="round"/>
+            <line class="cop-note-line" x1="13" y1="78" x2="26" y2="78" stroke="#d4bfa0" stroke-width="1.3" stroke-linecap="round"/>
+            <g class="cop-pen-group"><rect fill="#e8440a" x="50" y="54" width="4" height="18" rx="1.5" transform="rotate(30 52 63)"/><polygon fill="#f5d0a9" points="50,71 54,71 52,76" transform="rotate(30 52 63)"/><rect fill="#d4d4d4" x="50" y="54" width="4" height="3.5" rx="1" transform="rotate(30 52 63)"/></g>
+          </g>
+        </svg>
+      </div>
+      <div class="insight-text-content" id="insightTextContent">
+        <span class="insight-awaiting">Awaiting detection…</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="script/auth.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+//  detect.html — Real API (doc 3 logic, doc 6 UI)
+// ══════════════════════════════════════════════════
+
+const PROB_LABELS = ['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surprise'];
+const PROB_COLORS = ['#ef4444','#10b981','#8b5cf6','#f59e0b','#6b7280','#3b82f6','#f97316'];
+// Map backend labels → EMOTION_META keys
+const LABEL_MAP   = {Anger:'Angry',Disgust:'Disgust',Fear:'Fear',Happiness:'Happy',Neutral:'Neutral',Sadness:'Sad',Surprise:'Surprise'};
+
+const EMOTION_META = {
+  Happy:   {emoji:'😊',color:'#f59e0b',desc:'Joy is a warm, uplifting feeling of pleasure and contentment — your brain is flooded with dopamine and everything feels possible.',insHead:'Riding the happy wave',insTip:'Channel this energy into your most creative or ambitious task — joy supercharges problem-solving and opens your mind to new ideas.'},
+  Neutral: {emoji:'😐',color:'#6b7280',desc:'Neutral is a calm, balanced state — neither pulled toward highs nor lows. Your mind is clear, steady, and ready to process information with precision.',insHead:'Making the most of calm',insTip:'This steady state is your best asset for deep analytical thinking. Tackle something complex or make an important decision — your unbiased mind will serve you well.'},
+  Surprise:{emoji:'😲',color:'#f97316',desc:'Surprise is a brief, sharp jolt of attention — your brain snaps to full alertness and curiosity instantly.',insHead:'Harness the attention spike',insTip:'Your brain is at peak receptivity right now. Use this heightened attention to absorb something new — explore the source of your surprise.'},
+  Sad:     {emoji:'😢',color:'#3b82f6',desc:'Sadness is a deep emotional ache of loss or disappointment — a natural signal that something meaningful to you has been affected.',insHead:'Navigating through sadness',insTip:'Be gentle with yourself — sadness is valid, not weakness. Take a short break, breathe slowly, and reach out to someone you trust.'},
+  Angry:   {emoji:'😠',color:'#ef4444',desc:'Anger is an intense surge of energy triggered by a perceived threat. It sharpens focus but can cloud judgment when left unchecked.',insHead:'Cooling and redirecting anger',insTip:'Step away for two minutes. Try box breathing: in 4 counts, hold 4, out 4, hold 4. Name the feeling — it reduces its power.'},
+  Fear:    {emoji:'😨',color:'#8b5cf6',desc:'Fear is your mind\'s protective alarm — it detects uncertainty or threat and floods your body with alertness.',insHead:'Moving through fear',insTip:'Name the fear out loud or write it down — labelling it immediately reduces its intensity. Break your challenge into the smallest next step.'},
+  Disgust: {emoji:'🤢',color:'#06b6d4',desc:'Disgust is a strong aversion response — a signal that something conflicts with your values or expectations.',insHead:'Reframing and re-engaging',insTip:'Step back and ask what specifically is triggering this reaction. Try reframing the task in terms of a goal you actually care about.'},
+};
+
+const API_URL = '/predict/';
+let stream=null,detecting=false,countTimer=null;
+
+// ── Typewriter ──
+const IDLE_MSGS=['Position your face in the frame…','Press Start when you\'re ready…','I\'ll capture your emotion in one shot.','Hold still for the countdown…','Your expression tells a story.'];
+let twIndex=0,twChar=0,twTimeout=null,twDeleting=false,twRunning=false;
+function typewriterTick(){
+  const el=document.getElementById('typewriterText');if(!el||!twRunning)return;
+  const msg=IDLE_MSGS[twIndex];
+  if(!twDeleting){twChar++;el.textContent=msg.slice(0,twChar);if(twChar>=msg.length){twDeleting=true;twTimeout=setTimeout(typewriterTick,2600);}else twTimeout=setTimeout(typewriterTick,52);}
+  else{twChar--;el.textContent=msg.slice(0,twChar);if(twChar<=0){twDeleting=false;twIndex=(twIndex+1)%IDLE_MSGS.length;twTimeout=setTimeout(typewriterTick,320);}else twTimeout=setTimeout(typewriterTick,26);}
+}
+function startTypewriter(){if(twRunning)return;twRunning=true;twChar=0;twDeleting=false;twIndex=0;typewriterTick();}
+function stopTypewriter(){twRunning=false;if(twTimeout)clearTimeout(twTimeout);const el=document.getElementById('typewriterText');if(el)el.textContent='';}
+function initGreeting(){
+  const h=new Date().getHours();
+  const gl=document.getElementById('greetingLine');
+  if(gl)gl.textContent=h>=5&&h<12?'Good morning! Ready for a detection?':h>=12&&h<17?'Good afternoon! Let\'s read your emotion.':h>=17&&h<21?'Good evening! How are you feeling?':'Hey night owl! Let\'s see your emotion.';
+  startTypewriter();
+}
+
+// ── Dropdown ──
+function toggleLaunchMenu(e){e.stopPropagation();const wrap=document.getElementById('navLaunchWrap');const chev=document.getElementById('launchChevron');const open=wrap.classList.toggle('open');if(chev)chev.style.transform=open?'rotate(180deg)':'rotate(0deg)';}
+document.addEventListener('click',function(e){const wrap=document.getElementById('navLaunchWrap');if(wrap&&!wrap.contains(e.target)){wrap.classList.remove('open');const chev=document.getElementById('launchChevron');if(chev)chev.style.transform='rotate(0deg)';}});
+
+// ── Guide steps ──
+function setStep(active){for(let i=1;i<=4;i++){const el=document.getElementById('step'+i);if(!el)continue;el.classList.remove('active','done');if(i<active)el.classList.add('done');else if(i===active)el.classList.add('active');}}
+function setStatus(txt,state){const dot=document.getElementById('camStatusDot');const label=document.getElementById('camStatusTxt');dot.className='cam-status-dot'+(state?' '+state:'');label.textContent=txt;}
+
+// ── Avatar morphs ──
+function morphAvatar(idMouth,idBrowL,idBrowR,emotion){
+  const morphs={
+    Happy:   {mouth:'M 63 107 Q 75 118 87 107',browL:'M48 71 Q56 69 64 71',browR:'M86 71 Q94 69 102 71'},
+    Sad:     {mouth:'M 63 113 Q 75 106 87 113',browL:'M48 74 Q56 71 64 73',browR:'M86 73 Q94 71 102 74'},
+    Angry:   {mouth:'M 63 112 Q 75 107 87 112',browL:'M48 73 Q56 68 64 73',browR:'M86 73 Q94 68 102 73'},
+    Surprise:{mouth:'M 67 108 Q 75 119 83 108',browL:'M48 69 Q56 65 64 69',browR:'M86 69 Q94 65 102 69'},
+    Fear:    {mouth:'M 67 110 Q 75 116 83 110',browL:'M48 70 Q56 66 64 70',browR:'M86 70 Q94 66 102 70'},
+    Disgust: {mouth:'M 63 111 Q 75 105 87 111',browL:'M48 74 Q56 69 64 74',browR:'M86 74 Q94 69 102 74'},
+    Neutral: {mouth:'M 63 108 Q 75 112 87 108',browL:'M48 72 Q56 69 64 72',browR:'M86 72 Q94 69 102 72'},
+  };
+  const m=morphs[emotion]||morphs.Neutral;
+  const mouth=document.getElementById(idMouth);const browL=document.getElementById(idBrowL);const browR=document.getElementById(idBrowR);
+  if(mouth)mouth.setAttribute('d',m.mouth);if(browL)browL.setAttribute('d',m.browL);if(browR)browR.setAttribute('d',m.browR);
+}
+
+// ── Donut chart ──
+function renderDonut(probs){
+  const svg=document.getElementById('pieSvg');if(!svg)return;
+
+  // Ensure probs is valid; fall back to zeros
+  const safeProbs=(probs&&typeof probs==='object')?probs:{};
+  const vals=PROB_LABELS.map((l,i)=>({label:l,color:PROB_COLORS[i],val:Math.max(0,parseFloat(safeProbs[l])||0)}));
+  let total=vals.reduce((s,v)=>s+v.val,0);
+
+  // If all zero, show fallback message and bail
+  if(total<=0){
+    svg.innerHTML='';
+    svg.setAttribute('viewBox','0 0 420 200');
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x','210');t.setAttribute('y','100');t.setAttribute('text-anchor','middle');
+    t.setAttribute('dominant-baseline','middle');t.setAttribute('fill','#a8a29e');
+    t.setAttribute('font-size','11');t.setAttribute('font-family','Plus Jakarta Sans,sans-serif');
+    t.setAttribute('font-style','italic');t.textContent='No distribution data available';
+    svg.appendChild(t);return;
+  }
+
+  // Normalise to 100
+  vals.forEach(v=>v.val=v.val/total*100);
+  total=100;
+
+  const VW=420,VH=200;
+  const cx=VW/2,cy=VH/2,R=60,INNER=28;
+  // Margin reserved for labels on each side
+  const SIDE_PAD=72;
+
+  let startAngle=-Math.PI/2;
+  const segments=[];
+  vals.forEach(v=>{
+    const sweep=(v.val/total)*2*Math.PI;
+    if(sweep<0.005)return; // skip near-zero slices
+    const midAngle=startAngle+sweep/2;
+    segments.push({...v,startAngle,sweep,midAngle});
+    startAngle+=sweep;
+  });
+
+  if(segments.length===0){
+    svg.innerHTML='';svg.setAttribute('viewBox',`0 0 ${VW} ${VH}`);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx);t.setAttribute('y',cy);t.setAttribute('text-anchor','middle');
+    t.setAttribute('dominant-baseline','middle');t.setAttribute('fill','#a8a29e');
+    t.setAttribute('font-size','11');t.textContent='No data';svg.appendChild(t);return;
+  }
+
+  function polar(angle,r){return[cx+r*Math.cos(angle),cy+r*Math.sin(angle)];}
+
+  function slicePath(s){
+    const[x1,y1]=polar(s.startAngle,R);
+    const[x2,y2]=polar(s.startAngle+s.sweep,R);
+    const[ix1,iy1]=polar(s.startAngle,INNER);
+    const[ix2,iy2]=polar(s.startAngle+s.sweep,INNER);
+    const large=s.sweep>Math.PI?1:0;
+    return`M${ix1.toFixed(2)},${iy1.toFixed(2)} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} L${ix2.toFixed(2)},${iy2.toFixed(2)} A${INNER},${INNER} 0 ${large},0 ${ix1.toFixed(2)},${iy1.toFixed(2)} Z`;
+  }
+
+  svg.innerHTML='';
+  svg.setAttribute('viewBox',`0 0 ${VW} ${VH}`);
+
+  // Draw slices
+  segments.forEach(s=>{
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',slicePath(s));p.setAttribute('fill',s.color);
+    p.setAttribute('stroke','#faf9f7');p.setAttribute('stroke-width','2');
+    svg.appendChild(p);
+  });
+
+  // Center dominant label
+  const top=segments.reduce((a,b)=>a.val>b.val?a:b,segments[0]);
+  const ct=document.createElementNS('http://www.w3.org/2000/svg','text');
+  ct.setAttribute('x',cx);ct.setAttribute('y',cy-4);ct.setAttribute('text-anchor','middle');
+  ct.setAttribute('font-size','9');ct.setAttribute('font-weight','700');
+  ct.setAttribute('font-family','Plus Jakarta Sans,sans-serif');ct.setAttribute('fill',top.color);
+  ct.textContent=top.label;svg.appendChild(ct);
+  const cs=document.createElementNS('http://www.w3.org/2000/svg','text');
+  cs.setAttribute('x',cx);cs.setAttribute('y',cy+7);cs.setAttribute('text-anchor','middle');
+  cs.setAttribute('font-size','7');cs.setAttribute('font-family','Plus Jakarta Sans,sans-serif');
+  cs.setAttribute('fill','#a8a29e');cs.textContent='dominant';svg.appendChild(cs);
+
+  // Outer labels — only >= 5%, strictly contained within viewBox
+  const LABEL_R=R+16;const LINE_R=R+5;
+  const FONT_SIZE=8;const CHAR_W=5;const LINE_H=10;
+
+  segments.forEach(s=>{
+    const pct=Math.round(s.val);if(pct<5)return;
+    const labelText=`${s.label} ${pct}%`;
+    const approxW=labelText.length*CHAR_W+4;
+
+    const[lx,ly]=polar(s.midAngle,LINE_R);
+    const[ex,ey]=polar(s.midAngle,LABEL_R);
+
+    const isRight=Math.cos(s.midAngle)>=0;
+    const anchor=isRight?'start':'end';
+
+    // Clamp x so text stays within [SIDE_PAD, VW-SIDE_PAD] area
+    let tx=isRight?ex+4:ex-4;
+    if(isRight){
+      const maxTx=VW-approxW-2;
+      if(tx>maxTx)tx=maxTx;
+    }else{
+      const minTx=approxW+2;
+      if(tx<minTx)tx=minTx;
+    }
+
+    // Clamp y so text stays within viewBox top/bottom with margin
+    const ty=Math.max(LINE_H,Math.min(VH-LINE_H,ey));
+
+    // Leader line
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',lx.toFixed(2));line.setAttribute('y1',ly.toFixed(2));
+    line.setAttribute('x2',ex.toFixed(2));line.setAttribute('y2',ty.toFixed(2));
+    line.setAttribute('stroke',s.color);line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+
+    // End dot
+    const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',ex.toFixed(2));dot.setAttribute('cy',ty.toFixed(2));
+    dot.setAttribute('r','1.8');dot.setAttribute('fill',s.color);
+    svg.appendChild(dot);
+
+    // Label — use clipPath-safe attributes and constrained x
+    const nameEl=document.createElementNS('http://www.w3.org/2000/svg','text');
+    nameEl.setAttribute('x',tx.toFixed(2));nameEl.setAttribute('y',(ty+1).toFixed(2));
+    nameEl.setAttribute('text-anchor',anchor);
+    nameEl.setAttribute('font-size',FONT_SIZE);nameEl.setAttribute('font-weight','700');
+    nameEl.setAttribute('font-family','Plus Jakarta Sans,sans-serif');
+    nameEl.setAttribute('fill',s.color);
+    // overflow:visible is SVG default but set clip explicitly to none
+    nameEl.style.overflow='visible';
+    nameEl.textContent=labelText;
+    svg.appendChild(nameEl);
+  });
+}
+
+// ── Typewriter result helper ──
+function typeText(elementId,text,delay){const el=document.getElementById(elementId);if(!el)return;let i=0;function tick(){el.textContent=text.slice(0,i++);if(i<=text.length)setTimeout(tick,delay||22);}setTimeout(tick,100);}
+
+// ── Show results ──
+function showResults(backendEmotion,conf,probs,elapsed){
+  // Map backend label to meta key
+  const metaKey=LABEL_MAP[backendEmotion]||backendEmotion;
+  const meta=EMOTION_META[metaKey]||EMOTION_META['Neutral'];
+
+  morphAvatar('avatarMouth','browL','browR',metaKey);
+
+  // Detected panel
+  const detName=document.getElementById('detName');detName.textContent=metaKey;detName.style.color=meta.color;
+  document.getElementById('detAwaitTxt').style.display='none';
+  const badge=document.getElementById('detConf');badge.classList.remove('hidden');badge.style.background=meta.color+'18';badge.style.borderColor=meta.color+'44';badge.style.color=meta.color;
+  document.getElementById('detConfVal').textContent=`${conf}% confidence · ${elapsed}ms`;
+  morphAvatar('detMouth','detBrowL','detBrowR',metaKey);
+  const descEl=document.getElementById('detDesc');descEl.innerHTML='<span id="detDescTW"></span>';
+  typeText('detDescTW',meta.desc,20);
+
+  // Donut
+  renderDonut(probs);
+
+  // Insight
+  const insightContent=document.getElementById('insightTextContent');
+  if(insightContent){insightContent.innerHTML=`<div class="insight-head" style="color:${meta.color}">${meta.insHead}</div><div><span id="insightTW"></span></div>`;typeText('insightTW',meta.insTip,20);}
+
+  // Pulse
+  const camBox=document.getElementById('camBox');camBox.classList.add('pulsing');setTimeout(()=>camBox.classList.remove('pulsing'),1000);
+}
+
+// ── Capture frame ──
+function captureFrameBlob(){
+  const v=document.getElementById('videoEl');
+  const canvas=document.getElementById('captureCanvas');
+  canvas.width=v.videoWidth||640;canvas.height=v.videoHeight||480;
+  canvas.getContext('2d').drawImage(v,0,0);
+  const dataURL=canvas.toDataURL('image/jpeg',0.92);
+  const arr=dataURL.split(','),mime=arr[0].match(/:(.*?);/)[1],b64=atob(arr[1]);
+  const buf=new Uint8Array(b64.length);for(let i=0;i<b64.length;i++)buf[i]=b64.charCodeAt(i);
+  return new Blob([buf],{type:mime});
+}
+
+// ── Call API (real) ──
+async function callPredict(blob){
+  const PROB_KEYS=['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surprise'];
+  const t0=performance.now();
+  const form=new FormData();form.append('file',blob,'frame.jpg');
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),10000);
+  const fetchFn=(typeof Auth!=='undefined'&&Auth.apiFetch)?Auth.apiFetch.bind(Auth):fetch;
+  const res=await fetchFn(API_URL,{method:'POST',body:form,signal:controller.signal});
+  clearTimeout(timer);
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`HTTP ${res.status}`);}
+  const data=await res.json();
+  const elapsed=Math.round(performance.now()-t0);
+  // Build probs from all_probabilities array
+  const probs={};
+  PROB_KEYS.forEach((k,i)=>{const raw=data.all_probabilities?.[i]??0;probs[k]=Math.round((raw>1?raw:raw*100));});
+  const total=Object.values(probs).reduce((a,b)=>a+b,0);
+  if(total>0)PROB_KEYS.forEach(k=>probs[k]=Math.round(probs[k]/total*100));
+  const emotion=data.emotion;
+  const conf=Math.round(data.confidence>1?data.confidence:data.confidence*100);
+  return{emotion,conf,probs,elapsed};
+}
+
+// ── Countdown ──
+function runCountdown(seconds){
+  return new Promise(resolve=>{
+    const overlay=document.getElementById('countdownOverlay');const numEl=document.getElementById('countdownNum');
+    let n=seconds;overlay.classList.add('show');numEl.textContent=n;
+    function tick(){n--;if(n<=0){overlay.classList.remove('show');resolve();return;}numEl.textContent=n;numEl.style.animation='none';void numEl.offsetHeight;numEl.style.animation='';countTimer=setTimeout(tick,1000);}
+    countTimer=setTimeout(tick,1000);
+  });
+}
+
+// ── START ──
+async function doStart(){
+  if(detecting)return;detecting=true;stopTypewriter();
+  const btnStart=document.getElementById('btnStart');btnStart.disabled=true;
+  setStep(1);
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'}});
+    const v=document.getElementById('videoEl');v.srcObject=stream;await v.play();v.style.display='block';
+    document.getElementById('camIdle').style.display='none';
+    setStatus('LIVE','ready');setStep(2);
+    await runCountdown(3);setStep(3);
+    const blob=captureFrameBlob();
+    stream.getTracks().forEach(t=>t.stop());stream=null;v.style.display='none';
+    const imgEl=document.getElementById('captureImg');imgEl.src=URL.createObjectURL(blob);imgEl.style.display='block';
+    document.getElementById('camScan').classList.add('active');
+    document.getElementById('processOverlay').classList.add('show');
+    setStatus('ANALYZING','processing');
+    const{emotion,conf,probs,elapsed}=await callPredict(blob);
+    await new Promise(r=>setTimeout(r,400));
+    document.getElementById('processOverlay').classList.remove('show');
+    document.getElementById('camScan').classList.remove('active');
+    showResults(emotion,conf,probs,elapsed);
+    setStep(4);setStatus('DONE','ready');
+  }catch(err){
+    document.getElementById('processOverlay').classList.remove('show');
+    if(err.name==='NotAllowedError'){alert('Camera access denied. Please allow camera permission and try again.');}
+    setStatus('ERROR','');
+  }finally{detecting=false;}
+}
+
+// ── RESET ──
+function doRefresh(){
+  detecting=false;if(countTimer)clearTimeout(countTimer);
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  document.getElementById('videoEl').style.display='none';document.getElementById('videoEl').srcObject=null;
+  document.getElementById('captureImg').style.display='none';document.getElementById('captureImg').src='';
+  document.getElementById('camIdle').style.display='flex';
+  document.getElementById('countdownOverlay').classList.remove('show');
+  document.getElementById('processOverlay').classList.remove('show');
+  document.getElementById('camScan').classList.remove('active');
+  document.getElementById('camBox').classList.remove('pulsing');
+  // Reset avatar
+  ['avatarMouth','browL','browR'].forEach((id,i)=>{const el=document.getElementById(id);if(el){const defaults=['M 63 108 Q 75 115 87 108','M48 72 Q56 69 64 72','M86 72 Q94 69 102 72'];el.setAttribute('d',defaults[i]);}});
+  setStatus('READY','');
+  // Reset detected panel
+  document.getElementById('detName').textContent='Awaiting';document.getElementById('detName').style.color='';
+  document.getElementById('detAwaitTxt').style.display='';document.getElementById('detConf').classList.add('hidden');document.getElementById('detDesc').textContent='';
+  ['detMouth','detBrowL','detBrowR'].forEach((id,i)=>{const el=document.getElementById(id);if(el){const defaults=['M 63 108 Q 75 115 87 108','M48 72 Q56 69 64 72','M86 72 Q94 69 102 72'];el.setAttribute('d',defaults[i]);}});
+  // Reset donut
+  const pieSvg=document.getElementById('pieSvg');if(pieSvg){pieSvg.setAttribute('viewBox','0 0 420 200');pieSvg.innerHTML='<text x="210" y="100" text-anchor="middle" dominant-baseline="middle" fill="#a8a29e" font-size="11" font-family="Plus Jakarta Sans,sans-serif" font-style="italic">Run detection to see distribution</text>';}
+  // Reset insight
+  const itc=document.getElementById('insightTextContent');if(itc)itc.innerHTML='<span class="insight-awaiting">Awaiting detection…</span>';
+  setStep(1);btnStart.disabled=false;initGreeting();
+}
+// Fix doRefresh btnStart ref
+const btnStart=document.getElementById('btnStart');
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown',function(e){if(e.code==='Space'&&!e.target.matches('input,textarea,button')){e.preventDefault();if(!detecting)doStart();}if(e.code==='KeyR'&&!e.target.matches('input,textarea'))doRefresh();});
+
+// ── Auth & Init ──
+if(typeof Auth!=='undefined'){if(!Auth.requireAuth())throw new Error('Not authenticated');const _user=Auth.getUser();const _userEl=document.getElementById('topbarUser');if(_userEl&&_user)_userEl.textContent=_user.username||_user.email||'';}
+window.addEventListener('load',initGreeting);
+</script>
+</body>
+</html>

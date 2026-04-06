@@ -43,6 +43,7 @@ REFRESH_TOKEN_EXPIRE_DAYS   = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS",   "30")
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin@1234")
+ADMIN_EMAIL    = os.getenv("ADMIN_EMAIL",    f"admin@emotionai.local")
 
 DB_DSN = {
     "host":     os.getenv("DB_HOST",     "localhost"),
@@ -147,15 +148,34 @@ def init_db():
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id            BIGSERIAL    PRIMARY KEY,
-            username      VARCHAR(80)  NOT NULL UNIQUE,
-            email         VARCHAR(254) NOT NULL UNIQUE,
-            password_hash TEXT         NOT NULL,
-            is_admin      BOOLEAN      NOT NULL DEFAULT FALSE,
-            created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-            last_login    TIMESTAMPTZ
+            id                BIGSERIAL    PRIMARY KEY,
+            username          VARCHAR(80)  NOT NULL UNIQUE,
+            email             VARCHAR(254) NOT NULL UNIQUE,
+            password_hash     TEXT         NOT NULL,
+            is_admin          BOOLEAN      NOT NULL DEFAULT FALSE,
+            created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+            last_login        TIMESTAMPTZ,
+            security_q1       TEXT,
+            security_a1       TEXT,
+            security_q2       TEXT,
+            security_a2       TEXT,
+            password_reset_at TIMESTAMPTZ
         )
     """)
+    # Migrate existing users table — safe to re-run, skips already-existing columns
+    for _col_sql in [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q1       TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a1       TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q2       TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a2       TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_at TIMESTAMPTZ",
+    ]:
+        try:
+            cur.execute(_col_sql)
+            con.commit()
+        except Exception as _e:
+            con.rollback()
+            print(f"[EmotionAI] users migration skipped: {_e}")
     cur.execute("""
         CREATE TABLE IF NOT EXISTS detections (
             id         BIGSERIAL    PRIMARY KEY,
@@ -221,27 +241,50 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_fb_user    ON feedback(user_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_fb_created ON feedback(created_at)")
 
-    # Sync admin account from .env (create or update password)
-    cur.execute("SELECT id FROM users WHERE username=%s AND is_admin=TRUE", (ADMIN_USERNAME,))
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS password_reset_log (
+            id           BIGSERIAL    PRIMARY KEY,
+            user_id      BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+            email        VARCHAR(254) NOT NULL,
+            security_q1  TEXT,
+            security_q2  TEXT,
+            step1_at     TIMESTAMPTZ,
+            step2_at     TIMESTAMPTZ,
+            step2_passed BOOLEAN      NOT NULL DEFAULT FALSE,
+            step3_at     TIMESTAMPTZ,
+            completed    BOOLEAN      NOT NULL DEFAULT FALSE,
+            ip_address   TEXT
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prl_user    ON password_reset_log(user_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_prl_step1   ON password_reset_log(step1_at)")
+
+    # Sync admin account from .env — find by username OR existing admin email
+    admin_email_clean = ADMIN_EMAIL.strip().lower()
+    cur.execute(
+        "SELECT id FROM users WHERE is_admin=TRUE AND (username=%s OR LOWER(email)=%s) LIMIT 1",
+        (ADMIN_USERNAME, admin_email_clean)
+    )
     existing_admin = cur.fetchone()
     if not existing_admin:
         cur.execute(
             "INSERT INTO users (username, email, password_hash, is_admin) VALUES (%s,%s,%s,TRUE)",
-            (ADMIN_USERNAME, f"{ADMIN_USERNAME}@emotionai.local", hash_password(ADMIN_PASSWORD))
+            (ADMIN_USERNAME, admin_email_clean, hash_password(ADMIN_PASSWORD))
         )
-        print(f"[EmotionAI] Default admin created  ->  username: {ADMIN_USERNAME}")
-        print("[EmotionAI] Please change the admin password after first login!")
+        print(f"[Emotional Analysis] Default admin created  ->  email: {admin_email_clean}")
+        print("[Emotional Analysis] Please change the admin password after first login!")
     else:
+        # Always sync both email AND password so .env changes take effect on restart
         cur.execute(
-            "UPDATE users SET password_hash=%s WHERE username=%s AND is_admin=TRUE",
-            (hash_password(ADMIN_PASSWORD), ADMIN_USERNAME)
+            "UPDATE users SET password_hash=%s, email=%s WHERE id=%s",
+            (hash_password(ADMIN_PASSWORD), admin_email_clean, existing_admin[0])
         )
-        print(f"[EmotionAI] Admin credentials synced from .env  ->  username: {ADMIN_USERNAME}")
+        print(f"[Emotional Analysis] Admin credentials synced from .env  ->  email: {admin_email_clean}")
 
     con.commit()
     cur.close()
     con.close()
-    print("[EmotionAI] Database initialised")
+    print("[Emotional Analysis] Database initialised")
 
 
 # ── LIFESPAN ──────────────────────────────────────────────────────────────────
@@ -253,16 +296,16 @@ async def lifespan(app: FastAPI):
         import testing
         testing.get_haar_detector()
         testing.get_model()
-        print("[EmotionAI] Preload complete")
+        print("[Emotional Analysis] Preload complete")
     except Exception as e:
-        print(f"[EmotionAI] Preload error (non-fatal): {e}")
+        print(f"[Emotional Analysis] Preload error (non-fatal): {e}")
     webbrowser.open(f"http://localhost:{APP_PORT}")
     yield
 
 
 # ── APP (must be created before auth dependencies and route decorators) ────────
 
-app = FastAPI(title="EmotionAI", lifespan=lifespan)
+app = FastAPI(title="Emotional Analysis", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -296,9 +339,13 @@ async def get_admin_user(current: dict = Depends(get_current_user)):
 # ── SCHEMAS ───────────────────────────────────────────────────────────────────
 
 class RegisterRequest(BaseModel):
-    username: str
-    email:    str
-    password: str
+    email:       str
+    password:    str
+    username:    Optional[str] = None   # optional — auto-derived from email if not provided
+    security_q1: Optional[str] = None
+    security_a1: Optional[str] = None
+    security_q2: Optional[str] = None
+    security_a2: Optional[str] = None
 
 class RefreshRequest(BaseModel):
     refresh_token: str
@@ -334,8 +381,8 @@ class AdminCreateUserRequest(BaseModel):
 EMOTION_LABELS = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
 
 ENGAGEMENT_SCORES: dict[str, float] = {
-    "Happiness": 1.0, "Surprise": 1.0, "Neutral": 0.6,
-    "Sadness": 0.3,   "Fear": 0.3,    "Anger": 0.1, "Disgust": 0.1,
+    "Happiness": 0.90, "Surprise": 0.85, "Neutral": 0.75,
+    "Sadness": 0.30,   "Fear": 0.50,    "Anger": 0.60, "Disgust": 0.20,
 }
 
 def emotion_to_engagement(emotion: str) -> float:
@@ -376,18 +423,40 @@ async def register(body: RegisterRequest):
     err = validate_password_strength(body.password)
     if err:
         raise HTTPException(status_code=400, detail=err)
-    un_err = validate_username(body.username)
-    if un_err:
-        raise HTTPException(status_code=400, detail=un_err)
+
+    # Derive username from email local-part if not provided
+    email_clean = body.email.strip().lower()
+    if body.username and body.username.strip():
+        username = body.username.strip()
+        un_err = validate_username(username)
+        if un_err:
+            raise HTTPException(status_code=400, detail=un_err)
+    else:
+        # Auto-derive: take part before @, replace non-alphanum with _
+        local = email_clean.split("@")[0]
+        username = re.sub(r"[^A-Za-z0-9._-]", "_", local)[:30] or "user"
+
     con = db_conn()
     cur = con.cursor()
     try:
-        cur.execute("SELECT id FROM users WHERE username=%s OR email=%s",
-                    (body.username.strip(), body.email.strip()))
+        cur.execute("SELECT id FROM users WHERE email=%s", (email_clean,))
         if cur.fetchone():
-            raise HTTPException(status_code=400, detail="Username or email already taken.")
-        cur.execute("INSERT INTO users (username, email, password_hash) VALUES (%s,%s,%s)",
-                    (body.username.strip(), body.email.strip(), hash_password(body.password)))
+            raise HTTPException(status_code=400, detail="An account with this email already exists.")
+        # Ensure derived username is unique by appending a short suffix if needed
+        base_username = username
+        suffix = 1
+        while True:
+            cur.execute("SELECT id FROM users WHERE username=%s", (username,))
+            if not cur.fetchone():
+                break
+            username = f"{base_username}{suffix}"
+            suffix += 1
+        cur.execute(
+            "INSERT INTO users (username, email, password_hash, security_q1, security_a1, security_q2, security_a2) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            (username, email_clean, hash_password(body.password),
+             body.security_q1, body.security_a1, body.security_q2, body.security_a2)
+        )
         con.commit()
         return {"message": "Account created successfully"}
     finally:
@@ -404,12 +473,12 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
     cur = con.cursor()
     try:
         cur.execute(
-            "SELECT * FROM users WHERE username=%s",
-            (form.username,)
+            "SELECT * FROM users WHERE LOWER(email)=%s",
+            (form.username.strip().lower(),)
         )
         row = fetchone(cur)
         if not row or not verify_password(form.password, row["password_hash"]):
-            raise HTTPException(status_code=401, detail="Incorrect username or password")
+            raise HTTPException(status_code=401, detail="Incorrect email or password")
         cur.execute("UPDATE users SET last_login=NOW() WHERE id=%s", (row["id"],))
         con.commit()
         return {
@@ -428,8 +497,8 @@ async def admin_login(form: OAuth2PasswordRequestForm = Depends()):
     cur = con.cursor()
     try:
         cur.execute(
-            "SELECT * FROM users WHERE username=%s AND is_admin=TRUE",
-            (form.username,)
+            "SELECT * FROM users WHERE LOWER(email)=%s AND is_admin=TRUE",
+            (form.username.strip().lower(),)
         )
         row = fetchone(cur)
         if not row or not verify_password(form.password, row["password_hash"]):
@@ -477,6 +546,114 @@ async def me(current: dict = Depends(get_current_user)):
         "created_at": current["created_at"],
         "last_login": current["last_login"],
     }
+
+
+@app.post("/auth/reset/verify-email")
+async def reset_verify_email(body: dict, request: Request):
+    """Step 1: confirm email exists, return security question labels, open a log row."""
+    email = body.get("email", "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required.")
+    ip = request.client.host if request.client else None
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT id, security_q1, security_q2 FROM users WHERE LOWER(email)=%s AND is_admin=FALSE",
+            (email,)
+        )
+        row = fetchone(cur)
+        if not row:
+            raise HTTPException(status_code=404, detail="No account found for that email. Please sign up first.")
+        if not row.get("security_q1") or not row.get("security_q2"):
+            raise HTTPException(status_code=400, detail="This account has no security questions set. Please contact support.")
+        # Open a new log row for this reset attempt
+        cur.execute(
+            """INSERT INTO password_reset_log
+               (user_id, email, security_q1, security_q2, step1_at, ip_address)
+               VALUES (%s, %s, %s, %s, NOW(), %s)""",
+            (row["id"], email, row["security_q1"], row["security_q2"], ip)
+        )
+        con.commit()
+        return {"q1label": row["security_q1"], "q2label": row["security_q2"]}
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/reset/verify-answers")
+async def reset_verify_answers(body: dict):
+    """Step 2: verify security answers and mark log row as step2 passed/failed."""
+    email = body.get("email", "").strip().lower()
+    a1    = (body.get("a1") or "").strip().lower()
+    a2    = (body.get("a2") or "").strip().lower()
+    if not email or not a1 or not a2:
+        raise HTTPException(status_code=400, detail="Email and both answers are required.")
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT id, security_a1, security_a2 FROM users WHERE LOWER(email)=%s AND is_admin=FALSE",
+            (email,)
+        )
+        row = fetchone(cur)
+        if not row:
+            raise HTTPException(status_code=404, detail="Account not found.")
+        passed = (
+            a1 == (row.get("security_a1") or "").strip().lower() and
+            a2 == (row.get("security_a2") or "").strip().lower()
+        )
+        # Update the most recent log row for this email
+        cur.execute(
+            """UPDATE password_reset_log
+               SET step2_at=NOW(), step2_passed=%s
+               WHERE id = (
+                   SELECT id FROM password_reset_log
+                   WHERE user_id=%s ORDER BY step1_at DESC LIMIT 1
+               )""",
+            (passed, row["id"])
+        )
+        con.commit()
+        if not passed:
+            raise HTTPException(status_code=400, detail="Answers do not match. Please check and try again.")
+        return {"verified": True}
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/reset/password")
+async def reset_password(body: dict):
+    """Step 3: set the new password and mark the log row as completed."""
+    email  = body.get("email", "").strip().lower()
+    new_pw = body.get("new_password", "")
+    if not email or not new_pw:
+        raise HTTPException(status_code=400, detail="Email and new password are required.")
+    err = validate_password_strength(new_pw)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT id FROM users WHERE LOWER(email)=%s AND is_admin=FALSE", (email,))
+        row = fetchone(cur)
+        if not row:
+            raise HTTPException(status_code=404, detail="Account not found.")
+        # Update password in users table + stamp reset timestamp
+        cur.execute("UPDATE users SET password_hash=%s, password_reset_at=NOW() WHERE id=%s",
+                    (hash_password(new_pw), row["id"]))
+        # Mark reset log as completed
+        cur.execute(
+            """UPDATE password_reset_log
+               SET step3_at=NOW(), completed=TRUE
+               WHERE id = (
+                   SELECT id FROM password_reset_log
+                   WHERE user_id=%s ORDER BY step1_at DESC LIMIT 1
+               )""",
+            (row["id"],)
+        )
+        con.commit()
+        return {"message": "Password reset successfully."}
+    finally:
+        cur.close(); con.close()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1119,7 +1296,7 @@ async def landing_page():
 @app.get("/app")
 @app.get("/app.html")
 async def app_page():
-    return FileResponse(os.path.join(FRONTEND_DIR, "app.html"))
+    return RedirectResponse(url="/livecam", status_code=302)
 
 @app.get("/login")
 @app.get("/login.html")
@@ -1140,6 +1317,16 @@ async def feedback_page():
 @app.get("/admin.html")
 async def admin_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
+
+@app.get("/detect")
+@app.get("/detect.html")
+async def detect_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "detect.html"))
+
+@app.get("/livecam")
+@app.get("/livecam.html")
+async def livecam_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "livecam.html"))
 
 @app.get("/logout")
 async def logout():

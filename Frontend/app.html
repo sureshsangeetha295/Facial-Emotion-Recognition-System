@@ -1,136 +1,1048 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>EmotionAI — Detection Dashboard</title>
-  <link rel="stylesheet" href="style/app.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EmotionAI — Detection Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
+  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
+  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.06),0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 8px 32px rgba(0,0,0,0.05);
+  --green:#16a34a;--yellow:#ca8a04;--red:#dc2626;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+  --muted:#a8a29e;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* ── JS ghost elements — strictly invisible ── */
+.js-ghost{display:none!important;visibility:hidden!important;pointer-events:none!important;position:absolute!important;width:0!important;height:0!important;overflow:hidden!important}
+
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;background:rgba(250,249,247,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);flex-shrink:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1rem;text-decoration:none;color:var(--text)}
+.logo-box{width:28px;height:28px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;font-family:var(--font-body)}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.back-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-live-badge{display:none;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.2);font-size:11px;font-weight:700;color:#dc2626;letter-spacing:0.06em}
+.nav-live-badge.active{display:flex}
+.nav-live-dot{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:livePip 1s ease-in-out infinite}
+@keyframes livePip{0%,100%{opacity:1}50%{opacity:0.2}}
+.nav-launch-wrap{position:relative;display:inline-flex}
+.nav-launch-btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:7px 15px;border-radius:99px;background:var(--accent);color:#fff;border:none;cursor:pointer;box-shadow:0 3px 10px var(--accent-glow);transition:all 0.15s;font-family:var(--font-body)}
+.nav-launch-btn:hover{background:var(--accent2)}
+.nav-launch-btn svg{width:11px;height:11px;fill:#fff;flex-shrink:0}
+.nav-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.12);min-width:200px;padding:6px;z-index:200;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.18s ease,transform 0.18s ease;transform-origin:top right}
+.nav-launch-wrap.open .nav-dropdown{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+.nav-dd-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--text);font-size:12px;font-weight:500;transition:background 0.12s}
+.nav-dd-item:hover{background:var(--accent-dim);color:var(--accent)}
+.nav-dd-item.current{background:var(--accent-dim);color:var(--accent);pointer-events:none}
+.nav-dd-icon{width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.12s}
+.nav-dd-icon svg{width:13px;height:13px;stroke-width:2;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.nav-dd-item.current .nav-dd-icon{background:var(--accent);color:#fff}
+.nav-dd-item.current .nav-dd-icon svg{stroke:#fff}
+.nav-dd-label{font-weight:700;font-size:12px}
+.nav-dd-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.nav-dd-divider{height:1px;background:var(--border);margin:4px 0}
+
+/* ── MAIN 3-COL GRID ── */
+.app-body{display:grid;grid-template-columns:300px 1fr 380px;flex:1;min-height:0;overflow:hidden}
+
+/* ── LEFT PANEL ── */
+.left-panel{background:var(--surface);border-right:1px solid var(--border);padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.left-panel::-webkit-scrollbar{width:3px}
+.left-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.panel-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.panel-title{font-family:var(--font-display);font-size:1.1rem;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin-bottom:8px}
+.panel-title em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.info-box{background:linear-gradient(135deg,#fff9f5,#fff);border:1px solid rgba(232,68,10,0.12);border-radius:14px;padding:12px 16px}
+.bullets{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.bullet{display:flex;gap:8px;font-size:11.5px;color:var(--text2);line-height:1.5}
+.bdot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+
+/* Guide steps */
+.guide-label{font-size:9.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.guide-section{display:flex;flex-direction:column;gap:5px}
+.guide-step{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);transition:all 0.25s}
+.guide-step.active{border-color:rgba(232,68,10,0.35);background:var(--accent-dim)}
+.guide-step.done{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.05)}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--elevated);color:var(--text3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:9.5px;flex-shrink:0;transition:all 0.25s}
+.guide-step.active .step-num{background:var(--accent);color:#fff}
+.guide-step.done .step-num{background:#22c55e;color:#fff}
+.step-text{font-size:11.5px;font-weight:500;color:var(--text2);transition:color 0.25s;line-height:1.35;flex:1}
+.guide-step.active .step-text{color:var(--accent)}
+.guide-step.done .step-text{color:#15803d}
+.step-icon{width:24px;height:24px;border-radius:7px;background:var(--elevated);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto}
+.step-icon svg{width:12px;height:12px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.guide-step.active .step-icon{background:rgba(232,68,10,0.15)}
+.guide-step.active .step-icon svg{stroke:var(--accent)}
+.guide-step.done .step-icon svg{stroke:#22c55e}
+
+/* Session Notes in left panel */
+.notes-section-hdr{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.notes-add-btn{font-size:10.5px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px;transition:background 0.12s}
+.notes-add-btn:hover{background:var(--accent-dim)}
+.notes-input-wrap{display:none;margin-bottom:8px}
+.notes-textarea{width:100%;border:1.5px solid var(--border2);border-radius:10px;padding:8px 10px;font-size:11.5px;font-family:var(--font-body);color:var(--text);background:var(--surface);resize:none;outline:none;min-height:64px;transition:border-color 0.15s}
+.notes-textarea:focus{border-color:var(--accent)}
+.notes-actions{display:flex;gap:6px;margin-top:5px;justify-content:flex-end}
+.notes-cancel-btn{font-size:11px;font-weight:600;color:var(--text2);background:none;border:1.5px solid var(--border2);border-radius:7px;padding:4px 10px;cursor:pointer;font-family:var(--font-body)}
+.notes-save-btn{font-size:11px;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:7px;padding:4px 12px;cursor:pointer;font-family:var(--font-body)}
+.notes-list{display:flex;flex-direction:column;gap:5px;max-height:160px;overflow-y:auto}
+.notes-list::-webkit-scrollbar{width:3px}
+.notes-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.notes-empty{font-size:11px;color:var(--text3);font-style:italic;text-align:center;padding:8px 0}
+.note-item{display:flex;align-items:flex-start;gap:6px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.note-ts{font-size:9px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px}
+.note-text{font-size:11px;color:var(--text2);flex:1;line-height:1.45;word-break:break-word}
+.note-delete{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;flex-shrink:0;padding:1px 3px;border-radius:4px}
+.note-delete:hover{color:var(--red);background:rgba(220,38,38,0.07)}
+
+/* ── CENTER: Camera ── */
+.center-col{display:flex;flex-direction:column;align-items:center;padding:10px 14px;gap:8px;background:#f2f1ee;overflow:hidden;position:relative}
+.cam-box{position:relative;width:100%;flex:1;min-height:0;background:#1c1a18;border:3px solid var(--accent);border-radius:18px;overflow:hidden;box-shadow:0 8px 48px rgba(232,68,10,.25),0 4px 20px rgba(0,0,0,0.3);transition:box-shadow 0.4s}
+.cam-box.live-active{border-color:#dc2626;box-shadow:0 8px 48px rgba(220,38,38,.35),0 4px 20px rgba(0,0,0,0.35)}
+#videoFeed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.bk{position:absolute;width:22px;height:22px;border-color:rgba(255,255,255,0.45);border-style:solid;z-index:4}
+.bk.tl{top:12px;left:12px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
+.bk.tr{top:12px;right:12px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
+.bk.bl{bottom:12px;left:12px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
+.bk.br{bottom:12px;right:12px;border-width:0 2px 2px 0;border-radius:0 0 3px 0}
+
+/* Status badge */
+.cam-status{position:absolute;top:10px;left:10px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border-radius:20px;padding:4px 11px;border:1px solid rgba(255,255,255,0.1)}
+.cam-status-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;flex-shrink:0}
+.cam-status-dot.ready{background:#22c55e;animation:pip 1.4s ease-in-out infinite}
+.cam-status-dot.live{background:#dc2626;animation:livePip 0.8s ease-in-out infinite}
+.cam-status-dot.processing{background:var(--accent);animation:pip 0.5s ease-in-out infinite}
+@keyframes pip{0%,100%{opacity:1}50%{opacity:0.3}}
+.cam-status-txt{font-size:10px;font-weight:700;color:#fff;letter-spacing:0.07em}
+
+/* LIVE tag */
+.live-tag{position:absolute;top:10px;right:10px;z-index:9;display:none;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;background:rgba(220,38,38,0.85);border:1px solid rgba(255,255,255,0.15);font-size:10px;font-weight:700;color:#fff;letter-spacing:0.07em;backdrop-filter:blur(6px)}
+.live-tag.visible{display:flex}
+.live-tag-dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:livePip 0.8s ease-in-out infinite}
+
+/* Detection bar */
+.detection-bar{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:7px 14px;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);font-size:11px;font-weight:600;color:#fff;letter-spacing:0.02em;transform:translateY(100%);transition:transform 0.3s ease;text-align:center}
+.detection-bar.visible{transform:translateY(0)}
+
+/* Scan line */
+.cam-scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(232,68,10,0.9),transparent);z-index:5;opacity:0;pointer-events:none}
+.cam-scan.active{animation:scanAnim 1.4s ease-in-out forwards}
+.cam-scan.live{animation:scanLive 2s ease-in-out infinite}
+@keyframes scanAnim{0%{top:5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:95%;opacity:0}}
+@keyframes scanLive{0%{top:5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:95%;opacity:0}}
+
+/* Idle avatar inside camera */
+.cam-idle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#2b2927,#1c1a18);transition:opacity 0.4s;overflow:hidden;padding:0 24px}
+.idle-inner{display:flex;align-items:center;gap:18px;width:100%;max-width:520px}
+.idle-text-side{flex:1;display:flex;flex-direction:column;gap:6px}
+.greeting-line{font-size:14px;font-weight:700;color:#fff;font-family:var(--font-body);text-shadow:0 1px 8px rgba(0,0,0,0.7);line-height:1.3}
+.greeting-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.05em}
+.typewriter-label{font-size:11.5px;color:rgba(255,255,255,0.7);min-height:17px;font-family:var(--font-body)}
+.typewriter-cursor{display:inline-block;width:1px;height:12px;background:var(--accent);margin-left:2px;vertical-align:middle;animation:cursorBlink 0.8s step-end infinite}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+.idle-hint{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,0.28);letter-spacing:0.07em;text-transform:uppercase;margin-top:2px}
+.idle-hint-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0.7}
+
+/* Avatar animations */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
+@keyframes eyeMove{0%,30%{transform:translateX(0)}35%,55%{transform:translateX(2px)}60%,100%{transform:translateX(0)}}
+@keyframes breathe{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.04)}}
+.avatar-group{animation:float 3.5s ease-in-out infinite}
+.avatar-eye{fill:#2a1a0a;animation:blink 4s ease-in-out infinite}
+.avatar-pupil{fill:#5b3a1a;animation:eyeMove 5s ease-in-out infinite}
+.avatar-body-anim{animation:breathe 3.5s ease-in-out infinite}
+
+/* Reaction box */
+.reaction-box{position:absolute;bottom:14px;right:12px;z-index:9;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(10,8,6,0.42);backdrop-filter:blur(14px);border-radius:18px;padding:10px 7px;border:1px solid rgba(255,255,255,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.35)}
+.reaction-box.show{display:flex}
+.rx-label{font-size:7.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:1px}
+.reaction-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.13);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s;position:relative}
+.reaction-btn:hover{background:rgba(255,255,255,0.18);transform:scale(1.14);border-color:rgba(255,255,255,0.3)}
+.reaction-btn.active{background:rgba(232,68,10,0.35);border-color:var(--accent)}
+.reaction-btn .tooltip{position:absolute;right:calc(100% + 7px);top:50%;transform:translateY(-50%);white-space:nowrap;background:rgba(0,0,0,0.8);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity 0.15s;letter-spacing:0.04em}
+.reaction-btn:hover .tooltip{opacity:1}
+.rx-divider{width:18px;height:1px;background:rgba(255,255,255,0.1)}
+.float-reaction{position:absolute;font-size:22px;pointer-events:none;z-index:20;animation:floatUp 1.6s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(1.5)}}
+
+/* Upload video label */
+.upload-label{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:9px 14px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.upload-label:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.upload-label svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Buttons */
+.btn-row{display:flex;gap:8px;width:100%;flex-shrink:0;flex-wrap:wrap}
+.btn{flex:1;min-width:90px;padding:9px 12px;border:none;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.2s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 14px var(--accent-glow)}
+.btn:disabled{opacity:0.45;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border2)}
+.btn-ghost:hover:not(:disabled){background:var(--accent-dim);color:var(--accent);border-color:rgba(232,68,10,0.3);box-shadow:none}
+.btn-stop{background:#dc2626}
+.btn-stop:hover:not(:disabled){background:#b91c1c;box-shadow:0 4px 14px rgba(220,38,38,0.4)}
+.btn svg{width:12px;height:12px;stroke:currentColor;fill:currentColor;stroke-width:0;flex-shrink:0}
+.btn.btn-icon svg{stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── RIGHT PANEL ── */
+.right-panel{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.section-hdr{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:7px;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.section-hdr svg{width:11px;height:11px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* All Probabilities */
+.prob-section{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.prob-list{display:flex;flex-direction:column;gap:5px}
+.prob-row{display:grid;grid-template-columns:90px 1fr 40px;align-items:center;gap:7px}
+.prob-label{font-size:11px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.p-icon{font-size:12px}
+.prob-bar-bg{height:7px;border-radius:99px;background:var(--elevated);overflow:hidden}
+.prob-bar-fill{height:100%;border-radius:99px;background:var(--accent);transition:width 0.6s ease;opacity:0.6;width:0%}
+.prob-bar-fill.active{opacity:1;background:var(--grad)}
+.prob-pct{font-size:10.5px;font-weight:700;color:var(--text3);text-align:right}
+.prob-pct.active{color:var(--accent)}
+
+/* Speedometer */
+.speedo-section{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.speedo-wrap{display:flex;flex-direction:column;align-items:center}
+.speedo-svg{width:100%;max-width:220px}
+.speedo-value-label{font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--text);margin-top:-4px;text-align:center;transition:color 0.5s}
+.speedo-status-txt{font-size:10px;color:var(--text2);text-align:center;margin-top:1px;font-weight:500}
+.speedo-legend{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;width:100%}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--text2);font-weight:500}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* Session Summary (stats row) */
+.summary-section{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.session-stats-row{display:flex;align-items:center;gap:8px}
+.sess-stat{display:flex;flex-direction:column;gap:1px;padding:4px 7px;background:var(--elevated);border-radius:7px;flex:1;align-items:center}
+.sess-stat-val{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:var(--text);line-height:1;text-align:center;white-space:nowrap}
+.sess-stat-lbl{font-size:7px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:1px;text-align:center}
+.sess-stat-val.green{color:var(--green)}
+.sess-stat-val.yellow{color:var(--yellow)}
+.sess-stat-val.red{color:var(--red)}
+.end-note-row{display:none;align-items:center;gap:6px;padding:5px 8px;background:linear-gradient(135deg,#fff9f5,#fff);border:1px solid rgba(232,68,10,0.12);border-radius:8px;margin-top:6px}
+.end-note-row.show{display:flex}
+.end-time-badge{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.end-note-txt{font-size:10px;color:var(--text2);font-weight:600;line-height:1.4}
+
+/* Timeline */
+.timeline-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:11px 16px;min-height:0}
+.timeline-stats-row{display:flex;gap:6px;margin-bottom:8px;flex-shrink:0}
+.tl-stat-cell{display:flex;flex-direction:column;align-items:center;flex:1;padding:4px 6px;background:var(--elevated);border-radius:8px}
+.tl-stat-val{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:var(--text);line-height:1}
+.tl-stat-lbl{font-size:7.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:1px}
+.timeline-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;flex-shrink:0}
+.tl-summary-chip{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid;display:inline-flex;align-items:center;gap:4px}
+.timeline-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;min-height:0}
+.timeline-scroll::-webkit-scrollbar{width:3px}
+.timeline-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.tl-empty{font-size:11px;color:var(--text3);font-style:italic;text-align:center;margin-top:10px}
+.tl-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);font-size:10px;color:var(--text2);background:var(--surface)}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
+.tl-time{font-weight:700;color:var(--text);flex-shrink:0;min-width:32px;font-size:9.5px}
+.tl-msg{flex:1;line-height:1.4}
+.tl-icon{font-size:11px;flex-shrink:0}
+
+/* ── BOTTOM 2-COL ── */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);flex-shrink:0;min-height:0;max-height:200px}
+.bottom-col{padding:10px 14px;overflow:hidden;display:flex;flex-direction:column}
+.bottom-col+.bottom-col{border-left:1px solid var(--border)}
+.col-hdr{font-family:var(--font-display);font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.col-hdr svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Detected emotion panel */
+.detected-panel{display:flex;align-items:center;gap:12px;flex:1;overflow:hidden}
+.det-avatar-wrap{flex-shrink:0}
+@keyframes detFloat{0%,100%{transform:translateY(0px)}50%{transform:translateY(-4px)}}
+@keyframes detBlink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
+@keyframes detBreath{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.05)}}
+.det-av-group{animation:detFloat 3s ease-in-out infinite}
+.det-av-body{animation:detBreath 3s ease-in-out infinite}
+.det-av-eye{animation:detBlink 4s ease-in-out infinite}
+.det-info{flex:1;min-width:0}
+.det-name{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);transition:color 0.3s;line-height:1.0}
+.det-conf-badge{display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-dim);color:var(--accent);border:1px solid rgba(232,68,10,0.2)}
+.det-conf-badge.hidden{display:none}
+.det-desc{font-size:10.5px;color:var(--text2);line-height:1.5;margin-top:4px}
+.det-awaiting-txt{font-size:11px;color:var(--text3);font-style:italic;margin-top:3px}
+
+/* Student Engagement Insight (bottom right) */
+.insight-box{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.insight-avatar-row{display:flex;align-items:flex-start;gap:10px;flex:1;overflow:hidden}
+.insight-text{font-size:11px;color:var(--text2);line-height:1.6;flex:1;overflow:hidden}
+.insight-text strong{color:var(--text);font-weight:700}
+.insight-awaiting{font-size:11px;color:var(--text3);font-style:italic}
+.insight-head{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px}
+.motivate-box{margin-top:6px;padding:6px 10px;border-radius:8px;font-size:10.5px;font-weight:600;line-height:1.5;display:none}
+.motivate-box.show{display:block}
+.motivate-box.green{background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);color:#15803d}
+.motivate-box.yellow{background:rgba(202,138,4,0.08);border:1px solid rgba(202,138,4,0.22);color:#92400e}
+.motivate-box.red{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.18);color:#b91c1c}
+.insight-chip{display:none;align-items:center;gap:4px;margin-bottom:4px;font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:99px;border:1px solid;width:fit-content}
+.insight-chip.visible{display:inline-flex}
+.chip-green{background:rgba(22,163,74,0.1);color:#15803d;border-color:rgba(22,163,74,0.25)}
+.chip-yellow{background:rgba(202,138,4,0.1);color:#92400e;border-color:rgba(202,138,4,0.25)}
+.chip-red{background:rgba(220,38,38,0.1);color:#b91c1c;border-color:rgba(220,38,38,0.25)}
+
+/* Dom particle */
+.dom-particle{position:absolute;font-size:16px;pointer-events:none;z-index:20;animation:floatUp 1.5s ease-out forwards}
+
+/* ── ms badge (ghost/hidden) ── */
+#msBadge{display:none}
+</style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="logo">
-    <div class="logo-icon">😊</div>
+<!-- ═══ NAV ═══ -->
+<nav>
+  <a class="nav-logo" href="/home">
+    <div class="logo-box">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+        <circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/>
+      </svg>
+    </div>
     Emotion Analysis
+  </a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="nav-live-badge" id="liveBadge"><div class="nav-live-dot"></div>LIVE</div>
+    <span id="topbarUser" style="font-size:12px;color:var(--text3)"></span>
   </div>
-  <div class="topbar-right">
-    <div class="live-badge" id="liveBadge"><div class="live-dot"></div> Live</div>
-    <span id="topbarUser" style="font-size:13px;color:#94a3b8;margin-right:4px"></span>
-    <button class="back-btn" onclick="history.back()">← Back</button>
-    <button class="back-btn" onclick="Auth.logout()" style="margin-left:6px">Sign out</button>
+  <div class="nav-right">
+    <a class="back-btn" href="/home">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back
+    </a>
+    <a class="back-btn" href="#" onclick="if(typeof Auth!=='undefined')Auth.logout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </a>
+    <div class="nav-launch-wrap" id="navLaunchWrap">
+      <button class="nav-launch-btn" onclick="toggleLaunchMenu(event)">
+        <svg viewBox="0 0 24 24" width="11" height="11"><polygon points="6 3 20 12 6 21 6 3" fill="white"/></svg>
+        Switch Mode
+        <svg viewBox="0 0 10 6" width="10" height="6" id="launchChevron"><path d="M0 0l5 6 5-6z" fill="white"/></svg>
+      </button>
+      <div class="nav-dropdown" id="navDropdown">
+        <a class="nav-dd-item" href="/detect">
+          <div class="nav-dd-icon"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><div class="nav-dd-label">Detect</div><div class="nav-dd-sub">Single snapshot mode</div></div>
+        </a>
+        <div class="nav-dd-divider"></div>
+        <a class="nav-dd-item current" href="/livecam">
+          <div class="nav-dd-icon"><svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.07A1 1 0 0 1 21 8.845v6.31a1 1 0 0 1-1.447.914L15 14"/><rect x="2" y="7" width="13" height="10" rx="2"/></svg></div>
+          <div><div class="nav-dd-label">Live Cam</div><div class="nav-dd-sub">Current page</div></div>
+        </a>
+        <div class="nav-dd-divider"></div>
+        <a class="nav-dd-item" href="/upload">
+          <div class="nav-dd-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div><div class="nav-dd-label">Upload</div><div class="nav-dd-sub">Analyze video or image</div></div>
+        </a>
+      </div>
+    </div>
   </div>
-</div>
+</nav>
 
+<!-- ═══ MAIN 3-COL ═══ -->
 <div class="app-body">
 
-  <!-- ═══ LEFT ~40% : Camera top → Student Engagement Insight bottom ═══ -->
-  <div class="left-col">
-
-    <!-- CAMERA -->
-    <div class="cam-pane">
-      <video id="videoFeed" autoplay muted playsinline class="cam-feed"></video>
-
-      <!-- JS-required ghost elements — strictly invisible -->
-      <div id="msBadge"          class="js-ghost"></div>
-      <div id="camResultOverlay" class="js-ghost">
-        <div class="cam-result-emotion">
-          <div class="cam-result-dot" id="resultDot"></div>
-          <span id="resultEmotion"></span>
+  <!-- ═══ LEFT: Info + Guide + Notes ═══ -->
+  <div class="left-panel">
+    <div>
+      <div class="panel-label">Detection Dashboard</div>
+      <div class="panel-title">Analyse emotions <em>in real time.</em></div>
+    </div>
+    <div class="info-box">
+      <div class="bullets">
+        <div class="bullet"><div class="bdot"></div><span>Captures frames from your live camera and runs them through the AI model for a precise emotional reading.</span></div>
+        <div class="bullet"><div class="bdot"></div><span>Returns a full probability distribution across all 7 emotion classes with millisecond-level inference speed.</span></div>
+        <div class="bullet"><div class="bdot"></div><span>Go Live for continuous monitoring, or use single Detect for spot checks and structured sessions.</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="guide-label">Guide</div>
+      <div class="guide-section">
+        <div class="guide-step active" id="step1">
+          <div class="step-num" id="stepNum1">1</div>
+          <div class="step-text">Camera starts automatically on load</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
         </div>
-        <div class="cam-eng-row">
-          <div>
-            <div class="cam-eng-float" id="engFloat"></div>
-            <div class="cam-eng-label" id="resultConf"></div>
-          </div>
-          <div>
-            <div class="cam-eng-val"   id="engNum"></div>
-            <div class="cam-eng-pct"   id="engPctSuffix"></div>
-          </div>
+        <div class="guide-step" id="step2">
+          <div class="step-num" id="stepNum2">2</div>
+          <div class="step-text">Click <strong>Detect</strong> for a single snapshot</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        </div>
+        <div class="guide-step" id="step3">
+          <div class="step-num" id="stepNum3">3</div>
+          <div class="step-text">Or click <strong>Go Live</strong> for continuous tracking</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        </div>
+        <div class="guide-step" id="step4">
+          <div class="step-num" id="stepNum4">4</div>
+          <div class="step-text">View results, timeline &amp; engagement below</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
         </div>
       </div>
-
-      <div class="live-tag" id="liveTag">LIVE</div>
-      <div class="detection-bar" id="detectionBar"></div>
-
-      <div class="btn-row" id="btnRow">
-        <button class="btn btn-detect" id="btnDetect"      onclick="doDetect()">🔴 Detect</button>
-        <button class="btn btn-live"   id="btnGoLive"      onclick="startLive()">🎬 Go Live</button>
-        <button class="btn btn-stop"   id="btnStop"        onclick="stopLive()" style="display:none">⏹ Stop</button>
-        <button class="btn btn-upload" id="btnUploadVideo" onclick="document.getElementById('videoFileInput').click()">📤 Upload Video</button>
-        <input type="file" id="videoFileInput" accept="video/*" style="display:none"/>
-      </div>
     </div>
 
-    <!-- STUDENT ENGAGEMENT INSIGHT (below camera, left col) -->
-    <div class="breakdown-pane">
-      <div class="breakdown-hdr">
-        <div class="pane-label">Student Engagement Insight</div>
-        <div class="avg-eng-pill">Avg Eng: <span id="avgEngDisplay">—</span></div>
-      </div>
-      <div id="dominantCard" class="dominant-card empty">
-        <span class="dom-placeholder">Run detection to see engagement insight</span>
-      </div>
-      <!-- tutor log — hidden, kept for JS compat -->
-      <div class="tutor-log" id="tutorLog" style="display:none;"></div>
-    </div>
-
-  </div>
-
-  <!-- ═══ RIGHT ~60% : Probabilities → Timeline → Notes ═══ -->
-  <div class="right-col">
-
-    <!-- ALL PROBABILITIES -->
-    <div class="prob-pane">
-      <div class="prob-header"><div class="prob-title">All Probabilities</div></div>
-      <div class="prob-list" id="probList"></div>
-    </div>
-
-    <!-- SESSION TIMELINE -->
-    <div class="timeline-pane">
-      <div class="timeline-hdr">
-        <div class="pane-label">Session Timeline</div>
-        <span id="lastDetected" style="font-size:11px;color:var(--muted);"></span>
-      </div>
-      <div class="tl-stats-row">
-        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlDetCount">0</div><div class="tl-stat-lbl">Detections</div></div>
-        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlAvgEng">—</div><div class="tl-stat-lbl">Avg Eng</div></div>
-        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlTopEmo">—</div><div class="tl-stat-lbl">Top Emotion</div></div>
-        <div class="tl-stat-cell"><div class="tl-stat-val" id="tlDuration">00:00</div><div class="tl-stat-lbl">Duration</div></div>
-      </div>
-      <div id="timelineTag" class="timeline-tags"></div>
-      <!-- JS-compat hidden -->
-      <div id="timelineDots" style="display:none"></div>
-      <div id="tlEngBar"     style="display:none"></div>
-      <div id="tlConfBar"    style="display:none"></div>
-      <div id="tlEngVal"     style="display:none"></div>
-      <div id="tlConfVal"    style="display:none"></div>
-    </div>
-
-    <!-- SESSION NOTES -->
-    <div class="notes-pane">
-      <div class="notes-hdr">
-        <div class="pane-label">Session Notes</div>
+    <!-- Session Notes -->
+    <div style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="notes-section-hdr">
+        <span>Session Notes</span>
         <button class="notes-add-btn" onclick="toggleNoteInput()">+ Add Note</button>
       </div>
-      <div class="notes-input-wrap" id="noteInputWrap" style="display:none;">
+      <div class="notes-input-wrap" id="noteInputWrap">
         <textarea class="notes-textarea" id="noteTextarea"
-          placeholder="Write anything — observations, numbers, symbols, reminders… (Ctrl+Enter to save)"
-          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+          placeholder="Write observations, numbers, reminders… (Ctrl+Enter to save)"
+          autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
         <div class="notes-actions">
           <button class="notes-cancel-btn" onclick="toggleNoteInput()">Cancel</button>
-          <button class="notes-save-btn"   onclick="saveNote()">Save Note</button>
+          <button class="notes-save-btn" onclick="saveNote()">Save Note</button>
         </div>
       </div>
       <div class="notes-list" id="notesList">
         <div class="notes-empty" id="notesEmpty">No notes yet — add observations during the session.</div>
       </div>
     </div>
+  </div>
 
+  <!-- ═══ CENTER: Camera ═══ -->
+  <div class="center-col">
+    <div class="cam-box" id="camBox">
+      <!-- Idle avatar with typewriter -->
+      <div class="cam-idle" id="camIdle">
+        <div class="idle-inner">
+          <div style="flex-shrink:0">
+            <svg class="avatar-group" viewBox="0 0 150 200" width="130" height="155">
+              <!-- laptop prop -->
+              <rect fill="#374151" x="22" y="158" width="106" height="6" rx="3"/>
+              <rect fill="#374151" x="30" y="140" width="90" height="22" rx="4"/>
+              <rect fill="#1e40af" x="34" y="143" width="82" height="16" rx="2"/>
+              <rect fill="rgba(255,255,255,0.22)" x="37" y="147" width="28" height="1.5" rx="1"/>
+              <rect fill="rgba(255,255,255,0.13)" x="37" y="151" width="18" height="1.5" rx="1"/>
+              <circle fill="#e8440a" cx="108" cy="147" r="3"/>
+              <!-- body -->
+              <rect fill="#f5d0a9" x="63" y="118" width="24" height="22" rx="4"/>
+              <g class="avatar-body-anim">
+                <ellipse fill="#3b82f6" cx="75" cy="148" rx="36" ry="20"/>
+                <path fill="#1d4ed8" d="M66 132 L75 142 L84 132 Q78 137 75 138 Q72 137 66 132Z"/>
+              </g>
+              <ellipse fill="#f5d0a9" cx="31" cy="88" rx="7" ry="9"/>
+              <ellipse fill="#f5d0a9" cx="119" cy="88" rx="7" ry="9"/>
+              <ellipse fill="#f5d0a9" cx="75" cy="85" rx="44" ry="50"/>
+              <ellipse fill="#2a1a0a" cx="75" cy="46" rx="44" ry="22"/>
+              <rect fill="#2a1a0a" x="31" y="44" width="88" height="14"/>
+              <ellipse fill="#2a1a0a" cx="31" cy="63" rx="8" ry="18"/>
+              <ellipse fill="#2a1a0a" cx="119" cy="63" rx="8" ry="18"/>
+              <!-- glasses -->
+              <rect fill="none" stroke="#374151" stroke-width="2" x="43" y="76" width="26" height="18" rx="5"/>
+              <rect fill="none" stroke="#374151" stroke-width="2" x="81" y="76" width="26" height="18" rx="5"/>
+              <line stroke="#374151" stroke-width="2" x1="69" y1="85" x2="81" y2="85"/>
+              <line stroke="#374151" stroke-width="2" x1="31" y1="85" x2="43" y2="85"/>
+              <line stroke="#374151" stroke-width="2" x1="107" y1="85" x2="119" y2="85"/>
+              <!-- cheeks -->
+              <ellipse fill="rgba(255,100,80,0.15)" cx="44" cy="97" rx="12" ry="8"/>
+              <ellipse fill="rgba(255,100,80,0.15)" cx="106" cy="97" rx="12" ry="8"/>
+              <!-- eyes -->
+              <g class="avatar-eye" style="transform-origin:56px 85px">
+                <ellipse cx="56" cy="85" rx="7" ry="7.5" fill="#fff"/>
+                <ellipse class="avatar-pupil" cx="57" cy="86" rx="4" ry="4.5" style="transform-origin:57px 86px"/>
+                <ellipse cx="58.5" cy="83" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+              </g>
+              <g class="avatar-eye" style="transform-origin:94px 85px">
+                <ellipse cx="94" cy="85" rx="7" ry="7.5" fill="#fff"/>
+                <ellipse class="avatar-pupil" cx="95" cy="86" rx="4" ry="4.5" style="transform-origin:95px 86px"/>
+                <ellipse cx="96.5" cy="83" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+              </g>
+              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M49 72 Q56 69 63 72"/>
+              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M87 72 Q94 69 101 72"/>
+              <path stroke="#c9956a" stroke-width="1.5" fill="none" d="M75 90 Q72 97 69 99 Q75 102 81 99 Q78 97 75 90"/>
+              <path stroke="#c06040" stroke-width="2" fill="none" stroke-linecap="round" id="avatarMouth" d="M 65 110 Q 75 117 85 110"/>
+            </svg>
+          </div>
+          <div class="idle-text-side">
+            <div class="greeting-line" id="greetingLine"></div>
+            <div class="greeting-sub">EmotionAI · Dashboard</div>
+            <div class="typewriter-label"><span id="typewriterText"></span><span class="typewriter-cursor"></span></div>
+            <div class="idle-hint"><div class="idle-hint-dot"></div>Click Detect or Go Live to begin</div>
+          </div>
+        </div>
+      </div>
+
+      <video id="videoFeed" autoplay muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"></video>
+      <canvas id="captureCanvas" style="display:none"></canvas>
+
+      <div class="bk tl"></div><div class="bk tr"></div><div class="bk bl"></div><div class="bk br"></div>
+
+      <div class="cam-status" id="camStatus">
+        <div class="cam-status-dot ready" id="camStatusDot"></div>
+        <span class="cam-status-txt" id="camStatusTxt">READY</span>
+      </div>
+
+      <div class="live-tag" id="liveTag"><div class="live-tag-dot"></div>LIVE</div>
+      <div class="cam-scan" id="camScan"></div>
+      <div class="detection-bar" id="detectionBar"></div>
+
+      <!-- Reaction box (shown during live) -->
+      <div class="reaction-box" id="reactionBox">
+        <div class="rx-label">React</div>
+        <button class="reaction-btn" onclick="sendReaction('thumbsup',this)">👍<span class="tooltip">Content is great!</span></button>
+        <button class="reaction-btn" onclick="sendReaction('thumbsdown',this)">👎<span class="tooltip">Not clear / boring</span></button>
+        <div class="rx-divider"></div>
+        <button class="reaction-btn" onclick="sendReaction('handraise',this)">✋<span class="tooltip">Repeat / Doubt</span></button>
+        <div class="rx-divider"></div>
+        <button class="reaction-btn" onclick="sendReaction('confused',this)">😕<span class="tooltip">I'm confused</span></button>
+        <button class="reaction-btn" onclick="sendReaction('clap',this)">👏<span class="tooltip">Great explanation!</span></button>
+      </div>
+
+      <!-- JS ghost compat elements -->
+      <div id="msBadge" class="js-ghost"></div>
+      <div id="camResultOverlay" class="js-ghost">
+        <div id="resultDot"></div><span id="resultEmotion"></span>
+        <div id="engFloat"></div><div id="resultConf"></div>
+        <div id="engNum"></div><div id="engPctSuffix"></div>
+      </div>
+    </div>
+
+    <div class="btn-row" id="btnRow">
+      <button class="btn btn-icon" id="btnDetect" onclick="doDetect()">
+        <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/></svg>
+        Detect
+      </button>
+      <button class="btn btn-icon" id="btnGoLive" onclick="startLive()">
+        <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Go Live
+      </button>
+      <button class="btn btn-stop btn-icon" id="btnStop" onclick="stopLive()" style="display:none">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="white"/></svg>
+        Stop
+      </button>
+      <label class="upload-label">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Video
+        <input type="file" id="videoFileInput" accept="video/*" style="display:none"/>
+      </label>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT PANEL: Probs + Speedometer + Timeline ═══ -->
+  <div class="right-panel">
+
+    <!-- All Probabilities -->
+    <div class="prob-section">
+      <div class="section-hdr">
+        <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        ALL PROBABILITIES
+      </div>
+      <div class="prob-list" id="probList"></div>
+    </div>
+
+    <!-- Engagement Speedometer -->
+    <div class="speedo-section">
+      <div class="section-hdr">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+        ENGAGEMENT METER
+      </div>
+      <div class="speedo-wrap">
+        <svg class="speedo-svg" viewBox="0 0 230 120" id="speedoSvg">
+          <defs>
+            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#dc2626"/>
+              <stop offset="40%" stop-color="#ca8a04"/>
+              <stop offset="100%" stop-color="#16a34a"/>
+            </linearGradient>
+          </defs>
+          <path d="M 20 112 A 95 95 0 0 1 210 112" fill="none" stroke="#e5e7eb" stroke-width="15" stroke-linecap="round"/>
+          <path d="M 20 112 A 95 95 0 0 1 210 112" fill="none" stroke="url(#arcGrad)" stroke-width="15" stroke-linecap="round" opacity="0.2"/>
+          <path id="speedoArc" d="M 20 112 A 95 95 0 0 1 115 17" fill="none" stroke="#ca8a04" stroke-width="15" stroke-linecap="round" opacity="0.9"/>
+          <line id="speedoNeedle" x1="115" y1="112" x2="115" y2="26" stroke="#1a1612" stroke-width="3" stroke-linecap="round" style="transform-origin:115px 112px;transform:rotate(0deg);transition:transform 0.9s cubic-bezier(0.34,1.56,0.64,1)"/>
+          <circle cx="115" cy="112" r="7" fill="#1a1612"/>
+          <circle cx="115" cy="112" r="3.5" fill="#fff"/>
+          <text x="12" y="116" font-size="8" fill="#dc2626" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">0</text>
+          <text x="107" y="12" font-size="8" fill="#6b7280" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" text-anchor="middle">50</text>
+          <text x="218" y="116" font-size="8" fill="#16a34a" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" text-anchor="end">100</text>
+        </svg>
+        <div class="speedo-value-label" id="speedoValue" style="color:var(--yellow)">—</div>
+        <div class="speedo-status-txt" id="speedoStatus">Awaiting detection</div>
+      </div>
+      <div class="speedo-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Green = Highly engaged</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ca8a04"></div>Yellow = Partial focus</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Red = Disengaged</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>Grey = Not tracking</div>
+      </div>
+    </div>
+
+    <!-- Session Summary stats -->
+    <div class="summary-section">
+      <div class="section-hdr">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        SESSION SUMMARY
+      </div>
+      <div class="session-stats-row">
+        <div class="sess-stat"><div class="sess-stat-val" id="tlDetCount">0</div><div class="sess-stat-lbl">Detections</div></div>
+        <div class="sess-stat"><div class="sess-stat-val green" id="statAttentive">—</div><div class="sess-stat-lbl">Attentive</div></div>
+        <div class="sess-stat"><div class="sess-stat-val yellow" id="statPartial">—</div><div class="sess-stat-lbl">Partial</div></div>
+        <div class="sess-stat"><div class="sess-stat-val red" id="statDisengaged">—</div><div class="sess-stat-lbl">Disengaged</div></div>
+        <div class="sess-stat"><div class="sess-stat-val" id="tlAvgEng">—</div><div class="sess-stat-lbl">Avg Eng</div></div>
+        <div class="sess-stat"><div class="sess-stat-val" id="tlDuration">00:00</div><div class="sess-stat-lbl">Duration</div></div>
+      </div>
+      <div class="end-note-row" id="endNoteRow">
+        <div class="end-time-badge" id="endBadgeTime">—</div>
+        <div class="end-note-txt">Session complete 🎓 &nbsp;·&nbsp; <span id="endBadgeNote">Great work!</span></div>
+      </div>
+    </div>
+
+    <!-- Session Timeline -->
+    <div class="timeline-section">
+      <div class="section-hdr" style="margin-bottom:6px">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        SESSION TIMELINE
+        <span style="margin-left:auto;font-size:9px;font-weight:700;color:var(--text3)" id="lastDetected"></span>
+      </div>
+      <div class="timeline-tags" id="timelineTag"></div>
+      <div class="timeline-scroll" id="timelineScroll">
+        <div class="tl-empty" id="tlEmpty">Session not started. Timeline will appear here.</div>
+      </div>
+      <!-- ghost compat -->
+      <div id="timelineDots" style="display:none"></div>
+      <div id="tlEngBar" style="display:none"></div>
+      <div id="tlConfBar" style="display:none"></div>
+      <div id="tlEngVal" style="display:none"></div>
+      <div id="tlConfVal" style="display:none"></div>
+      <div id="tlTopEmo" style="display:none"></div>
+      <div id="avgEngDisplay" style="display:none"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ BOTTOM 2-COL ═══ -->
+<div class="bottom-row">
+
+  <!-- Detected Emotion -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      Detected Emotion
+    </div>
+    <div class="detected-panel" id="detectedBox">
+      <div class="det-avatar-wrap">
+        <svg viewBox="0 0 150 180" width="88" height="105" xmlns="http://www.w3.org/2000/svg">
+          <g class="det-av-group">
+            <rect fill="#f5d0a9" x="63" y="118" width="24" height="22" rx="4"/>
+            <g class="det-av-body">
+              <ellipse fill="#e8440a" cx="75" cy="158" rx="38" ry="28"/>
+              <path fill="#c73208" d="M66 136 L75 148 L84 136 Q78 140 75 141 Q72 140 66 136Z"/>
+            </g>
+            <ellipse fill="#f5d0a9" cx="30" cy="88" rx="7" ry="9"/>
+            <ellipse fill="#f5d0a9" cx="120" cy="88" rx="7" ry="9"/>
+            <ellipse fill="#f5d0a9" cx="75" cy="85" rx="44" ry="50"/>
+            <ellipse fill="#2a1a0a" cx="75" cy="46" rx="44" ry="22"/>
+            <rect fill="#2a1a0a" x="31" y="44" width="88" height="16" rx="0"/>
+            <ellipse fill="#2a1a0a" cx="31" cy="65" rx="8" ry="18"/>
+            <ellipse fill="#2a1a0a" cx="119" cy="65" rx="8" ry="18"/>
+            <ellipse fill="rgba(255,100,80,0.15)" cx="44" cy="96" rx="12" ry="8"/>
+            <ellipse fill="rgba(255,100,80,0.15)" cx="106" cy="96" rx="12" ry="8"/>
+            <g class="det-av-eye" style="transform-origin:56px 82px">
+              <ellipse cx="56" cy="82" rx="8" ry="9" fill="#fff"/>
+              <ellipse cx="57" cy="83" rx="4.5" ry="5" fill="#5b3a1a"/>
+              <ellipse cx="58.5" cy="80.5" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+            </g>
+            <g class="det-av-eye" style="transform-origin:94px 82px">
+              <ellipse cx="94" cy="82" rx="8" ry="9" fill="#fff"/>
+              <ellipse cx="95" cy="83" rx="4.5" ry="5" fill="#5b3a1a"/>
+              <ellipse cx="96.5" cy="80.5" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/>
+            </g>
+            <path stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round" d="M48 72 Q56 69 64 72" id="detBrowL"/>
+            <path stroke="#2a1a0a" stroke-width="2.5" fill="none" stroke-linecap="round" d="M86 72 Q94 69 102 72" id="detBrowR"/>
+            <path stroke="#c9956a" stroke-width="1.5" fill="none" d="M75 88 Q72 96 69 98 Q75 101 81 98 Q78 96 75 88"/>
+            <path stroke="#c06040" stroke-width="2" fill="none" stroke-linecap="round" id="detMouth" d="M 63 108 Q 75 115 87 108"/>
+          </g>
+        </svg>
+      </div>
+      <div class="det-info">
+        <div class="det-name" id="detName">Awaiting</div>
+        <div class="det-awaiting-txt" id="detAwaitTxt">Run detection to see results</div>
+        <div class="det-conf-badge hidden" id="detConf">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="13 2 13 9 20 9"/><path d="M21 3L13 11 9 7 3 13"/></svg>
+          <span id="detConfVal"></span>
+        </div>
+        <div class="det-desc" id="detDesc"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Engagement Insight -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/></svg>
+      Student Engagement Insight
+    </div>
+    <div class="insight-box" id="insightBox">
+      <span class="insight-chip" id="insightChip"></span>
+      <div class="insight-avatar-row">
+        <!-- Coping avatar — person writing notes -->
+        <div style="flex-shrink:0">
+          <svg viewBox="0 0 90 110" width="76" height="93" xmlns="http://www.w3.org/2000/svg">
+            <g style="animation:detFloat 3.2s ease-in-out infinite">
+              <rect fill="#f5d0a9" x="38" y="52" width="14" height="11" rx="3"/>
+              <ellipse fill="#e8440a" cx="45" cy="78" rx="22" ry="17"/>
+              <path fill="#c73208" d="M40 63 L45 72 L50 63 Q47 66 45 67 Q43 66 40 63Z"/>
+              <ellipse fill="#f5d0a9" cx="18" cy="38" rx="4" ry="5.5"/>
+              <ellipse fill="#f5d0a9" cx="72" cy="38" rx="4" ry="5.5"/>
+              <ellipse fill="#f5d0a9" cx="45" cy="36" rx="27" ry="30"/>
+              <ellipse fill="#2a1a0a" cx="45" cy="15" rx="27" ry="13"/>
+              <rect fill="#2a1a0a" x="18" y="13" width="54" height="10" rx="0"/>
+              <ellipse fill="#2a1a0a" cx="18" cy="26" rx="5" ry="11"/>
+              <ellipse fill="#2a1a0a" cx="72" cy="26" rx="5" ry="11"/>
+              <ellipse fill="rgba(255,100,80,0.18)" cx="28" cy="43" rx="7" ry="5"/>
+              <ellipse fill="rgba(255,100,80,0.18)" cx="62" cy="43" rx="7" ry="5"/>
+              <g style="animation:detBlink 4.5s ease-in-out infinite;transform-origin:34px 33px">
+                <ellipse cx="34" cy="33" rx="5" ry="5.5" fill="#fff"/>
+                <ellipse cx="35" cy="34" rx="2.8" ry="3" fill="#5b3a1a"/>
+                <ellipse cx="36" cy="32" rx="1" ry="1" fill="#fff" opacity="0.8"/>
+              </g>
+              <g style="animation:detBlink 4.5s ease-in-out infinite;transform-origin:56px 33px">
+                <ellipse cx="56" cy="33" rx="5" ry="5.5" fill="#fff"/>
+                <ellipse cx="57" cy="34" rx="2.8" ry="3" fill="#5b3a1a"/>
+                <ellipse cx="58" cy="32" rx="1" ry="1" fill="#fff" opacity="0.8"/>
+              </g>
+              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M29 25 Q34 22.5 39 24.5"/>
+              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M51 24.5 Q56 22.5 61 25"/>
+              <path stroke="#c9956a" stroke-width="1" fill="none" d="M45 38 Q43 43 41 44 Q45 46 49 44 Q47 43 45 38"/>
+              <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="copMouth" d="M 38 51 Q 45 53 52 51"/>
+              <!-- Notepad -->
+              <rect fill="#fffbf5" stroke="#d4c4a8" stroke-width="1.2" x="4" y="58" width="30" height="36" rx="3"/>
+              <rect fill="#f59e4a" x="4" y="58" width="5" height="36" rx="2"/>
+              <line x1="13" y1="66" x2="30" y2="66" stroke="#d4bfa0" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="13" y1="72" x2="30" y2="72" stroke="#d4bfa0" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="13" y1="78" x2="26" y2="78" stroke="#d4bfa0" stroke-width="1.3" stroke-linecap="round"/>
+              <!-- Pen -->
+              <g style="animation:penWrite 1.2s ease-in-out infinite;transform-origin:54px 62px">
+                <rect fill="#e8440a" x="50" y="54" width="4" height="18" rx="1.5" transform="rotate(30 52 63)"/>
+                <polygon fill="#f5d0a9" points="50,71 54,71 52,76" transform="rotate(30 52 63)"/>
+                <rect fill="#d4d4d4" x="50" y="54" width="4" height="3.5" rx="1" transform="rotate(30 52 63)"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <div class="insight-text" id="insightText">
+          <span class="insight-awaiting">Run detection to see engagement insight</span>
+        </div>
+      </div>
+      <div class="motivate-box" id="motivateBox"></div>
+    </div>
   </div>
 
 </div>
 
 <script src="script/auth.js"></script>
-<script src="script/app.js?v=8"></script>
+<script>
+/* ── Dashboard-level additions that integrate with app.js ── */
+
+// Typewriter for idle cam
+const TW_LINES = [
+  'Ready to detect your emotion…',
+  'Place your face clearly in the frame…',
+  'Click Detect for a single snapshot…',
+  'Go Live for continuous monitoring…',
+  'Session timeline builds automatically…',
+];
+let _twIdx=0,_twChar=0,_twDir=1;
+
+function initGreeting(){
+  const h=new Date().getHours();
+  const g=document.getElementById('greetingLine');
+  if(g)g.textContent=h<12?'Good Morning! 🌅':h<17?'Good Afternoon! 📚':'Good Evening! 🌙';
+  runTW();
+}
+function runTW(){
+  const el=document.getElementById('typewriterText');
+  if(!el)return;
+  const line=TW_LINES[_twIdx];
+  if(_twDir===1){el.textContent=line.slice(0,++_twChar);if(_twChar>=line.length){_twDir=-1;setTimeout(runTW,1800);return;}}
+  else{el.textContent=line.slice(0,--_twChar);if(_twChar<=0){_twDir=1;_twIdx=(_twIdx+1)%TW_LINES.length;}}
+  setTimeout(runTW,_twDir===1?55:28);
+}
+
+// Launch dropdown
+function toggleLaunchMenu(e){
+  e.stopPropagation();
+  document.getElementById('navLaunchWrap').classList.toggle('open');
+}
+document.addEventListener('click',()=>{
+  const w=document.getElementById('navLaunchWrap');
+  if(w)w.classList.remove('open');
+});
+
+// Speedometer
+function setSpeedometer(score){
+  const angle=(score/100)*180-90;
+  const n=document.getElementById('speedoNeedle');
+  if(n)n.style.transform=`rotate(${angle}deg)`;
+  const cx=115,cy=112,r=95;
+  const sR=Math.PI,eR=Math.PI-(score/100)*Math.PI;
+  const x1=cx+r*Math.cos(sR),y1=cy+r*Math.sin(sR);
+  const x2=cx+r*Math.cos(eR),y2=cy+r*Math.sin(eR);
+  const largeArc=score>50?1:0;
+  const col=score>=70?'#16a34a':score>=40?'#ca8a04':'#dc2626';
+  const arc=document.getElementById('speedoArc');
+  if(arc){arc.setAttribute('d',`M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`);arc.setAttribute('stroke',col);}
+  const sv=document.getElementById('speedoValue');
+  const ss=document.getElementById('speedoStatus');
+  if(sv){sv.textContent=score>0?Math.round(score):'—';sv.style.color=col;}
+  if(ss)ss.textContent=score>=70?'🟢 Actively Listening':score>=40?'🟡 Partially Engaged':score>0?'🔴 Low Engagement':'Awaiting detection';
+}
+
+// EMOTION META for detect/insight panels
+const DETECT_META={
+  happiness:{label:'Happy',        color:'#f59e0b',chip:'chip-green',chipTxt:'● Actively Engaged',
+    desc:'Joy is a warm feeling of pleasure — your brain is flooded with dopamine.',
+    head:'Riding the happy wave',
+    tips:'Channel this energy into your most creative task. Joy supercharges problem-solving.',
+    motivate:'',motivateCls:''},
+  neutral:{label:'Neutral',        color:'#6b7280',chip:'chip-yellow',chipTxt:'◑ Partially Focused',
+    desc:'A calm, balanced state — neither highs nor lows. Your mind is clear and steady.',
+    head:'Making the most of calm',
+    tips:'This steady state is ideal for deep analytical thinking and careful decision-making.',
+    motivate:'💡 Try taking a quick note — writing helps lock in your attention!',motivateCls:'yellow'},
+  sadness:{label:'Sad',            color:'#3b82f6',chip:'chip-red',chipTxt:'● Disengaged',
+    desc:'A deep ache of loss or disappointment — a natural signal asking for reflection.',
+    head:'Navigating through sadness',
+    tips:'Be gentle with yourself. Take a short break and reach out to someone you trust.',
+    motivate:'❤️ It\'s okay to feel this way. One step at a time!',motivateCls:'red'},
+  anger:{label:'Frustrated',       color:'#ef4444',chip:'chip-red',chipTxt:'● Disengaged',
+    desc:'Anger is intense energy triggered by a perceived threat — it sharpens focus but clouds judgment.',
+    head:'Cooling and redirecting anger',
+    tips:'Step away briefly and try box breathing: 4 counts in, hold 4, out 4, hold 4.',
+    motivate:'🧘 Breathe. Frustration means you care — you\'re closer than you think!',motivateCls:'red'},
+  fear:{label:'Anxious',           color:'#8b5cf6',chip:'chip-red',chipTxt:'● Stressed / Anxious',
+    desc:'Fear is your mind\'s alarm — it detects uncertainty and floods your body with alertness.',
+    head:'Moving through fear',
+    tips:'Name the fear and break your challenge into the smallest next step.',
+    motivate:'💙 Slow breath in, slow breath out. You\'ve got this! 🙌',motivateCls:'red'},
+  disgust:{label:'Disengaged',     color:'#10b981',chip:'chip-red',chipTxt:'● Very Low Interest',
+    desc:'Very low engagement detected — try switching the delivery or connecting to something interesting.',
+    head:'Re-engaging your interest',
+    tips:'Find just one surprising fact about this topic to spark curiosity.',
+    motivate:'🔥 Even 2 focused minutes can reset the entire session. Go!',motivateCls:'red'},
+  surprise:{label:'Surprised',     color:'#f97316',chip:'chip-yellow',chipTxt:'◑ Attention Spike',
+    desc:'Surprise is a brief jolt — your brain snaps to full alertness and curiosity instantly.',
+    head:'Harness the attention spike',
+    tips:'Your brain is at peak receptivity right now. Use this to absorb something new.',
+    motivate:'',motivateCls:''},
+};
+
+// Engagement score map (matches app.js ENGAGEMENT_MAP)
+const ENG_SCORE={Happiness:0.9,Surprise:0.68,Neutral:0.52,Sadness:0.18,Fear:0.28,Anger:0.14,Disgust:0.10};
+
+// Live engagement tracking for speedometer
+let _engScoresLive=[];
+let _attentiveTime=0,_partialTime=0,_disengagedTime=0;
+let _currentEngScore=0;
+let _reactionCount=0;
+let _sessionTimerEl=null;
+
+// Hook into app.js updateUI to also drive new panels
+function _patchedUpdateUI(probs, top, conf, engagement){
+  // Update detected panel
+  const emoLower=(top||'').toLowerCase();
+  const meta=DETECT_META[emoLower];
+  const color=meta?meta.color:'#6b7280';
+
+  // Detected emotion panel
+  const dn=document.getElementById('detName');
+  const da=document.getElementById('detAwaitTxt');
+  const dc=document.getElementById('detConf');
+  const dcv=document.getElementById('detConfVal');
+  const dd=document.getElementById('detDesc');
+  if(dn){dn.textContent=meta?meta.label:(top||'Awaiting');dn.style.color=color;}
+  if(da)da.style.display='none';
+  if(dc)dc.classList.remove('hidden');
+  if(dcv)dcv.textContent=`${conf}% confidence`;
+  if(dd)dd.textContent=meta?meta.desc:'';
+
+  // Detected avatar mouth
+  const mouths={happiness:'M 63 115 Q 75 125 87 115',neutral:'M 63 110 Q 75 112 87 110',
+    sadness:'M 63 115 Q 75 105 87 115',anger:'M 63 113 Q 75 105 87 113',
+    fear:'M 65 112 Q 75 118 85 112',disgust:'M 60 112 Q 68 118 76 112 Q 84 106 90 112',
+    surprise:'M 67 110 Q 75 122 83 110'};
+  const dm=document.getElementById('detMouth');
+  if(dm)dm.setAttribute('d',mouths[emoLower]||mouths.neutral);
+
+  // Insight panel
+  const chip=document.getElementById('insightChip');
+  const itxt=document.getElementById('insightText');
+  const mbox=document.getElementById('motivateBox');
+  if(chip&&meta){chip.className=`insight-chip visible ${meta.chip}`;chip.textContent=meta.chipTxt;}
+  if(itxt&&meta){
+    itxt.innerHTML=`<div class="insight-head">${meta.head}</div><span>${meta.tips}</span>`;
+  }
+  if(mbox&&meta){
+    if(meta.motivate){mbox.textContent=meta.motivate;mbox.className=`motivate-box show ${meta.motivateCls}`;}
+    else{mbox.className='motivate-box';}
+  }
+
+  // Speedometer via engagement
+  const engVal=engagement!=null?engagement:(ENG_SCORE[top]||0.5);
+  _currentEngScore+=((engVal*100-_currentEngScore)*0.4);
+  setSpeedometer(_currentEngScore);
+
+  // Track attentive/partial/disengaged
+  const score=_currentEngScore;
+  if(score>=70)_attentiveTime++;else if(score>=40)_partialTime++;else _disengagedTime++;
+  const total=_attentiveTime+_partialTime+_disengagedTime;
+  if(total>0){
+    const sa=document.getElementById('statAttentive');
+    const sp=document.getElementById('statPartial');
+    const sd=document.getElementById('statDisengaged');
+    if(sa)sa.textContent=Math.round((_attentiveTime/total)*100)+'%';
+    if(sp)sp.textContent=Math.round((_partialTime/total)*100)+'%';
+    if(sd)sd.textContent=Math.round((_disengagedTime/total)*100)+'%';
+  }
+
+  // Guide steps
+  const s2=document.getElementById('step2'),s3=document.getElementById('step3'),s4=document.getElementById('step4');
+  if(s2)s2.classList.add('done');
+  if(s3)s3.classList.add('done');
+  if(s4)s4.classList.add('active');
+
+  // Cam idle → hide once detection starts
+  const idle=document.getElementById('camIdle');
+  if(idle)idle.style.display='none';
+
+  // Cam status
+  const dot=document.getElementById('camStatusDot');
+  const txt=document.getElementById('camStatusTxt');
+  if(dot){dot.className='cam-status-dot ready';}
+  if(txt)txt.textContent='DETECTED';
+
+  // Add to live timeline scroll
+  _addTLItem(meta?meta.label:(top||'—'),color,score>=70?'😊':score>=40?'😐':'😞');
+}
+
+function _addTLItem(label,color,icon){
+  const empty=document.getElementById('tlEmpty');
+  if(empty)empty.remove();
+  const sc=document.getElementById('timelineScroll');
+  if(!sc)return;
+  const el=document.createElement('div');
+  el.className='tl-item';
+  const elapsed=typeof _sessionStart!=='undefined'&&_sessionStart?Date.now()-_sessionStart:0;
+  const s=Math.floor(elapsed/1000),m=Math.floor(s/60);
+  const ts=`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  el.innerHTML=`<div class="tl-dot" style="background:${color}"></div><div class="tl-time">${ts}</div><div class="tl-msg">${label} detected</div><div class="tl-icon">${icon}</div>`;
+  sc.appendChild(el);sc.scrollTop=sc.scrollHeight;
+}
+
+// Reactions (shown during live)
+function sendReaction(type,btn){
+  btn.classList.add('active');setTimeout(()=>btn.classList.remove('active'),600);
+  _reactionCount++;
+  const labels={thumbsup:'👍 Liked content',thumbsdown:'👎 Unclear',handraise:'✋ Doubt raised',confused:'😕 Confused',clap:'👏 Appreciated'};
+  const colors={thumbsup:'#16a34a',thumbsdown:'#dc2626',handraise:'#e8440a',confused:'#ca8a04',clap:'#3b82f6'};
+  const icons={thumbsup:'👍',thumbsdown:'👎',handraise:'✋',confused:'😕',clap:'👏'};
+  _addTLItem(labels[type],colors[type]||'#6b7280',icons[type]||'⭐');
+  // Float up animation
+  const camBox=document.getElementById('camBox');
+  for(let i=0;i<3;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='float-reaction';el.textContent=icons[type];
+      el.style.cssText=`left:${15+Math.random()*50}%;bottom:70px;position:absolute;font-size:22px;pointer-events:none;z-index:20;animation:floatUp 1.6s ease-out forwards`;
+      camBox.appendChild(el);setTimeout(()=>el.remove(),1800);
+    },i*200);
+  }
+}
+
+// Patch updateUI once app.js loads
+window.addEventListener('load',()=>{
+  // Patch original updateUI from app.js
+  if(typeof updateUI==='function'){
+    const _orig=updateUI;
+    window.updateUI=function(probs,top,conf,engagement){
+      _orig(probs,top,conf,engagement);
+      _patchedUpdateUI(probs,top,conf,engagement);
+    };
+  }
+  // Also patch startLive / stopLive to update our UI
+  _patchLive();
+  initGreeting();
+  setSpeedometer(0);
+});
+
+function _patchLive(){
+  // Patch startLive
+  if(typeof startLive==='function'){
+    const _origStart=startLive;
+    window.startLive=async function(){
+      await _origStart();
+      _currentEngScore=0;_attentiveTime=0;_partialTime=0;_disengagedTime=0;_reactionCount=0;
+      document.getElementById('camStatusDot').className='cam-status-dot live';
+      document.getElementById('camStatusTxt').textContent='LIVE';
+      document.getElementById('reactionBox').classList.add('show');
+      document.getElementById('camScan').classList.add('live');
+      document.getElementById('endNoteRow').classList.remove('show');
+      // Clear timeline scroll for new session
+      const sc=document.getElementById('timelineScroll');
+      if(sc){sc.innerHTML='';const e=document.createElement('div');e.className='tl-empty';e.id='tlEmpty';e.textContent='Session started. Monitoring...';sc.appendChild(e);}
+      _addTLItem('Session started','#16a34a','🎬');
+    };
+  }
+  // Patch stopLive
+  if(typeof stopLive==='function'){
+    const _origStop=stopLive;
+    window.stopLive=async function(){
+      await _origStop();
+      document.getElementById('camStatusDot').className='cam-status-dot ready';
+      document.getElementById('camStatusTxt').textContent='STOPPED';
+      document.getElementById('reactionBox').classList.remove('show');
+      document.getElementById('camScan').classList.remove('live');
+      // End note
+      const total=_attentiveTime+_partialTime+_disengagedTime||1;
+      const attPct=Math.round((_attentiveTime/total)*100);
+      const note=attPct>=60?'Outstanding session! 🌟':attPct>=40?'Good effort — keep it up! 💪':'Keep pushing — every session counts! 🔥';
+      const elapsed=typeof _sessionStart!=='undefined'&&_sessionStart?Date.now()-_sessionStart:0;
+      const s=Math.floor(elapsed/1000),m=Math.floor(s/60);
+      const ts=`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+      const enr=document.getElementById('endNoteRow');
+      const ebt=document.getElementById('endBadgeTime');
+      const ebn=document.getElementById('endBadgeNote');
+      if(ebt)ebt.textContent=ts;if(ebn)ebn.textContent=note;if(enr)enr.classList.add('show');
+      _addTLItem('Session ended','#6b7280','🏁');
+    };
+  }
+}
+
+// Guide step helper (called from app.js indirectly)
+function setStep(n){
+  [1,2,3,4].forEach(i=>{
+    const s=document.getElementById('step'+i);
+    if(!s)return;
+    s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');
+    else if(i===n)s.classList.add('active');
+  });
+}
+
+// @keyframes penWrite needed inline
+const _ks=document.createElement('style');
+_ks.textContent='@keyframes penWrite{0%,100%{transform:rotate(-5deg) translateY(0px)}30%{transform:rotate(-3deg) translateY(-1.5px)}60%{transform:rotate(-6deg) translateY(1px)}}';
+document.head.appendChild(_ks);
+</script>
+<script src="script/app.js?v=9"></script>
 </body>
 </html>
