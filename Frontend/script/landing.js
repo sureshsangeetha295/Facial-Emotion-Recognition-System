@@ -149,4 +149,12 @@ document.addEventListener("DOMContentLoaded", () => {
   startGreeting();
   scheduleHourlyRefresh();
 
+  // Re-run greeting text on orientation change (landscape ↔ portrait)
+  window.addEventListener("orientationchange", () => {
+    setTimeout(startGreeting, 350);
+  });
+
+  // Expose for auth.js to call after username is known
+  window.__startGreeting = startGreeting;
+
 }); // end DOMContentLoaded

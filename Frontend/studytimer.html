@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>EmotionAI — Study Timer</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
+  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --grad:linear-gradient(135deg,#e8440a,#f59e4a);
+  --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --green:#16a34a;--yellow:#ca8a04;--red:#dc2626;
+  --blue:#3b82f6;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow:hidden}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;background:rgba(250,249,247,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);flex-shrink:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1rem;text-decoration:none;color:var(--text)}
+.logo-box{width:28px;height:28px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;font-family:var(--font-body)}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.nav-live-badge{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.2);font-size:11px;font-weight:700;color:#dc2626;letter-spacing:0.06em}
+.nav-live-dot{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:livePip 1s ease-in-out infinite}
+@keyframes livePip{0%,100%{opacity:1}50%{opacity:0.2}}
+.nav-timer-display{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text);letter-spacing:0.04em;min-width:52px;text-align:center}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:340px 1fr 400px;flex:1;min-height:0;overflow:hidden}
+
+/* LEFT PANEL */
+.left-panel{background:var(--surface);border-right:1px solid var(--border);padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.left-panel::-webkit-scrollbar{width:3px}
+.left-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.panel-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.panel-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;line-height:1.2;letter-spacing:-0.01em}
+.panel-title em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* TIMER CARD (left panel hero) */
+.timer-card{background:linear-gradient(135deg,#1a1612,#2d2420);border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;overflow:hidden}
+.timer-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(232,68,10,0.15),transparent 60%);pointer-events:none}
+.timer-phase-label{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4)}
+.timer-phase-label.study{color:rgba(22,163,74,0.9)}
+.timer-phase-label.break{color:rgba(59,130,246,0.9)}
+.timer-phase-label.paused{color:rgba(202,138,4,0.9)}
+.timer-big{font-family:var(--font-display);font-size:3.2rem;font-weight:700;color:#fff;letter-spacing:-0.02em;line-height:1;text-shadow:0 4px 24px rgba(232,68,10,0.4);transition:color 0.4s}
+.timer-big.break-color{color:#93c5fd}
+.timer-big.paused-color{color:#fcd34d}
+.timer-progress-wrap{width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+.timer-progress-bar{height:100%;border-radius:99px;background:var(--grad);transition:width 1s linear,background 0.4s}
+.timer-progress-bar.break-bar{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.timer-progress-bar.paused-bar{background:linear-gradient(90deg,#ca8a04,#fcd34d)}
+.timer-status-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.timer-stat-pill{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);font-size:10px;font-weight:600;color:rgba(255,255,255,0.6)}
+.timer-stat-pill span{color:#fff}
+
+/* Adaptive rules list */
+.rules-list{display:flex;flex-direction:column;gap:7px}
+.rule-item{display:flex;gap:9px;align-items:flex-start;padding:9px 12px;border-radius:11px;border:1px solid var(--border)}
+.rule-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rule-text{font-size:11px;color:var(--text2);line-height:1.5;font-weight:500}
+.rule-text strong{color:var(--text);font-weight:700}
+
+/* Session config */
+.config-row{display:flex;gap:7px;align-items:center}
+.config-label{font-size:10.5px;font-weight:600;color:var(--text2);flex-shrink:0}
+.config-select{flex:1;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:11.5px;font-weight:600;color:var(--text);font-family:var(--font-body);cursor:pointer;outline:none}
+.config-select:focus{border-color:var(--accent)}
+
+/* CENTER */
+.center-col{display:flex;flex-direction:column;align-items:center;padding:10px 16px;gap:8px;background:#f2f1ee;overflow:hidden;position:relative}
+
+/* Camera — same as livecam */
+.cam-box{position:relative;width:100%;flex:1;min-height:0;background:#1c1a18;border:3px solid var(--accent);border-radius:18px;overflow:hidden;box-shadow:0 8px 48px rgba(232,68,10,.25),0 4px 20px rgba(0,0,0,0.3);transition:border-color 0.4s,box-shadow 0.4s}
+.cam-box.study-active{border-color:#16a34a;box-shadow:0 8px 48px rgba(22,163,74,.3),0 4px 20px rgba(0,0,0,0.3)}
+.cam-box.break-active{border-color:#3b82f6;box-shadow:0 8px 48px rgba(59,130,246,.3),0 4px 20px rgba(0,0,0,0.3)}
+.cam-box.paused-active{border-color:#ca8a04;box-shadow:0 8px 48px rgba(202,138,4,.3),0 4px 20px rgba(0,0,0,0.3)}
+#videoEl{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.bk{position:absolute;width:22px;height:22px;border-color:rgba(255,255,255,0.45);border-style:solid;z-index:4}
+.bk.tl{top:12px;left:12px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
+.bk.tr{top:12px;right:12px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
+.bk.bl{bottom:12px;left:12px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
+.bk.br{bottom:12px;right:12px;border-width:0 2px 2px 0;border-radius:0 0 3px 0}
+.cam-status{position:absolute;top:10px;left:10px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border-radius:20px;padding:4px 11px;border:1px solid rgba(255,255,255,0.1)}
+.cam-status-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;flex-shrink:0}
+.cam-status-dot.study{background:#22c55e;animation:livePip 0.8s ease-in-out infinite}
+.cam-status-dot.break{background:#60a5fa;animation:livePip 1.2s ease-in-out infinite}
+.cam-status-dot.paused{background:#fcd34d}
+.cam-status-dot.ready{background:#6b7280}
+.cam-status-txt{font-size:10px;font-weight:700;color:#fff;letter-spacing:0.07em}
+
+/* Overlay alert — appears on distraction/frustration */
+.cam-alert-overlay{position:absolute;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity 0.3s}
+.cam-alert-overlay.show{opacity:1;pointer-events:all}
+.cam-alert-box{background:rgba(255,255,255,0.97);border-radius:16px;padding:20px 24px;max-width:280px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.cam-alert-emoji{font-size:36px;line-height:1}
+.cam-alert-title{font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text)}
+.cam-alert-msg{font-size:11.5px;color:var(--text2);line-height:1.55}
+.cam-alert-btn{padding:8px 20px;border-radius:99px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:background 0.15s}
+.cam-alert-btn:hover{background:var(--accent2)}
+.cam-alert-btn.blue{background:#3b82f6}
+.cam-alert-btn.blue:hover{background:#2563eb}
+
+/* Scan line */
+.cam-scan-live{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(22,163,74,0.7),transparent);z-index:5;opacity:0;pointer-events:none}
+.cam-scan-live.active{animation:scanLive 2s ease-in-out infinite}
+.cam-scan-live.break-scan{background:linear-gradient(90deg,transparent,rgba(59,130,246,0.7),transparent)}
+@keyframes scanLive{0%{top:5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:95%;opacity:0}}
+
+/* Idle */
+.cam-idle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#2b2927,#1c1a18)}
+.idle-inner{display:flex;align-items:center;gap:20px;padding:0 28px}
+.idle-text-side{display:flex;flex-direction:column;gap:6px}
+.greeting-line{font-size:14px;font-weight:700;color:#fff;font-family:var(--font-body)}
+.greeting-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.05em}
+.typewriter-label{font-size:11.5px;color:rgba(255,255,255,0.7);min-height:17px}
+.typewriter-cursor{display:inline-block;width:1px;height:11px;background:var(--accent);margin-left:2px;vertical-align:middle;animation:cursorBlink 0.8s step-end infinite}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+.idle-hint{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,0.28);letter-spacing:0.07em;text-transform:uppercase}
+.idle-hint-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0.7}
+
+/* Animations */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
+@keyframes eyeMove{0%,30%{transform:translateX(0)}35%,55%{transform:translateX(2px)}60%,100%{transform:translateX(0)}}
+@keyframes breathe{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.04)}}
+@keyframes detFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes detBlink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
+.avatar-group{animation:float 3.5s ease-in-out infinite}
+.avatar-eye{fill:#2a1a0a;animation:blink 4s ease-in-out infinite}
+.avatar-pupil{fill:#5b3a1a;animation:eyeMove 5s ease-in-out infinite}
+.avatar-body{animation:breathe 3.5s ease-in-out infinite}
+.det-av-group{animation:detFloat 3s ease-in-out infinite}
+.det-av-eye{animation:detBlink 4s ease-in-out infinite}
+
+/* Buttons */
+.btn-row{display:flex;gap:8px;width:100%;flex-shrink:0}
+.btn{flex:1;padding:10px 14px;border:none;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.2s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 14px var(--accent-glow)}
+.btn:disabled{opacity:0.45;cursor:not-allowed;transform:none}
+.btn-stop{background:#dc2626}
+.btn-stop:hover:not(:disabled){background:#b91c1c;box-shadow:0 4px 14px rgba(220,38,38,0.4)}
+.btn-break{background:#3b82f6}
+.btn-break:hover:not(:disabled){background:#2563eb;box-shadow:0 4px 14px rgba(59,130,246,0.4)}
+.btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* RIGHT PANEL */
+.right-panel{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.section-hdr{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.section-hdr svg{width:11px;height:11px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Emotion + Suggestion panel */
+.emotion-panel{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.emotion-detect-row{display:flex;align-items:center;gap:12px}
+.emotion-name-big{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text);transition:color 0.3s;line-height:1}
+.emotion-state-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:9.5px;font-weight:700;border:1px solid;margin-top:4px;transition:all 0.3s}
+.emotion-conf{font-size:10px;color:var(--text3);margin-top:2px}
+.suggestion-box{margin-top:9px;padding:10px 13px;border-radius:11px;font-size:11.5px;font-weight:600;line-height:1.6;display:none;border:1px solid}
+.suggestion-box.show{display:block}
+.suggestion-box.focused{background:rgba(22,163,74,0.07);border-color:rgba(22,163,74,0.2);color:#15803d}
+.suggestion-box.bored{background:rgba(59,130,246,0.07);border-color:rgba(59,130,246,0.2);color:#1d4ed8}
+.suggestion-box.frustrated{background:rgba(202,138,4,0.08);border-color:rgba(202,138,4,0.2);color:#92400e}
+.suggestion-box.distracted{background:rgba(220,38,38,0.07);border-color:rgba(220,38,38,0.2);color:#b91c1c}
+
+/* Speedometer */
+.speedo-section{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.speedo-wrap{display:flex;flex-direction:column;align-items:center}
+.speedo-svg{width:100%;max-width:220px}
+.speedo-value-label{font-family:var(--font-display);font-size:1.55rem;font-weight:700;color:var(--text);margin-top:-6px;text-align:center;transition:color 0.5s}
+.speedo-status-txt{font-size:10px;color:var(--text2);text-align:center;margin-top:1px;font-weight:500}
+
+/* Session stats */
+.stats-section{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.stat-box{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 5px;background:var(--elevated);border-radius:9px}
+.stat-val{font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--text);line-height:1;text-align:center}
+.stat-val.green{color:var(--green)}
+.stat-val.yellow{color:var(--yellow)}
+.stat-val.red{color:var(--red)}
+.stat-val.blue{color:var(--blue)}
+.stat-lbl{font-size:7.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;text-align:center}
+
+/* Timeline */
+.timeline-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:10px 16px;min-height:0}
+.timeline-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;min-height:0}
+.timeline-scroll::-webkit-scrollbar{width:3px}
+.timeline-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.tl-empty{font-size:11px;color:var(--text3);font-style:italic;text-align:center;margin-top:12px}
+.tl-item{display:flex;align-items:flex-start;gap:7px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);font-size:10px;color:var(--text2);background:var(--surface)}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2.5px}
+.tl-time{font-weight:700;color:var(--text);flex-shrink:0;min-width:34px;font-size:9.5px}
+.tl-msg{flex:1;line-height:1.4}
+.tl-icon{font-size:12px;flex-shrink:0}
+
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);flex-shrink:0;height:160px}
+.bottom-col{padding:9px 14px;overflow:hidden;display:flex;flex-direction:column}
+.bottom-col+.bottom-col{border-left:1px solid var(--border)}
+.col-hdr{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.col-hdr svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Session summary (bottom-center) */
+.summary-stats-row{display:flex;gap:5px;flex:1;align-items:center}
+.sum-stat{display:flex;flex-direction:column;gap:2px;padding:5px 8px;background:var(--elevated);border-radius:8px;flex:1;align-items:center}
+.sum-stat-val{font-family:var(--font-display);font-size:.9rem;font-weight:700;color:var(--text);line-height:1;text-align:center}
+.sum-stat-val.green{color:var(--green)}
+.sum-stat-val.yellow{color:var(--yellow)}
+.sum-stat-val.red{color:var(--red)}
+.sum-stat-lbl{font-size:7.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;text-align:center}
+
+/* End note */
+.end-note-row{display:none;align-items:center;gap:6px;padding:4px 8px;background:linear-gradient(135deg,#fff9f5,#fff);border:1px solid rgba(232,68,10,0.12);border-radius:8px;flex-shrink:0;margin-top:5px}
+.end-note-row.show{display:flex}
+.end-time-badge{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.end-note-txt{font-size:10px;color:var(--text2);font-weight:600;line-height:1.4}
+
+/* Chip colors */
+.chip-green{background:rgba(22,163,74,0.1);color:#15803d;border-color:rgba(22,163,74,0.25)}
+.chip-yellow{background:rgba(202,138,4,0.1);color:#92400e;border-color:rgba(202,138,4,0.25)}
+.chip-red{background:rgba(220,38,38,0.1);color:#b91c1c;border-color:rgba(220,38,38,0.25)}
+.chip-blue{background:rgba(59,130,246,0.1);color:#1d4ed8;border-color:rgba(59,130,246,0.25)}
+
+/* Break countdown overlay on cam */
+.break-overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.75);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.4s;flex-direction:column;gap:10px}
+.break-overlay.show{opacity:1;pointer-events:all}
+.break-overlay-title{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:#93c5fd;text-align:center}
+.break-overlay-timer{font-family:var(--font-display);font-size:3rem;font-weight:700;color:#fff;line-height:1}
+.break-overlay-sub{font-size:11px;color:rgba(255,255,255,0.5);text-align:center}
+.break-resume-btn{padding:8px 22px;border-radius:99px;border:none;background:#3b82f6;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body);margin-top:6px;transition:background 0.15s}
+.break-resume-btn:hover{background:#2563eb}
+
+/* Hamburger */
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
+.hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-drawer{position:fixed;top:52px;left:0;right:0;background:rgba(250,249,247,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.1)}
+.mobile-drawer.open{transform:translateY(0)}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s}
+.mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
+.mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)}
+.mobile-overlay.open{display:block}
+
+/* Responsive */
+@media(min-width:769px){.hamburger-btn{display:none!important}.mobile-drawer,.mobile-overlay{display:none!important}}
+@media(max-width:768px){
+  body{overflow:auto;height:auto;min-height:100dvh}
+  nav{padding:0 14px;height:52px}
+  .hamburger-btn{display:flex!important}
+  .main-grid{display:flex;flex-direction:column;overflow:visible;height:auto}
+  .left-panel{order:2;border-right:none;border-top:1px solid var(--border)}
+  .center-col{order:1;padding:10px 12px}
+  .cam-box{height:56vw;min-height:220px;max-height:340px}
+  .right-panel{order:3;border-left:none;border-top:1px solid var(--border);overflow:visible}
+  .bottom-row{grid-template-columns:1fr;height:auto}
+  .bottom-col+.bottom-col{border-left:none;border-top:1px solid var(--border)}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  nav{padding:0 10px;height:48px}
+  .mobile-drawer{top:48px}
+  .cam-box{height:62vw;min-height:200px}
+  .timer-big{font-size:2.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/home">
+    <div class="logo-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    Study Timer
+  </a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="nav-live-badge" id="navLiveBadge" style="display:none"><div class="nav-live-dot"></div>STUDYING</div>
+    <div class="nav-timer-display" id="navTimerDisplay" style="display:none">00:00</div>
+  </div>
+  <div class="nav-right">
+    <div style="position:relative;display:inline-flex" id="navLaunchWrap">
+      <button class="btn" style="flex:0;padding:6px 14px;font-size:12px" onclick="toggleDD(event)">
+        <svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg><span>Switch Mode</span>
+      </button>
+      <div id="navDD" style="position:absolute;top:calc(100% + 10px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.12);min-width:200px;padding:6px;z-index:200;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.18s,transform 0.18s;transform-origin:top right">
+        <a href="/detect" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:500">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+          <div><div style="font-weight:700;font-size:12px">Detect</div><div style="font-size:10px;color:var(--text3)">Single snapshot mode</div></div>
+        </a>
+        <a href="/livecam" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:500">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+          <div><div style="font-weight:700;font-size:12px">Live Cam</div><div style="font-size:10px;color:var(--text3)">Continuous session mode</div></div>
+        </a>
+        <a href="/studytimer" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--accent);font-size:12px;font-weight:500;background:var(--accent-dim)">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div><div style="font-weight:700;font-size:12px">Study Timer</div><div style="font-size:10px;color:var(--accent2)">Current page</div></div>
+        </a>
+      </div>
+    </div>
+    <a class="back-btn" href="/home">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Back
+    </a>
+  </div>
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile drawer -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+  <a href="/detect"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect Mode</a>
+  <a href="/livecam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Live Cam</a>
+  <div class="mobile-drawer-divider"></div>
+  <a href="/faq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a>
+  <a href="/feedback"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Feedback</a>
+  <div class="mobile-drawer-divider"></div>
+  <button onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</button>
+</div>
+
+<div class="main-grid">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div>
+      <div class="panel-label">Adaptive Study Timer</div>
+      <div class="panel-title">Study <em>Smarter</em> with Emotion AI</div>
+    </div>
+
+    <!-- Timer Card -->
+    <div class="timer-card">
+      <div class="timer-phase-label" id="timerPhaseLabel">NOT STARTED</div>
+      <div class="timer-big" id="timerBig">00:00</div>
+      <div class="timer-progress-wrap">
+        <div class="timer-progress-bar" id="timerProgressBar" style="width:0%"></div>
+      </div>
+      <div class="timer-status-row">
+        <div class="timer-stat-pill">Focus <span id="statFocusBlocks">0</span></div>
+        <div class="timer-stat-pill">Breaks <span id="statBreakCount">0</span></div>
+        <div class="timer-stat-pill">Pauses <span id="statPauseCount">0</span></div>
+        <div class="timer-stat-pill">Total <span id="statTotalTime">00:00</span></div>
+      </div>
+    </div>
+
+    <!-- Session config -->
+    <div>
+      <div class="panel-label" style="margin-bottom:6px">Session Setup</div>
+      <div class="config-row" style="margin-bottom:6px">
+        <span class="config-label">Study block</span>
+        <select class="config-select" id="cfgStudy">
+          <option value="15">15 minutes</option>
+          <option value="25" selected>25 minutes</option>
+          <option value="30">30 minutes</option>
+          <option value="45">45 minutes</option>
+          <option value="60">60 minutes</option>
+        </select>
+      </div>
+      <div class="config-row">
+        <span class="config-label">Break length</span>
+        <select class="config-select" id="cfgBreak">
+          <option value="3">3 minutes</option>
+          <option value="5" selected>5 minutes</option>
+          <option value="10">10 minutes</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Adaptive rules -->
+    <div>
+      <div class="panel-label" style="margin-bottom:6px">How Adaptive Timer Works</div>
+      <div class="rules-list">
+        <div class="rule-item" style="background:rgba(22,163,74,0.04);border-color:rgba(22,163,74,0.15)">
+          <div class="rule-dot" style="background:#16a34a"></div>
+          <div class="rule-text"><strong>Focused</strong> (Happy / Neutral) — timer runs normally. Extended +2 min bonus if focused for 5+ mins straight.</div>
+        </div>
+        <div class="rule-item" style="background:rgba(59,130,246,0.04);border-color:rgba(59,130,246,0.15)">
+          <div class="rule-dot" style="background:#3b82f6"></div>
+          <div class="rule-text"><strong>Bored</strong> (Sadness / Disgust) — detected for 20s → suggests a short break. Break starts automatically after 3 alerts.</div>
+        </div>
+        <div class="rule-item" style="background:rgba(202,138,4,0.04);border-color:rgba(202,138,4,0.15)">
+          <div class="rule-dot" style="background:#ca8a04"></div>
+          <div class="rule-text"><strong>Frustrated</strong> (Anger / Fear) — timer pauses for 30s. A calming suggestion is shown with breathing guidance.</div>
+        </div>
+        <div class="rule-item" style="background:rgba(220,38,38,0.04);border-color:rgba(220,38,38,0.15)">
+          <div class="rule-dot" style="background:#dc2626"></div>
+          <div class="rule-text"><strong>Distracted</strong> (3 consecutive low-eng frames) — timer pauses immediately and an alert overlay appears on camera.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER: Camera -->
+  <div class="center-col">
+    <div class="cam-box" id="camBox">
+
+      <!-- Idle avatar — same character as livecam -->
+      <div class="cam-idle" id="camIdle">
+        <div class="idle-inner">
+          <div style="flex-shrink:0">
+            <svg class="avatar-group" viewBox="0 0 150 200" width="140" height="165">
+              <rect fill="#374151" x="22" y="158" width="106" height="6" rx="3"/>
+              <rect fill="#374151" x="30" y="140" width="90" height="22" rx="4"/>
+              <rect fill="#1e40af" x="34" y="143" width="82" height="16" rx="2"/>
+              <rect fill="rgba(255,255,255,0.25)" x="37" y="146" width="30" height="1.5" rx="1"/>
+              <rect fill="rgba(255,255,255,0.15)" x="37" y="150" width="20" height="1.5" rx="1"/>
+              <circle fill="#e8440a" cx="108" cy="146" r="3"/>
+              <rect fill="#f5d0a9" x="63" y="118" width="24" height="22" rx="4"/>
+              <g class="avatar-body"><ellipse fill="#3b82f6" cx="75" cy="148" rx="36" ry="20"/><path fill="#1d4ed8" d="M66 132 L75 142 L84 132 Q78 137 75 138 Q72 137 66 132Z"/></g>
+              <ellipse fill="#f5d0a9" cx="31" cy="88" rx="7" ry="9"/>
+              <ellipse fill="#f5d0a9" cx="119" cy="88" rx="7" ry="9"/>
+              <ellipse fill="#f5d0a9" cx="75" cy="85" rx="44" ry="50" style="filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))"/>
+              <ellipse fill="#2a1a0a" cx="75" cy="46" rx="44" ry="22"/>
+              <rect fill="#2a1a0a" x="31" y="44" width="88" height="14"/>
+              <ellipse fill="#2a1a0a" cx="31" cy="63" rx="8" ry="18"/>
+              <ellipse fill="#2a1a0a" cx="119" cy="63" rx="8" ry="18"/>
+              <rect fill="none" stroke="#374151" stroke-width="2" x="43" y="75" width="26" height="18" rx="5"/>
+              <rect fill="none" stroke="#374151" stroke-width="2" x="81" y="75" width="26" height="18" rx="5"/>
+              <line stroke="#374151" stroke-width="2" x1="69" y1="84" x2="81" y2="84"/>
+              <line stroke="#374151" stroke-width="2" x1="31" y1="84" x2="43" y2="84"/>
+              <line stroke="#374151" stroke-width="2" x1="107" y1="84" x2="119" y2="84"/>
+              <ellipse fill="rgba(255,100,80,0.15)" cx="44" cy="97" rx="12" ry="8"/>
+              <ellipse fill="rgba(255,100,80,0.15)" cx="106" cy="97" rx="12" ry="8"/>
+              <g class="avatar-eye" style="transform-origin:56px 84px"><ellipse cx="56" cy="84" rx="7" ry="7.5" fill="#fff"/><ellipse class="avatar-pupil" cx="57" cy="85" rx="4" ry="4.5" style="transform-origin:57px 85px"/><ellipse cx="58.5" cy="82" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/></g>
+              <g class="avatar-eye" style="transform-origin:94px 84px"><ellipse cx="94" cy="84" rx="7" ry="7.5" fill="#fff"/><ellipse class="avatar-pupil" cx="95" cy="85" rx="4" ry="4.5" style="transform-origin:95px 85px"/><ellipse cx="96.5" cy="82" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/></g>
+              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M49 72 Q56 69 63 72"/>
+              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M87 72 Q94 69 101 72"/>
+              <path stroke="#c9956a" stroke-width="1.5" fill="none" d="M75 90 Q72 97 69 99 Q75 102 81 99 Q78 97 75 90"/>
+              <path stroke="#c06040" stroke-width="2" fill="none" stroke-linecap="round" d="M 65 110 Q 75 117 85 110"/>
+            </svg>
+          </div>
+          <div class="idle-text-side">
+            <div class="greeting-line" id="greetingLine">Ready to study? 📚</div>
+            <div class="greeting-sub">EmotionAI · Study Timer</div>
+            <div class="typewriter-label"><span id="typewriterText"></span><span class="typewriter-cursor"></span></div>
+            <div class="idle-hint"><div class="idle-hint-dot"></div>Click Start Study Session</div>
+          </div>
+        </div>
+      </div>
+
+      <video id="videoEl" autoplay muted playsinline></video>
+      <div class="bk tl"></div><div class="bk tr"></div><div class="bk bl"></div><div class="bk br"></div>
+      <div class="cam-status" id="camStatus">
+        <div class="cam-status-dot ready" id="camStatusDot"></div>
+        <span class="cam-status-txt" id="camStatusTxt">READY</span>
+      </div>
+      <div class="cam-scan-live" id="camScanLive"></div>
+
+      <!-- Break overlay -->
+      <div class="break-overlay" id="breakOverlay">
+        <div class="break-overlay-title">☕ Break Time!</div>
+        <div class="break-overlay-timer" id="breakOverlayTimer">05:00</div>
+        <div class="break-overlay-sub">Relax, stretch, and hydrate 💧</div>
+        <button class="break-resume-btn" onclick="resumeEarly()">Resume Early →</button>
+      </div>
+
+      <!-- Distraction / frustration alert overlay -->
+      <div class="cam-alert-overlay" id="camAlertOverlay">
+        <div class="cam-alert-box">
+          <div class="cam-alert-emoji" id="alertEmoji">⚠️</div>
+          <div class="cam-alert-title" id="alertTitle">Stay Focused!</div>
+          <div class="cam-alert-msg" id="alertMsg">You seem distracted. Let's get back on track.</div>
+          <button class="cam-alert-btn" id="alertBtn" onclick="dismissAlert()">I'm Back! ✓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btnStart" onclick="doStart()">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Study Session
+      </button>
+      <button class="btn btn-break" id="btnBreak" onclick="manualBreak()" disabled>
+        <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>Break
+      </button>
+      <button class="btn btn-stop" id="btnStop" onclick="doStop()" disabled>
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>End
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- Emotion + Suggestion -->
+    <div class="emotion-panel">
+      <div class="section-hdr">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        STUDY STATE
+      </div>
+      <div class="emotion-detect-row">
+        <!-- small avatar -->
+        <svg viewBox="0 0 80 96" width="52" height="62" style="display:block;flex-shrink:0">
+          <g class="det-av-group">
+            <rect fill="#f5d0a9" x="34" y="62" width="12" height="11" rx="2"/>
+            <ellipse fill="#3b82f6" cx="40" cy="78" rx="20" ry="13"/>
+            <ellipse fill="#f5d0a9" cx="16" cy="46" rx="4" ry="5"/>
+            <ellipse fill="#f5d0a9" cx="64" cy="46" rx="4" ry="5"/>
+            <ellipse fill="#f5d0a9" cx="40" cy="44" rx="24" ry="27"/>
+            <ellipse fill="#2a1a0a" cx="40" cy="24" rx="24" ry="12"/>
+            <rect fill="#2a1a0a" x="16" y="22" width="48" height="8"/>
+            <ellipse fill="#2a1a0a" cx="16" cy="34" rx="5" ry="10"/>
+            <ellipse fill="#2a1a0a" cx="64" cy="34" rx="5" ry="10"/>
+            <rect fill="none" stroke="#374151" stroke-width="1.5" x="22" y="40" width="14" height="10" rx="3"/>
+            <rect fill="none" stroke="#374151" stroke-width="1.5" x="44" y="40" width="14" height="10" rx="3"/>
+            <line stroke="#374151" stroke-width="1.5" x1="36" y1="45" x2="44" y2="45"/>
+            <g class="det-av-eye" style="transform-origin:29px 45px"><ellipse fill="#fff" cx="29" cy="45" rx="4" ry="4"/><ellipse fill="#2a1a0a" cx="30" cy="46" rx="2.5" ry="2.5"/></g>
+            <g class="det-av-eye" style="transform-origin:51px 45px"><ellipse fill="#fff" cx="51" cy="45" rx="4" ry="4"/><ellipse fill="#2a1a0a" cx="52" cy="46" rx="2.5" ry="2.5"/></g>
+            <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="stateAvatarMouth" d="M 34 58 Q 40 62 46 58"/>
+          </g>
+        </svg>
+        <div style="flex:1">
+          <div class="emotion-name-big" id="emotionNameBig">Awaiting</div>
+          <div class="emotion-state-chip chip-yellow" id="emotionStateChip" style="display:none">◑ Detecting…</div>
+          <div class="emotion-conf" id="emotionConf">Start session to begin detection</div>
+        </div>
+      </div>
+      <div class="suggestion-box" id="suggestionBox"></div>
+    </div>
+
+    <!-- Speedometer -->
+    <div class="speedo-section">
+      <div class="section-hdr">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+        FOCUS METER
+      </div>
+      <div class="speedo-wrap">
+        <svg class="speedo-svg" viewBox="0 0 230 120" id="speedoSvg">
+          <defs>
+            <linearGradient id="arcGradST" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#dc2626"/>
+              <stop offset="40%" stop-color="#ca8a04"/>
+              <stop offset="100%" stop-color="#16a34a"/>
+            </linearGradient>
+          </defs>
+          <path d="M 20 107 A 95 95 0 0 1 210 107" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+          <path d="M 20 107 A 95 95 0 0 1 210 107" fill="none" stroke="url(#arcGradST)" stroke-width="16" stroke-linecap="round" opacity="0.2"/>
+          <path id="speedoArc" d="M 20 107 A 95 95 0 0 1 115 12" fill="none" stroke="#ca8a04" stroke-width="16" stroke-linecap="round" opacity="0.9"/>
+          <line id="speedoNeedle" x1="115" y1="107" x2="115" y2="20" stroke="#1a1612" stroke-width="3.5" stroke-linecap="round" style="transform-origin:115px 107px;transform:rotate(0deg);transition:transform 0.9s cubic-bezier(0.34,1.56,0.64,1)"/>
+          <circle cx="115" cy="107" r="7" fill="#1a1612"/>
+          <circle cx="115" cy="107" r="3.5" fill="#fff"/>
+          <text x="12" y="118" font-size="9" fill="#dc2626" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">0</text>
+          <text x="107" y="10" font-size="9" fill="#6b7280" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" text-anchor="middle">50</text>
+          <text x="218" y="118" font-size="9" fill="#16a34a" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" text-anchor="end">100</text>
+        </svg>
+        <div class="speedo-value-label" id="speedoValue" style="color:var(--yellow)">—</div>
+        <div class="speedo-status-txt" id="speedoStatus">Awaiting session start</div>
+      </div>
+    </div>
+
+    <!-- Live stats -->
+    <div class="stats-section">
+      <div class="section-hdr" style="margin-bottom:7px">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        LIVE STATS
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val green" id="lstatFocused">—</div><div class="stat-lbl">Focused %</div></div>
+        <div class="stat-box"><div class="stat-val blue" id="lstatBored">—</div><div class="stat-lbl">Bored %</div></div>
+        <div class="stat-box"><div class="stat-val yellow" id="lstatFrustrated">—</div><div class="stat-lbl">Frustrated %</div></div>
+        <div class="stat-box"><div class="stat-val red" id="lstatDistracted">—</div><div class="stat-lbl">Distracted %</div></div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-section">
+      <div class="section-hdr" style="margin-bottom:7px;flex-shrink:0">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        STUDY TIMELINE
+        <span style="margin-left:auto;font-size:9px;font-weight:700;color:var(--text3)" id="tlTimerSide">—</span>
+      </div>
+      <div class="timeline-scroll" id="timelineScroll">
+        <div class="tl-empty" id="tlEmpty">Session not started. Timeline will appear here.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM ROW -->
+<div class="bottom-row">
+
+  <!-- Current block info -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Current Block
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex:1;justify-content:center">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--text);line-height:1" id="blockTimerBig">—</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2)" id="blockPhase">Not started</div>
+          <div style="font-size:10px;color:var(--text3)" id="blockSubtitle">Configure and start your session above</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px">
+        <div style="flex:1;height:5px;border-radius:99px;background:var(--elevated);overflow:hidden">
+          <div id="blockProgressBar" style="height:100%;border-radius:99px;background:var(--grad);width:0%;transition:width 1s linear"></div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3)" id="blockAdaptiveNote"></div>
+    </div>
+  </div>
+
+  <!-- Session summary -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Session Summary
+    </div>
+    <div class="summary-stats-row">
+      <div class="sum-stat"><div class="sum-stat-val" id="sumDuration">—</div><div class="sum-stat-lbl">Total Time</div></div>
+      <div class="sum-stat"><div class="sum-stat-val green" id="sumStudy">—</div><div class="sum-stat-lbl">Study Time</div></div>
+      <div class="sum-stat"><div class="sum-stat-val blue" id="sumBreaks">—</div><div class="sum-stat-lbl">Break Time</div></div>
+      <div class="sum-stat"><div class="sum-stat-val" id="sumBlocks">—</div><div class="sum-stat-lbl">Blocks Done</div></div>
+      <div class="sum-stat"><div class="sum-stat-val yellow" id="sumAvgFocus">—</div><div class="sum-stat-lbl">Avg Focus</div></div>
+    </div>
+    <div class="end-note-row" id="endNoteRow">
+      <div class="end-time-badge" id="endTimeBadge">—</div>
+      <div class="end-note-txt" id="endNoteText">Great session! Keep it up 🌟</div>
+    </div>
+  </div>
+
+  <!-- Emotion breakdown -->
+  <div class="bottom-col">
+    <div class="col-hdr">
+      <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
+      Emotion Breakdown
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;flex:1;justify-content:center">
+      <div id="emotionBreakdownBars">
+        <div style="font-size:10.5px;color:var(--text3);font-style:italic">Start a session to see emotion distribution.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script/auth.js"></script>
+<script src="script/studytimer.js"></script>
+
+<script>
+// Dropdown
+function toggleDD(e){
+  e.stopPropagation();
+  const dd=document.getElementById('navDD'),open=dd.style.opacity==='1';
+  dd.style.opacity=open?'0':'1';
+  dd.style.transform=open?'translateY(-8px) scale(0.97)':'translateY(0) scale(1)';
+  dd.style.pointerEvents=open?'none':'all';
+}
+document.addEventListener('click',()=>{
+  const dd=document.getElementById('navDD');
+  if(dd){dd.style.opacity='0';dd.style.transform='translateY(-8px) scale(0.97)';dd.style.pointerEvents='none';}
+});
+
+// Hamburger
+(function(){
+  var btn=document.getElementById('hamburgerBtn');
+  var drawer=document.getElementById('mobileDrawer');
+  var overlay=document.getElementById('mobileOverlay');
+  if(!btn)return;
+  function open(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+  function close(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){btn.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  drawer.querySelectorAll('a,button').forEach(function(el){el.addEventListener('click',close);});
+})();
+</script>
+</body>
+</html>

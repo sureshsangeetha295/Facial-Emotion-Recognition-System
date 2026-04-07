@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>EmotionAI — Detect</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -191,6 +191,67 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 32px
 .cop-note-line{animation:noteLines 1.2s ease-in-out infinite}
 .cop-note-line:nth-child(2){animation-delay:0.4s}
 .cop-note-line:nth-child(3){animation-delay:0.8s}
+
+/* ══ HAMBURGER ══ */
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0;touch-action:manipulation}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
+.hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-drawer{position:fixed;top:56px;left:0;right:0;background:rgba(250,249,247,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.1)}
+.mobile-drawer.open{transform:translateY(0)}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s;touch-action:manipulation}
+.mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
+.mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)}
+.mobile-overlay.open{display:block}
+
+/* ══ RESPONSIVE ══ */
+@media(min-width:769px){
+  .hamburger-btn{display:none!important}
+  .mobile-drawer,.mobile-overlay{display:none!important}
+}
+@media(max-width:768px){
+  body{overflow:auto;height:auto;min-height:100dvh}
+  nav{padding:0 14px;height:52px}
+  .nav-right{gap:6px}
+  #topbarUser{display:none}
+  .hamburger-btn{display:flex!important}
+  /* Hide text labels from nav on mobile — use hamburger instead */
+  .nav-back-btn,.nav-signout-btn{display:none!important}
+  .nav-switch-text,.nav-switch-chevron{display:none!important}
+  .nav-launch-btn{padding:6px 10px!important;min-width:unset}
+  /* Stack 2-col to single column */
+  .main-row{grid-template-columns:1fr;overflow:visible;height:auto;flex:none}
+  .left-col{border-right:none;border-bottom:1px solid var(--border);overflow:visible;max-height:none;padding:14px 16px;gap:10px}
+  .right-col{padding:10px 12px;gap:8px;overflow:visible;justify-content:flex-start}
+  .cam-box{aspect-ratio:4/3;min-height:unset;flex-shrink:0}
+  .btn-row{gap:8px}
+  /* Bottom row: stack */
+  .bottom-row{grid-template-columns:1fr;max-height:none}
+  .bottom-col+.bottom-col{border-left:none;border-top:1px solid var(--border)}
+  .bottom-col{max-height:none;padding:10px 14px}
+  /* Avatar sizes: shrink on tablet */
+  .det-avatar-wrap{width:70px;height:84px}
+  .det-avatar-wrap svg{width:70px;height:84px}
+  .coping-avatar-wrap{width:70px;height:84px}
+  .coping-avatar-wrap svg{width:70px;height:84px}
+  .det-name{font-size:17px}
+}
+@media(max-width:480px){
+  nav{padding:0 10px;height:48px}
+  .mobile-drawer{top:48px}
+  .nav-logo{font-size:.88rem}
+  .logo-box{width:24px;height:24px}
+  .cam-box{aspect-ratio:3/4}
+  .left-col{padding:10px 14px}
+  .guide-step{padding:6px 10px}
+  .bottom-col{padding:8px 12px}
+  .det-avatar-wrap,.coping-avatar-wrap{width:56px;height:67px}
+  .det-avatar-wrap svg,.coping-avatar-wrap svg{width:56px;height:67px}
+  .det-name{font-size:15px}
+  .det-desc{font-size:10px;-webkit-line-clamp:3;line-clamp:3}
+}
 </style>
 </head>
 <body>
@@ -207,8 +268,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 32px
     <div class="nav-launch-wrap" id="navLaunchWrap">
       <button class="nav-launch-btn" onclick="toggleLaunchMenu(event)">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-        Switch Mode
-        <svg viewBox="0 0 10 6" style="width:10px;height:6px;fill:#fff;flex-shrink:0;transition:transform 0.2s" id="launchChevron"><path d="M0 0l5 6 5-6z"/></svg>
+        <span class="nav-switch-text">Switch Mode</span>
+        <svg class="nav-switch-chevron" viewBox="0 0 10 6" style="width:10px;height:6px;fill:#fff;flex-shrink:0;transition:transform 0.2s" id="launchChevron"><path d="M0 0l5 6 5-6z"/></svg>
       </button>
       <div class="nav-dropdown" id="navDropdown">
         <a class="nav-dd-item" href="/detect" style="opacity:0.5;pointer-events:none;cursor:default">
@@ -222,10 +283,26 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 32px
         </a>
       </div>
     </div>
-    <a class="back-btn" href="/home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back</a>
-    <a class="back-btn" href="#" onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</a>
+    <a class="back-btn nav-back-btn" href="/home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back</a>
+    <a class="back-btn nav-signout-btn" href="#" onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</a>
   </div>
+  <!-- Hamburger — mobile only -->
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- Mobile overlay + drawer -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+  <a href="/livecam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>Live Cam Mode</a>
+  <div class="mobile-drawer-divider"></div>
+  <a href="/faq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a>
+  <a href="/feedback"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Feedback</a>
+  <div class="mobile-drawer-divider"></div>
+  <button onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</button>
+</div>
 
 <div class="main-row">
   <!-- LEFT -->
@@ -798,6 +875,22 @@ document.addEventListener('keydown',function(e){if(e.code==='Space'&&!e.target.m
 // ── Auth & Init ──
 if(typeof Auth!=='undefined'){if(!Auth.requireAuth())throw new Error('Not authenticated');const _user=Auth.getUser();const _userEl=document.getElementById('topbarUser');if(_userEl&&_user)_userEl.textContent=_user.username||_user.email||'';}
 window.addEventListener('load',initGreeting);
+</script>
+
+<script>
+// ── Hamburger menu ──
+(function(){
+  var btn=document.getElementById('hamburgerBtn');
+  var drawer=document.getElementById('mobileDrawer');
+  var overlay=document.getElementById('mobileOverlay');
+  if(!btn)return;
+  function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+  function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});
+  overlay.addEventListener('click',closeD);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});
+  drawer.querySelectorAll('a,button').forEach(function(el){el.addEventListener('click',closeD);});
+})();
 </script>
 </body>
 </html>

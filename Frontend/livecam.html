@@ -2,268 +2,262 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>EmotionAI — Live Cam</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
-  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
+  --bg:#fdf8f4;--surface:#fff;--elevated:#fef3ec;
+  --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.18);
   --grad:linear-gradient(135deg,#e8440a,#f59e4a);
   --text:#1a1612;--text2:#6b6560;--text3:#a8a29e;
-  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --border:rgba(232,68,10,0.12);--border2:rgba(232,68,10,0.2);
   --green:#16a34a;--yellow:#ca8a04;--red:#dc2626;
+  --card-shadow:0 2px 12px rgba(232,68,10,0.08);
   --font-display:'Fraunces',Georgia,serif;
   --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
 }
 html{scroll-behavior:smooth}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow:hidden}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-/* NAV */
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;background:rgba(250,249,247,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);flex-shrink:0;z-index:100}
+/* ── NAV ── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:rgba(253,248,244,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1rem;text-decoration:none;color:var(--text)}
-.logo-box{width:28px;height:28px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
+.logo-box{width:30px;height:30px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
 .nav-right{display:flex;align-items:center;gap:8px}
-.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;font-family:var(--font-body)}
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;font-family:var(--font-body)}
 .back-btn:hover{border-color:var(--accent);color:var(--accent)}
 .nav-live-badge{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.2);font-size:11px;font-weight:700;color:#dc2626;letter-spacing:0.06em}
 .nav-live-dot{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:livePip 1s ease-in-out infinite}
 @keyframes livePip{0%,100%{opacity:1}50%{opacity:0.2}}
-.session-timer-nav{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.04em}
+.nav-mode-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:var(--font-body);transition:all 0.15s}
+.nav-mode-btn:hover{background:var(--accent2);box-shadow:0 3px 10px var(--accent-glow)}
+.nav-mode-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-/* MAIN GRID — left 360px, right 400px, center flex */
-.main-grid{display:grid;grid-template-columns:360px 1fr 400px;flex:1;min-height:0;overflow:hidden}
+/* ── PAGE WRAPPER ── */
+.page{max-width:960px;margin:0 auto;padding:24px 20px 48px}
 
-/* LEFT PANEL */
-.left-panel{background:var(--surface);border-right:1px solid var(--border);padding:16px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:11px}
-.left-panel::-webkit-scrollbar{width:3px}
-.left-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
-.panel-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
-.panel-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;line-height:1.2;letter-spacing:-0.01em}
-.panel-title em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.benefit-list{display:flex;flex-direction:column;gap:8px}
-.benefit-item{display:flex;gap:10px;align-items:flex-start;padding:10px 13px;background:linear-gradient(135deg,#fff9f5,#fff);border:1px solid rgba(232,68,10,0.1);border-radius:12px}
-.benefit-icon{width:28px;height:28px;border-radius:8px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.benefit-icon svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.benefit-text{font-size:11.5px;color:var(--text2);line-height:1.5;font-weight:500}
-.benefit-text strong{color:var(--text);font-weight:700}
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.page-header-icon{width:38px;height:38px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px var(--accent-glow)}
+.page-header-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.page-header-title{font-family:var(--font-display);font-size:1.45rem;font-weight:700;color:var(--text)}
 
-/* CENTER */
-.center-col{display:flex;flex-direction:column;align-items:center;padding:10px 16px;gap:8px;background:#f2f1ee;overflow:hidden;position:relative}
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px}
+.card-body{padding:20px}
 
-/* Signal Warning */
-.signal-warning{display:none;align-items:center;gap:7px;width:100%;padding:6px 14px;background:rgba(202,138,4,0.12);border:1px solid rgba(202,138,4,0.3);border-radius:10px;font-size:11px;font-weight:600;color:#92400e;animation:warnPulse 2s ease-in-out infinite}
-.signal-warning.show{display:flex}
-@keyframes warnPulse{0%,100%{background:rgba(202,138,4,0.12)}50%{background:rgba(202,138,4,0.22)}}
+/* ── HOW TO USE CARD ── */
+.how-card .card-body{padding:18px 20px}
+.how-header{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.how-header svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.how-header-title{font-size:14px;font-weight:700;color:var(--text)}
+.steps-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.step{display:flex;align-items:flex-start;gap:11px}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-body)}
+.step-content{flex:1}
+.step-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.step-desc{font-size:11.5px;color:var(--text2);line-height:1.5}
 
-/* Camera */
-.cam-box{position:relative;width:100%;flex:1;min-height:0;background:#1c1a18;border:3px solid var(--accent);border-radius:18px;overflow:hidden;box-shadow:0 8px 48px rgba(232,68,10,.25),0 4px 20px rgba(0,0,0,0.3);transition:box-shadow 0.4s}
-.cam-box.live-active{border-color:#dc2626;box-shadow:0 8px 48px rgba(220,38,38,.35),0 4px 20px rgba(0,0,0,0.35)}
+/* ── CAMERA CARD ── */
+.cam-card .card-body{padding:0}
+.cam-section-title{padding:16px 20px 12px;font-size:13.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.cam-section-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Camera box */
+.cam-box{position:relative;width:100%;aspect-ratio:16/7;background:#1a1814;overflow:hidden;cursor:pointer}
+.cam-box.live-active{background:#15130f}
 #videoEl{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
-.bk{position:absolute;width:22px;height:22px;border-color:rgba(255,255,255,0.45);border-style:solid;z-index:4}
-.bk.tl{top:12px;left:12px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
-.bk.tr{top:12px;right:12px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
-.bk.bl{bottom:12px;left:12px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
-.bk.br{bottom:12px;right:12px;border-width:0 2px 2px 0;border-radius:0 0 3px 0}
-.cam-status{position:absolute;top:10px;left:10px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border-radius:20px;padding:4px 11px;border:1px solid rgba(255,255,255,0.1)}
+
+/* Idle state */
+.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(160deg,#22201c,#1a1814);border:3px solid transparent}
+.cam-idle-icon{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,0.1)}
+.cam-idle-icon svg{width:24px;height:24px;stroke:rgba(255,255,255,0.35);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.cam-idle-text{font-size:13px;color:rgba(255,255,255,0.4);font-weight:500}
+
+/* Camera border ring when live */
+.cam-ring{position:absolute;inset:0;pointer-events:none;border:3px solid var(--accent);border-radius:0;opacity:0;transition:opacity 0.4s;z-index:3}
+.cam-ring.active{opacity:1;animation:ringPulse 2.5s ease-in-out infinite}
+@keyframes ringPulse{0%,100%{box-shadow:inset 0 0 0 0 rgba(232,68,10,0);border-color:#e8440a}50%{box-shadow:inset 0 0 20px rgba(232,68,10,0.12);border-color:#f06940}}
+
+/* Scan line */
+.cam-scan{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(232,68,10,0.6),transparent);z-index:5;opacity:0;pointer-events:none}
+.cam-scan.active{animation:scanLine 2.4s ease-in-out infinite}
+@keyframes scanLine{0%{top:5%;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:95%;opacity:0}}
+
+/* Status badge overlay */
+.cam-status{position:absolute;top:12px;left:12px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border-radius:20px;padding:4px 12px;border:1px solid rgba(255,255,255,0.1)}
 .cam-status-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;flex-shrink:0}
 .cam-status-dot.live{background:#dc2626;animation:livePip 0.8s ease-in-out infinite}
 .cam-status-dot.ready{background:#22c55e}
 .cam-status-txt{font-size:10px;font-weight:700;color:#fff;letter-spacing:0.07em}
 
-/* REACTION BOX — faded, bottom-right corner, vertical stack */
-.reaction-box{position:absolute;bottom:14px;right:12px;z-index:9;display:none;flex-direction:column;align-items:center;gap:6px;background:rgba(10,8,6,0.42);backdrop-filter:blur(14px);border-radius:18px;padding:10px 7px;border:1px solid rgba(255,255,255,0.07);box-shadow:0 4px 24px rgba(0,0,0,0.35)}
-.reaction-box.show{display:flex}
-.rx-label{font-size:7.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:1px}
-.reaction-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.13);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.2s;position:relative}
-.reaction-btn:hover{background:rgba(255,255,255,0.18);transform:scale(1.14);border-color:rgba(255,255,255,0.3)}
-.reaction-btn.active{background:rgba(232,68,10,0.35);border-color:var(--accent)}
-.reaction-btn .tooltip{position:absolute;right:calc(100% + 7px);top:50%;transform:translateY(-50%);white-space:nowrap;background:rgba(0,0,0,0.8);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity 0.15s;letter-spacing:0.04em}
-.reaction-btn:hover .tooltip{opacity:1}
-.rx-divider{width:20px;height:1px;background:rgba(255,255,255,0.1)}
+/* Emotion overlay badge */
+.cam-emotion-badge{position:absolute;bottom:14px;left:14px;z-index:8;display:none;align-items:center;gap:7px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,0.1)}
+.cam-emotion-badge.show{display:flex}
+.cam-emotion-dot{width:8px;height:8px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background 0.4s}
+.cam-emotion-name{font-size:13px;font-weight:700;color:#fff;font-family:var(--font-display)}
+.cam-emotion-score{font-size:11px;color:rgba(255,255,255,0.55);font-weight:600}
 
-/* Float up */
-.float-reaction{position:absolute;font-size:22px;pointer-events:none;z-index:20;animation:floatUp 1.6s ease-out forwards}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(1.5)}}
+/* Reaction bar — horizontal at bottom-right */
+.reaction-bar{position:absolute;bottom:14px;right:14px;z-index:8;display:none;align-items:center;gap:5px;background:rgba(0,0,0,0.5);backdrop-filter:blur(12px);border-radius:10px;padding:6px 10px;border:1px solid rgba(255,255,255,0.08)}
+.reaction-bar.show{display:flex}
+.rx-lbl{font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-right:2px}
+.rx-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.18s;position:relative}
+.rx-btn:hover{background:rgba(255,255,255,0.18);transform:scale(1.12)}
+.rx-btn.active{background:rgba(232,68,10,0.4);border-color:var(--accent)}
+.rx-btn .tt{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,0.85);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity 0.15s}
+.rx-btn:hover .tt{opacity:1}
 
-/* Scan line */
-.cam-scan-live{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(220,38,38,0.7),transparent);z-index:5;opacity:0;pointer-events:none}
-.cam-scan-live.active{animation:scanLive 2s ease-in-out infinite}
-@keyframes scanLive{0%{top:5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:95%;opacity:0}}
+/* Float emojis */
+.float-emoji{position:absolute;font-size:20px;pointer-events:none;z-index:20;animation:floatUp 1.4s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}
 
-/* Idle avatar */
-.cam-idle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#2b2927,#1c1a18)}
-.idle-inner{display:flex;align-items:center;gap:20px;padding:0 28px}
-.idle-text-side{display:flex;flex-direction:column;gap:6px}
-.greeting-line{font-size:14px;font-weight:700;color:#fff;font-family:var(--font-body);text-shadow:0 1px 8px rgba(0,0,0,0.7)}
-.greeting-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.05em}
-.typewriter-label{font-size:11.5px;color:rgba(255,255,255,0.7);min-height:17px}
-.typewriter-cursor{display:inline-block;width:1px;height:11px;background:var(--accent);margin-left:2px;vertical-align:middle;animation:cursorBlink 0.8s step-end infinite}
-@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
-.idle-hint{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,0.28);letter-spacing:0.07em;text-transform:uppercase}
-.idle-hint-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0.7}
+/* Start/Stop row */
+.cam-btn-row{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px}
+.btn-start{flex:1;padding:12px 20px;border:none;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.18s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-start:hover:not(:disabled){background:var(--accent2);box-shadow:0 4px 16px var(--accent-glow);transform:translateY(-1px)}
+.btn-start:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-start svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-stop{padding:12px 20px;border:none;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;color:#fff;background:#dc2626;transition:all 0.18s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:7px;min-width:100px}
+.btn-stop:hover:not(:disabled){background:#b91c1c;box-shadow:0 4px 16px rgba(220,38,38,0.35);transform:translateY(-1px)}
+.btn-stop:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-stop svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
-/* Animations */
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
-@keyframes eyeMove{0%,30%{transform:translateX(0)}35%,55%{transform:translateX(2px)}60%,100%{transform:translateX(0)}}
-@keyframes breathe{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.04)}}
-@keyframes detFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@keyframes detBlink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(0.07)}}
-.avatar-group{animation:float 3.5s ease-in-out infinite}
-.avatar-eye{fill:#2a1a0a;animation:blink 4s ease-in-out infinite}
-.avatar-pupil{fill:#5b3a1a;animation:eyeMove 5s ease-in-out infinite}
-.avatar-body{animation:breathe 3.5s ease-in-out infinite}
-.det-av-group{animation:detFloat 3s ease-in-out infinite}
-.det-av-eye{animation:detBlink 4s ease-in-out infinite}
+/* Signal warning */
+.signal-bar{display:none;align-items:center;gap:8px;padding:9px 20px;background:rgba(202,138,4,0.1);border-bottom:1px solid rgba(202,138,4,0.25);font-size:11.5px;font-weight:600;color:#92400e}
+.signal-bar.show{display:flex}
+.signal-bar svg{flex-shrink:0;animation:livePip 1s ease-in-out infinite}
 
-/* Buttons */
-.btn-row{display:flex;gap:8px;width:100%;flex-shrink:0}
-.btn{flex:1;padding:10px 14px;border:none;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.2s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px}
-.btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 14px var(--accent-glow)}
-.btn:disabled{opacity:0.45;cursor:not-allowed;transform:none}
-.btn-stop{background:#dc2626}
-.btn-stop:hover:not(:disabled){background:#b91c1c;box-shadow:0 4px 14px rgba(220,38,38,0.4)}
-.btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+/* ── LIVE EMOTION DISTRIBUTION (TREND GRAPH) ── */
+.dist-card .card-body{padding:0}
+.dist-section-title{padding:16px 20px 14px;font-size:13.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.dist-section-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* RIGHT PANEL */
-.right-panel{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.insight-signal-warn{display:none;align-items:center;gap:6px;padding:7px 14px;background:rgba(202,138,4,0.1);border-bottom:1px solid rgba(202,138,4,0.25);font-size:10.5px;font-weight:600;color:#92400e;flex-shrink:0}
-.insight-signal-warn.show{display:flex}
-.warn-blink{animation:livePip 1s ease-in-out infinite}
+/* Empty dist state */
+.dist-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:10px;color:var(--text3)}
+.dist-empty-icon{width:52px;height:52px;display:flex;align-items:center;justify-content:center}
+.dist-empty-icon svg{width:36px;height:36px;stroke:var(--text3);fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.dist-empty-text{font-size:12.5px;font-weight:500}
 
-/* Insight — now at bottom-left as session feedback */
-.insight-section{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.section-hdr{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:5px}
-.section-hdr svg{width:11px;height:11px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.insight-avatar-wrap{display:flex;align-items:flex-start;gap:12px}
-.insight-text{font-size:11.5px;color:var(--text2);line-height:1.6;flex:1}
-.insight-text strong{color:var(--text);font-weight:700}
-.motivate-box{margin-top:8px;padding:9px 12px;border-radius:10px;font-size:11px;font-weight:600;line-height:1.55;display:none}
-.motivate-box.show{display:block}
-.motivate-box.green{background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.2);color:#15803d}
-.motivate-box.yellow{background:rgba(202,138,4,0.08);border:1px solid rgba(202,138,4,0.22);color:#92400e}
-.motivate-box.red{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.18);color:#b91c1c}
-.insight-status-chip{display:none;align-items:center;gap:4px;margin-top:7px;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:99px;border:1px solid;transition:all 0.4s}
-.insight-status-chip.visible{display:inline-flex}
-.chip-green{background:rgba(22,163,74,0.1);color:#15803d;border-color:rgba(22,163,74,0.25)}
-.chip-yellow{background:rgba(202,138,4,0.1);color:#92400e;border-color:rgba(202,138,4,0.25)}
-.chip-red{background:rgba(220,38,38,0.1);color:#b91c1c;border-color:rgba(220,38,38,0.25)}
-/* Bottom feedback section styles */
-.bottom-feedback{display:flex;flex-direction:column;gap:0;flex:1;overflow:hidden}
-.feedback-body{display:flex;align-items:stretch;gap:10px;flex:1;overflow:hidden}
-.feedback-text-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:4px;justify-content:center}
-.feedback-points{display:flex;flex-direction:column;gap:3px}
-.feedback-point{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;color:var(--text2);line-height:1.45;font-weight:500}
-.feedback-point-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px;background:var(--accent)}
-.feedback-point.green .feedback-point-dot{background:#16a34a}
-.feedback-point.yellow .feedback-point-dot{background:#ca8a04}
-.feedback-point.red .feedback-point-dot{background:#dc2626}
-.feedback-point strong{color:var(--text);font-weight:700}
-.feedback-chip{display:none;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid;flex-shrink:0;width:fit-content;margin-bottom:2px}
-.feedback-chip.visible{display:inline-flex}
-.feedback-motivate{font-size:10px;font-weight:600;line-height:1.5;padding:4px 9px;border-radius:7px;display:none;margin-top:2px}
-.feedback-motivate.show{display:block}
-.feedback-motivate.green{background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.18);color:#15803d}
-.feedback-motivate.yellow{background:rgba(202,138,4,0.08);border:1px solid rgba(202,138,4,0.2);color:#92400e}
-.feedback-motivate.red{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.16);color:#b91c1c}
-/* Avatar col shared */
-.av-col-fill{display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* Trend graph area */
+.dist-graph-wrap{padding:14px 20px 10px;position:relative}
+.dist-graph-canvas-wrap{position:relative;width:100%;height:130px}
+#distTrendCanvas{width:100%;height:130px;display:block;cursor:crosshair}
+.dist-hover-tip{position:absolute;background:rgba(26,22,18,0.88);backdrop-filter:blur(8px);border:1px solid var(--border2);color:#fff;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;pointer-events:none;opacity:0;transition:opacity 0.15s;white-space:nowrap;z-index:10;transform:translate(-50%,-110%)}
+.dist-hover-tip.show{opacity:1}
+.dist-graph-legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 20px 14px;border-top:1px solid var(--border)}
+.dist-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
+.dist-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
-/* Speedometer */
-.speedo-section{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.speedo-wrap{display:flex;flex-direction:column;align-items:center}
-.speedo-svg{width:100%;max-width:230px}
-.speedo-value-label{font-family:var(--font-display);font-size:1.65rem;font-weight:700;color:var(--text);margin-top:-6px;text-align:center;transition:color 0.5s}
-.speedo-status-txt{font-size:10.5px;color:var(--text2);text-align:center;margin-top:1px;font-weight:500}
-.speedo-legend{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px;width:100%}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);font-weight:500}
-.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-
-/* Timeline — fills remaining space */
-.timeline-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:12px 16px;min-height:0}
-.timeline-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px;min-height:0}
+/* ── SESSION TIMELINE (embedded in summary) ── */
+.timeline-scroll{overflow-y:auto;padding:8px 0 0;display:flex;flex-direction:column;gap:5px;max-height:160px;min-height:60px}
 .timeline-scroll::-webkit-scrollbar{width:3px}
-.timeline-scroll::-webkit-scrollbar-track{background:transparent}
-.timeline-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
-.tl-empty{font-size:11px;color:var(--text3);font-style:italic;text-align:center;margin-top:12px}
-.tl-item{display:flex;align-items:flex-start;gap:7px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);font-size:10px;color:var(--text2);background:var(--surface)}
-.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2.5px}
+.timeline-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.tl-empty{font-size:11px;color:var(--text3);font-style:italic;text-align:center;padding:12px 0}
+.tl-item{display:flex;align-items:flex-start;gap:7px;font-size:10.5px}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
 .tl-time{font-weight:700;color:var(--text);flex-shrink:0;min-width:34px;font-size:9.5px}
-.tl-msg{flex:1;line-height:1.4}
-.tl-icon{font-size:12px;flex-shrink:0}
+.tl-msg{flex:1;line-height:1.4;color:var(--text2)}
+.tl-icon{font-size:11px;flex-shrink:0}
 
-/* BOTTOM ROW */
-.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);flex-shrink:0;height:160px}
-.bottom-col{padding:9px 14px;overflow:hidden;display:flex;flex-direction:column}
-.bottom-col+.bottom-col{border-left:1px solid var(--border)}
-.col-hdr{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px;flex-shrink:0}
-.col-hdr svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* ── ENGAGEMENT PIE ── */
+.engage-pie-card .card-body{padding:16px 20px}
+.engage-pie-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.engage-pie-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.engage-pie-inner{display:flex;align-items:center;gap:20px}
+.engage-pie-canvas-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+#engagePieCanvas{width:110px;height:110px;display:block}
+.engage-pie-legend{flex:1;display:flex;flex-direction:column;gap:8px}
+.engage-leg-item{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:500;color:var(--text2)}
+.engage-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.engage-leg-pct{font-weight:700;color:var(--text);margin-left:auto}
 
-/* Results — dominant emotion only, compact */
-.result-content{display:flex;align-items:stretch;gap:12px;flex:1;overflow:hidden}
-.result-avatar-col{display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.result-state{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;justify-content:center}
-.result-emotion-name{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text);transition:color 0.3s;line-height:1}
-.result-desc{font-size:10.5px;color:var(--text2);line-height:1.45;margin-top:3px}
-.result-badge{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px}
-.result-badge.hidden{display:none}
-.result-await{font-size:10.5px;color:var(--text3);font-style:italic;margin-top:3px}
-.result-motivate{font-size:10px;color:var(--text2);line-height:1.5;margin-top:4px;padding:5px 9px;border-radius:8px;display:none;font-weight:500}
-.result-motivate.show{display:block}
-.result-motivate.green{background:rgba(22,163,74,0.07);border:1px solid rgba(22,163,74,0.18);color:#15803d}
-.result-motivate.yellow{background:rgba(202,138,4,0.07);border:1px solid rgba(202,138,4,0.2);color:#92400e}
-.result-motivate.red{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.18);color:#b91c1c}
+/* Session Summary */
+.summary-card .card-body{padding:18px 20px}
+.summary-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.summary-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.summary-rows{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
+.summary-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none}
+.summary-lbl{font-size:12px;color:var(--text2);font-weight:500}
+.summary-val{font-size:12px;font-weight:700;color:var(--accent)}
+.summary-val.grey{color:var(--text3)}
+/* Timeline embedded in summary */
+.sum-tl-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;border-top:1px solid var(--border);margin-top:2px}
+.sum-tl-hdr-left{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text)}
+.sum-tl-hdr-left svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* Session Summary — now in bottom-right, inline stats row with avatar first */
-.sess-summary-col{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:4px;min-height:0}
-.sess-avatar-stats-row{display:flex;align-items:center;gap:10px;flex:1;min-height:0;overflow:hidden}
-.session-stats{display:flex;gap:5px;flex-wrap:nowrap;align-items:center;flex:1;min-width:0}
-.sess-stat{display:flex;flex-direction:column;gap:1px;padding:4px 8px;background:var(--elevated);border-radius:7px;flex:1;min-width:0;align-items:center}
-.sess-stat-val{font-family:var(--font-display);font-size:.92rem;font-weight:700;color:var(--text);line-height:1;text-align:center;white-space:nowrap}
-.sess-stat-lbl{font-size:7.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-top:1px;text-align:center;white-space:nowrap}
-.sess-stat-val.green{color:var(--green)}
-.sess-stat-val.yellow{color:var(--yellow)}
-.sess-stat-val.red{color:var(--red)}
-/* End note row — shown after Stop */
-.end-note-row{display:none;align-items:center;gap:6px;padding:4px 8px;background:linear-gradient(135deg,#fff9f5,#fff);border:1px solid rgba(232,68,10,0.12);border-radius:8px;flex-shrink:0}
-.end-note-row.show{display:flex}
-.end-note-txt{font-size:10px;color:var(--text2);font-weight:600;line-height:1.4}
-.end-time-badge{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:var(--accent);white-space:nowrap}
-/* Session Feedback Rating */
-.rating-row{display:flex;gap:7px;margin-top:6px}
-.rating-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;font-family:var(--font-body);transition:all 0.18s;font-size:10px;font-weight:600;color:var(--text2)}
-.rating-btn:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);transform:translateY(-1px)}
-.rating-btn.selected-good{border-color:#16a34a;background:rgba(22,163,74,0.08);color:#15803d}
-.rating-btn.selected-moderate{border-color:#ca8a04;background:rgba(202,138,4,0.08);color:#92400e}
-.rating-btn.selected-bad{border-color:#dc2626;background:rgba(220,38,38,0.07);color:#b91c1c}
-.rating-emoji{font-size:18px;line-height:1}
-.rating-thankyou{font-size:10px;color:var(--text3);font-style:italic;margin-top:5px;text-align:center}
-.rating-thankyou.show{color:#16a34a;font-style:normal;font-weight:600}
-.feedback-avatar-col{display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-.end-avatar-info{display:none}
-.end-time,.end-lbl,.end-note{display:none}
+/* ── OVERALL ANALYSIS (LLM) ── */
+.analysis-card .card-body{padding:18px 20px}
+.analysis-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.analysis-hdr-left{display:flex;align-items:center;gap:8px}
+.analysis-icon{width:28px;height:28px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px var(--accent-glow)}
+.analysis-icon svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.analysis-title{font-size:13.5px;font-weight:700;color:var(--text)}
+.btn-analyse{padding:7px 15px;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);font-family:var(--font-body);display:flex;align-items:center;gap:6px;transition:all 0.15s}
+.btn-analyse:hover:not(:disabled){background:var(--accent2);box-shadow:0 3px 10px var(--accent-glow)}
+.btn-analyse:disabled{opacity:0.45;cursor:not-allowed}
+.btn-analyse svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.analysis-body{font-size:12.5px;line-height:1.7;color:var(--text2)}
+.analysis-body p{margin-bottom:8px}
+.analysis-body p:last-child{margin-bottom:0}
+.analysis-empty{font-size:12px;color:var(--text3);font-style:italic}
+.analysis-typing{display:inline-flex;align-items:center;gap:4px}
+.analysis-typing span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:typingDot 1.2s ease-in-out infinite}
+.analysis-typing span:nth-child(2){animation-delay:0.2s}
+.analysis-typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typingDot{0%,60%,100%{opacity:0.2;transform:scale(0.8)}30%{opacity:1;transform:scale(1)}}
+
+/* ── HAMBURGER ── */
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
+.hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-drawer{position:fixed;top:54px;left:0;right:0;background:rgba(253,248,244,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.mobile-drawer.open{transform:translateY(0)}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s}
+.mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
+.mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.1)}
+.mobile-overlay.open{display:block}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hamburger-btn{display:flex!important}
+  .back-btn{display:none}
+  .steps-row{grid-template-columns:1fr;gap:10px}
+  .two-col{grid-template-columns:1fr}
+  .page{padding:16px 14px 40px}
+}
+@media(max-width:480px){
+  .cam-box{aspect-ratio:4/3}
+  .steps-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
 <nav>
   <a class="nav-logo" href="/home">
-    <div class="logo-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
-    Emotion Analysis
+    <div class="logo-box">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
+    </div>
+    Emotion Analysis System
   </a>
   <div style="display:flex;align-items:center;gap:8px">
     <div class="nav-live-badge" id="navLiveBadge" style="display:none"><div class="nav-live-dot"></div>LIVE</div>
-    <span class="session-timer-nav" id="sessionTimerNav" style="display:none;width:0;overflow:hidden;pointer-events:none"></span>
+    <span style="font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:0.04em" id="sessionTimerNav" style="display:none"></span>
   </div>
   <div class="nav-right">
-    <div style="position:relative;display:inline-flex" id="navLaunchWrap">
-      <button class="btn" style="flex:0;padding:6px 14px;font-size:12px" onclick="toggleDD(event)">
+    <div style="position:relative" id="navModeWrap">
+      <button class="nav-mode-btn" onclick="toggleDD(event)">
         <svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>Switch Mode
       </button>
-      <div id="navDD" style="position:absolute;top:calc(100% + 10px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.12);min-width:190px;padding:6px;z-index:200;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.18s,transform 0.18s;transform-origin:top right">
+      <div id="navDD" style="position:absolute;top:calc(100%+10px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.1);min-width:190px;padding:6px;z-index:200;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.18s,transform 0.18s;transform-origin:top right">
         <a href="/detect" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:500">
           <div style="width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
           <div><div style="font-weight:700;font-size:12px">Detect</div><div style="font-size:10px;color:var(--text3)">Single snapshot mode</div></div>
@@ -272,460 +266,284 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 28px
           <div style="width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
           <div><div style="font-weight:700;font-size:12px">Live Cam</div><div style="font-size:10px;color:var(--accent2)">Current page</div></div>
         </a>
+        <a href="/studytimer" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:500">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div><div style="font-weight:700;font-size:12px">Study Timer</div><div style="font-size:10px;color:var(--text3)">Adaptive emotion timer</div></div>
+        </a>
       </div>
     </div>
     <a class="back-btn" href="/home">
       <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </a>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
-<div class="main-grid">
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+  <a href="/detect"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect Mode</a>
+  <div class="mobile-drawer-divider"></div>
+  <a href="/faq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a>
+  <div class="mobile-drawer-divider"></div>
+  <button onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</button>
+</div>
 
-  <!-- LEFT PANEL (2x wider) -->
-  <div class="left-panel">
-    <div>
-      <div class="panel-label">Live Webcam</div>
-      <div class="panel-title">About <em>Live</em> Analysis</div>
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-icon">
+      <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
     </div>
-    <div class="benefit-list">
-      <div class="benefit-item">
-        <div class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <div class="benefit-text"><strong>Continuous Monitoring</strong> — your attention and engagement are tracked frame-by-frame throughout the entire online class session, giving you an unbroken picture of how focused you were.</div>
+    <div class="page-header-title">Live Camera Feed</div>
+  </div>
+
+  <!-- How to Use Card -->
+  <div class="card how-card">
+    <div class="card-body">
+      <div class="how-header">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="how-header-title">How to Use &amp; Analyze</div>
       </div>
-      <div class="benefit-item">
-        <div class="benefit-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div class="benefit-text"><strong>Live Engagement Score</strong> — a real-time speedometer moves dynamically as the AI detects your emotional state, so you always know if your attention is drifting before it becomes a problem.</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div class="benefit-text"><strong>Session Timeline</strong> — every emotional shift is automatically logged with a timestamp. After class, review the full timeline to see exactly when you were most and least focused.</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg></div>
-        <div class="benefit-text"><strong>Live Reactions</strong> — send instant signals without interrupting the class. Use 👍 when content is great, 👎 when it's unclear, ✋ to request a repeat, 😕 if confused, or 👏 to appreciate a good explanation.</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></div>
-        <div class="benefit-text"><strong>Smart Signal Alerts</strong> — if your internet connection drops or weakens, a warning banner appears instantly suggesting you move closer to your router for better connectivity.</div>
-      </div>
-      <div class="benefit-item">
-        <div class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div class="benefit-text"><strong>Motivational Nudges</strong> — when you seem confused or distracted, the insight panel shows encouraging tips to get you back on track, not just a score.</div>
+      <div class="steps-row">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Start Camera</div>
+            <div class="step-desc">Click "Start Session" button and allow camera access when prompted.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Position Yourself</div>
+            <div class="step-desc">Face the camera directly with good lighting. Keep your face centered in the frame.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">View Results</div>
+            <div class="step-desc">Watch real-time emotion analysis in the distribution chart and engagement meter below.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- CENTER: Camera -->
-  <div class="center-col">
-    <div class="signal-warning" id="signalWarning">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:livePip 1s ease-in-out infinite"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  <!-- Camera Card -->
+  <div class="card cam-card">
+    <div class="cam-section-title">
+      <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      Live Camera Feed
+    </div>
+
+    <!-- Signal warning -->
+    <div class="signal-bar" id="signalBar">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       ⚠️ Weak Signal Detected — try moving closer to your router or near a window.
     </div>
 
     <div class="cam-box" id="camBox">
-      <!-- Idle avatar -->
+      <!-- Idle -->
       <div class="cam-idle" id="camIdle">
-        <div class="idle-inner">
-          <div style="flex-shrink:0">
-            <svg class="avatar-group" viewBox="0 0 150 200" width="145" height="172">
-              <!-- laptop -->
-              <rect fill="#374151" x="22" y="158" width="106" height="6" rx="3"/>
-              <rect fill="#374151" x="30" y="140" width="90" height="22" rx="4"/>
-              <rect fill="#1e40af" x="34" y="143" width="82" height="16" rx="2"/>
-              <rect fill="rgba(255,255,255,0.25)" x="37" y="146" width="30" height="1.5" rx="1"/>
-              <rect fill="rgba(255,255,255,0.15)" x="37" y="150" width="20" height="1.5" rx="1"/>
-              <circle fill="#e8440a" cx="108" cy="146" r="3"/>
-              <!-- body -->
-              <rect fill="#f5d0a9" x="63" y="118" width="24" height="22" rx="4"/>
-              <g class="avatar-body"><ellipse fill="#3b82f6" cx="75" cy="148" rx="36" ry="20"/><path fill="#1d4ed8" d="M66 132 L75 142 L84 132 Q78 137 75 138 Q72 137 66 132Z"/></g>
-              <ellipse fill="#f5d0a9" cx="31" cy="88" rx="7" ry="9"/>
-              <ellipse fill="#f5d0a9" cx="119" cy="88" rx="7" ry="9"/>
-              <ellipse fill="#f5d0a9" cx="75" cy="85" rx="44" ry="50" style="filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))"/>
-              <ellipse fill="#2a1a0a" cx="75" cy="46" rx="44" ry="22"/>
-              <rect fill="#2a1a0a" x="31" y="44" width="88" height="14"/>
-              <ellipse fill="#2a1a0a" cx="31" cy="63" rx="8" ry="18"/>
-              <ellipse fill="#2a1a0a" cx="119" cy="63" rx="8" ry="18"/>
-              <!-- glasses -->
-              <rect fill="none" stroke="#374151" stroke-width="2" x="43" y="75" width="26" height="18" rx="5"/>
-              <rect fill="none" stroke="#374151" stroke-width="2" x="81" y="75" width="26" height="18" rx="5"/>
-              <line stroke="#374151" stroke-width="2" x1="69" y1="84" x2="81" y2="84"/>
-              <line stroke="#374151" stroke-width="2" x1="31" y1="84" x2="43" y2="84"/>
-              <line stroke="#374151" stroke-width="2" x1="107" y1="84" x2="119" y2="84"/>
-              <!-- cheeks -->
-              <ellipse fill="rgba(255,100,80,0.15)" cx="44" cy="97" rx="12" ry="8"/>
-              <ellipse fill="rgba(255,100,80,0.15)" cx="106" cy="97" rx="12" ry="8"/>
-              <!-- eyes -->
-              <g class="avatar-eye" style="transform-origin:56px 84px"><ellipse cx="56" cy="84" rx="7" ry="7.5" fill="#fff"/><ellipse class="avatar-pupil" cx="57" cy="85" rx="4" ry="4.5" style="transform-origin:57px 85px"/><ellipse cx="58.5" cy="82" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/></g>
-              <g class="avatar-eye" style="transform-origin:94px 84px"><ellipse cx="94" cy="84" rx="7" ry="7.5" fill="#fff"/><ellipse class="avatar-pupil" cx="95" cy="85" rx="4" ry="4.5" style="transform-origin:95px 85px"/><ellipse cx="96.5" cy="82" rx="1.5" ry="1.5" fill="#fff" opacity="0.8"/></g>
-              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M49 72 Q56 69 63 72"/>
-              <path stroke="#2a1a0a" stroke-width="2" fill="none" stroke-linecap="round" d="M87 72 Q94 69 101 72"/>
-              <path stroke="#c9956a" stroke-width="1.5" fill="none" d="M75 90 Q72 97 69 99 Q75 102 81 99 Q78 97 75 90"/>
-              <path stroke="#c06040" stroke-width="2" fill="none" stroke-linecap="round" id="avatarMouth" d="M 65 110 Q 75 117 85 110"/>
-            </svg>
-          </div>
-          <div class="idle-text-side">
-            <div class="greeting-line" id="greetingLine">Hello, Student! 👋</div>
-            <div class="greeting-sub">EmotionAI · Live Mode</div>
-            <div class="typewriter-label"><span id="typewriterText"></span><span class="typewriter-cursor"></span></div>
-            <div class="idle-hint"><div class="idle-hint-dot"></div>Click Start Session to begin</div>
-          </div>
+        <div class="cam-idle-icon">
+          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
         </div>
+        <div class="cam-idle-text">Click "Start Session" to begin</div>
       </div>
 
       <video id="videoEl" autoplay muted playsinline></video>
-      <div class="bk tl"></div><div class="bk tr"></div><div class="bk bl"></div><div class="bk br"></div>
+      <div class="cam-ring" id="camRing"></div>
+      <div class="cam-scan" id="camScan"></div>
+
       <div class="cam-status" id="camStatus">
         <div class="cam-status-dot ready" id="camStatusDot"></div>
         <span class="cam-status-txt" id="camStatusTxt">READY</span>
       </div>
-      <div class="cam-scan-live" id="camScanLive"></div>
 
-      <!-- Reaction box — faded, bottom-right corner, vertical -->
-      <div class="reaction-box" id="reactionBox">
-        <div class="rx-label">React</div>
-        <button class="reaction-btn" onclick="sendReaction('thumbsup',this)">👍<span class="tooltip">Content is great!</span></button>
-        <button class="reaction-btn" onclick="sendReaction('thumbsdown',this)">👎<span class="tooltip">Not clear / boring</span></button>
-        <div class="rx-divider"></div>
-        <button class="reaction-btn" onclick="sendReaction('handraise',this)">✋<span class="tooltip">Repeat / Doubt</span></button>
-        <div class="rx-divider"></div>
-        <button class="reaction-btn" onclick="sendReaction('confused',this)">😕<span class="tooltip">I'm confused</span></button>
-        <button class="reaction-btn" onclick="sendReaction('clap',this)">👏<span class="tooltip">Great explanation!</span></button>
+      <!-- Emotion badge overlay -->
+      <div class="cam-emotion-badge" id="camEmotionBadge">
+        <div class="cam-emotion-dot" id="camEmotionDot"></div>
+        <span class="cam-emotion-name" id="camEmotionName">—</span>
+        <span class="cam-emotion-score" id="camEmotionScore"></span>
+      </div>
+
+      <!-- Reaction bar -->
+      <div class="reaction-bar" id="reactionBar">
+        <span class="rx-lbl">React</span>
+        <button class="rx-btn" onclick="sendReaction('thumbsup',this)">👍<span class="tt">Content is great!</span></button>
+        <button class="rx-btn" onclick="sendReaction('thumbsdown',this)">👎<span class="tt">Not clear</span></button>
+        <button class="rx-btn" onclick="sendReaction('handraise',this)">✋<span class="tt">Repeat / Doubt</span></button>
+        <button class="rx-btn" onclick="sendReaction('confused',this)">😕<span class="tt">Confused</span></button>
+        <button class="rx-btn" onclick="sendReaction('clap',this)">👏<span class="tt">Great explanation!</span></button>
       </div>
     </div>
 
-    <div class="btn-row">
-      <button class="btn" id="btnStart" onclick="doStart()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Session</button>
-      <button class="btn btn-stop" id="btnStop" onclick="doStop()" disabled><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Stop</button>
+    <div class="cam-btn-row">
+      <button class="btn-start" id="btnStart" onclick="doStart()">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Start Session
+      </button>
+      <button class="btn-stop" id="btnStop" onclick="doStop()" disabled>
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        Stop
+      </button>
     </div>
   </div>
 
-  <!-- RIGHT PANEL (2x wider) -->
-  <div class="right-panel">
-
-    <!-- Signal warn -->
-    <div class="insight-signal-warn" id="insightSignalWarn">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="warn-blink"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      ⚠️ Weak signal — try to move closer to your router.
+  <!-- Live Emotion Distribution (Trend Graph) -->
+  <div class="card dist-card">
+    <div class="dist-section-title">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Live Emotion Distribution
     </div>
-
-    <!-- SESSION SUMMARY (moved to top of right panel) -->
-    <div class="insight-section" style="padding:11px 16px">
-      <div class="section-hdr">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        SESSION SUMMARY
+    <div class="dist-graph-wrap" id="distGraphWrap">
+      <div class="dist-empty" id="distEmpty">
+        <div class="dist-empty-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="dist-empty-text">Start the camera to see emotion trend.</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <!-- summary avatar -->
-        <svg viewBox="0 0 60 72" width="42" height="50" style="flex-shrink:0">
-          <g style="animation:detFloat 3s ease-in-out infinite">
-            <rect fill="#f5d0a9" x="25" y="47" width="10" height="9" rx="2"/>
-            <ellipse fill="#3b82f6" cx="30" cy="60" rx="16" ry="11"/>
-            <ellipse fill="#f5d0a9" cx="12" cy="35" rx="3.5" ry="4.5"/>
-            <ellipse fill="#f5d0a9" cx="48" cy="35" rx="3.5" ry="4.5"/>
-            <ellipse fill="#f5d0a9" cx="30" cy="33" rx="18" ry="21"/>
-            <ellipse fill="#2a1a0a" cx="30" cy="17" rx="18" ry="9"/>
-            <rect fill="#2a1a0a" x="12" y="16" width="36" height="6"/>
-            <ellipse fill="#2a1a0a" cx="12" cy="26" rx="4" ry="8"/>
-            <ellipse fill="#2a1a0a" cx="48" cy="26" rx="4" ry="8"/>
-            <rect fill="none" stroke="#374151" stroke-width="1.2" x="16" y="29" width="11" height="8" rx="2.5"/>
-            <rect fill="none" stroke="#374151" stroke-width="1.2" x="33" y="29" width="11" height="8" rx="2.5"/>
-            <line stroke="#374151" stroke-width="1.2" x1="27" y1="33" x2="33" y2="33"/>
-            <ellipse fill="#2a1a0a" cx="21.5" cy="33" rx="2.8" ry="2.8"/>
-            <ellipse fill="#2a1a0a" cx="38.5" cy="33" rx="2.8" ry="2.8"/>
-            <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="insightMouth" d="M 22 44 Q 30 50 38 44"/>
-            <circle fill="#f59e0b" cx="48" cy="18" r="5"/>
-            <text x="48" y="21" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">★</text>
-          </g>
-        </svg>
-        <!-- stats row -->
-        <div style="display:flex;gap:5px;flex:1;min-width:0">
-          <div class="sess-stat"><div class="sess-stat-val" id="statDuration">—</div><div class="sess-stat-lbl">Duration</div></div>
-          <div class="sess-stat"><div class="sess-stat-val green" id="statAttentive">—</div><div class="sess-stat-lbl">Attentive</div></div>
-          <div class="sess-stat"><div class="sess-stat-val yellow" id="statPartial">—</div><div class="sess-stat-lbl">Partial</div></div>
-          <div class="sess-stat"><div class="sess-stat-val red" id="statDisengaged">—</div><div class="sess-stat-lbl">Disengaged</div></div>
-          <div class="sess-stat"><div class="sess-stat-val" id="statReactions">—</div><div class="sess-stat-lbl">Reactions</div></div>
+      <div id="distGraphArea" style="display:none">
+        <div class="dist-graph-canvas-wrap">
+          <canvas id="distTrendCanvas" height="130"></canvas>
+          <div class="dist-hover-tip" id="distHoverTip"></div>
         </div>
       </div>
-      <!-- end note shown after stop -->
-      <div class="end-note-row" id="endAvatarRow" style="margin-top:6px">
-        <div class="end-time-badge" id="endAvatarTime">—</div>
-        <div class="end-note-txt">Total session time 🎓 &nbsp;·&nbsp; <span id="endAvatarNote">Great work today!</span></div>
-      </div>
     </div>
-
-    <!-- Speedometer -->
-    <div class="speedo-section">
-      <div class="section-hdr">
-        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
-        ENGAGEMENT METER
-      </div>
-      <div class="speedo-wrap">
-        <svg class="speedo-svg" viewBox="0 0 230 125" id="speedoSvg">
-          <defs>
-            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#dc2626"/>
-              <stop offset="40%" stop-color="#ca8a04"/>
-              <stop offset="100%" stop-color="#16a34a"/>
-            </linearGradient>
-          </defs>
-          <path d="M 20 112 A 95 95 0 0 1 210 112" fill="none" stroke="#e5e7eb" stroke-width="17" stroke-linecap="round"/>
-          <path d="M 20 112 A 95 95 0 0 1 210 112" fill="none" stroke="url(#arcGrad)" stroke-width="17" stroke-linecap="round" opacity="0.22"/>
-          <path id="speedoArc" d="M 20 112 A 95 95 0 0 1 115 17" fill="none" stroke="#ca8a04" stroke-width="17" stroke-linecap="round" opacity="0.9"/>
-          <line id="speedoNeedle" x1="115" y1="112" x2="115" y2="24" stroke="#1a1612" stroke-width="3.5" stroke-linecap="round" style="transform-origin:115px 112px;transform:rotate(0deg);transition:transform 0.9s cubic-bezier(0.34,1.56,0.64,1)"/>
-          <circle cx="115" cy="112" r="8" fill="#1a1612"/>
-          <circle cx="115" cy="112" r="4" fill="#fff"/>
-          <!-- ticks -->
-          <line x1="20" y1="112" x2="32" y2="112" stroke="#9ca3af" stroke-width="1.5" style="transform-origin:115px 112px;transform:rotate(-90deg)"/>
-          <line x1="20" y1="112" x2="28" y2="112" stroke="#9ca3af" stroke-width="1" style="transform-origin:115px 112px;transform:rotate(-67.5deg)"/>
-          <line x1="20" y1="112" x2="32" y2="112" stroke="#9ca3af" stroke-width="1.5" style="transform-origin:115px 112px;transform:rotate(-45deg)"/>
-          <line x1="20" y1="112" x2="28" y2="112" stroke="#9ca3af" stroke-width="1" style="transform-origin:115px 112px;transform:rotate(-22.5deg)"/>
-          <line x1="20" y1="112" x2="32" y2="112" stroke="#9ca3af" stroke-width="1.5" style="transform-origin:115px 112px;transform:rotate(0deg)"/>
-          <line x1="20" y1="112" x2="28" y2="112" stroke="#9ca3af" stroke-width="1" style="transform-origin:115px 112px;transform:rotate(22.5deg)"/>
-          <line x1="20" y1="112" x2="32" y2="112" stroke="#9ca3af" stroke-width="1.5" style="transform-origin:115px 112px;transform:rotate(45deg)"/>
-          <line x1="20" y1="112" x2="28" y2="112" stroke="#9ca3af" stroke-width="1" style="transform-origin:115px 112px;transform:rotate(67.5deg)"/>
-          <line x1="20" y1="112" x2="32" y2="112" stroke="#9ca3af" stroke-width="1.5" style="transform-origin:115px 112px;transform:rotate(90deg)"/>
-          <text x="12" y="124" font-size="9" fill="#dc2626" font-family="Plus Jakarta Sans,sans-serif" font-weight="700">0</text>
-          <text x="107" y="12" font-size="9" fill="#6b7280" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" text-anchor="middle">50</text>
-          <text x="218" y="124" font-size="9" fill="#16a34a" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" text-anchor="end">100</text>
-        </svg>
-        <div class="speedo-value-label" id="speedoValue" style="color:var(--yellow)">—</div>
-        <div class="speedo-status-txt" id="speedoStatus">Awaiting session start</div>
-      </div>
-      <div class="speedo-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Dark Green = Actively listening</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ca8a04"></div>Yellow = Partially engaged</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Red = Disengaged / Bored</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>Grey = Not tracking</div>
-      </div>
+    <div class="dist-graph-legend" id="distLegend" style="display:none">
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#22c55e"></div>Happiness</div>
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f59e0b"></div>Surprise</div>
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#6b7280"></div>Neutral</div>
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#3b82f6"></div>Sadness</div>
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#ef4444"></div>Anger</div>
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f97316"></div>Fear</div>
+      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#7c3aed"></div>Disgust</div>
     </div>
+  </div>
 
-    <!-- Session Timeline — fills remaining space, scrollable -->
-    <div class="timeline-section">
-      <div class="section-hdr" style="margin-bottom:7px;flex-shrink:0">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        SESSION TIMELINE
-        <span style="margin-left:auto;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:0.06em" id="sessionTimerSide">—</span>
+  <!-- Session Summary (with embedded timeline, no chart) -->
+  <div class="card summary-card">
+    <div class="card-body">
+      <div class="summary-title">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Session Summary
+      </div>
+      <div class="summary-rows">
+        <div class="summary-row">
+          <span class="summary-lbl">Session Duration</span>
+          <span class="summary-val" id="sumDuration">0:00</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-lbl">Emotions Detected</span>
+          <span class="summary-val" id="sumDetected">0</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-lbl">Reactions Sent</span>
+          <span class="summary-val grey" id="sumReactions">0</span>
+        </div>
+      </div>
+      <!-- Embedded Timeline -->
+      <div class="sum-tl-hdr">
+        <div class="sum-tl-hdr-left">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Session Timeline
+        </div>
+        <span style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.04em" id="sessionTimerSide">—</span>
       </div>
       <div class="timeline-scroll" id="timelineScroll">
         <div class="tl-empty" id="tlEmpty">Session not started. Timeline will appear here.</div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- BOTTOM ROW -->
-<div class="bottom-row">
-  <!-- Results — dominant emotion + motivation -->
-  <div class="bottom-col">
-    <div class="col-hdr">
-      <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
-      Results / Detection
-    </div>
-    <div class="result-content">
-      <!-- result avatar — fills height -->
-      <div class="result-avatar-col">
-        <svg viewBox="0 0 80 96" width="88" height="105" style="display:block">
-          <g class="det-av-group">
-            <rect fill="#f5d0a9" x="34" y="62" width="12" height="11" rx="2"/>
-            <ellipse fill="#3b82f6" cx="40" cy="78" rx="20" ry="13"/>
-            <ellipse fill="#f5d0a9" cx="16" cy="46" rx="4" ry="5"/>
-            <ellipse fill="#f5d0a9" cx="64" cy="46" rx="4" ry="5"/>
-            <ellipse fill="#f5d0a9" cx="40" cy="44" rx="24" ry="27"/>
-            <ellipse fill="#2a1a0a" cx="40" cy="24" rx="24" ry="12"/>
-            <rect fill="#2a1a0a" x="16" y="22" width="48" height="8"/>
-            <ellipse fill="#2a1a0a" cx="16" cy="34" rx="5" ry="10"/>
-            <ellipse fill="#2a1a0a" cx="64" cy="34" rx="5" ry="10"/>
-            <rect fill="none" stroke="#374151" stroke-width="1.5" x="22" y="40" width="14" height="10" rx="3"/>
-            <rect fill="none" stroke="#374151" stroke-width="1.5" x="44" y="40" width="14" height="10" rx="3"/>
-            <line stroke="#374151" stroke-width="1.5" x1="36" y1="45" x2="44" y2="45"/>
-            <g class="det-av-eye" style="transform-origin:29px 45px"><ellipse fill="#fff" cx="29" cy="45" rx="4" ry="4"/><ellipse fill="#2a1a0a" cx="30" cy="46" rx="2.5" ry="2.5"/></g>
-            <g class="det-av-eye" style="transform-origin:51px 45px"><ellipse fill="#fff" cx="51" cy="45" rx="4" ry="4"/><ellipse fill="#2a1a0a" cx="52" cy="46" rx="2.5" ry="2.5"/></g>
-            <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="detMouth" d="M 34 58 Q 40 62 46 58"/>
-          </g>
-        </svg>
+  <!-- Engagement Pie -->
+  <div class="card engage-pie-card">
+    <div class="card-body">
+      <div class="engage-pie-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+        Engagement
       </div>
-      <div class="result-state">
-        <div class="result-emotion-name" id="resultEmotion">Awaiting</div>
-        <div class="result-await" id="resultAwait">Start session to detect emotions live</div>
-        <div class="result-badge hidden" id="resultBadge">● Score: —</div>
-        <div class="result-desc" id="resultDesc"></div>
-        <div class="result-motivate" id="resultMotivate"></div>
+      <div class="engage-pie-inner">
+        <div class="engage-pie-canvas-wrap">
+          <canvas id="engagePieCanvas" width="110" height="110"></canvas>
+        </div>
+        <div class="engage-pie-legend" id="engagePieLegend">
+          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#16a34a"></div><span>Actively Listening</span><span class="engage-leg-pct" id="engPctActive">—</span></div>
+          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#ca8a04"></div><span>Partially Engaged</span><span class="engage-leg-pct" id="engPctPartial">—</span></div>
+          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#dc2626"></div><span>Low Engagement</span><span class="engage-leg-pct" id="engPctLow">—</span></div>
+          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#e5e7eb"></div><span>Not Tracked</span><span class="engage-leg-pct" id="engPctNone">—</span></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Tips & Insight — session feedback (moved to bottom-right) -->
-  <div class="bottom-col">
-    <div class="col-hdr">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Tips &amp; Insight
-    </div>
-    <div class="bottom-feedback">
-      <div class="feedback-body">
-        <!-- insight avatar — same size as result -->
-        <div class="av-col-fill">
-          <svg viewBox="0 0 80 96" width="88" height="105" style="display:block">
-            <g style="animation:detFloat 3.2s ease-in-out infinite;transform-origin:40px 48px">
-              <rect fill="#f5d0a9" x="34" y="62" width="12" height="11" rx="2"/>
-              <g style="animation:breathe 3.2s ease-in-out infinite;transform-origin:40px 80px">
-                <ellipse fill="#3b82f6" cx="40" cy="80" rx="20" ry="13"/>
-                <path fill="#1d4ed8" d="M35 71 L40 77 L45 71 Q42 74 40 75 Q38 74 35 71Z"/>
-              </g>
-              <ellipse fill="#f5d0a9" cx="16" cy="46" rx="4" ry="5"/>
-              <ellipse fill="#f5d0a9" cx="64" cy="46" rx="4" ry="5"/>
-              <ellipse fill="#f5d0a9" cx="40" cy="44" rx="24" ry="27"/>
-              <ellipse fill="#2a1a0a" cx="40" cy="24" rx="24" ry="12"/>
-              <rect fill="#2a1a0a" x="16" y="22" width="48" height="8"/>
-              <ellipse fill="#2a1a0a" cx="16" cy="34" rx="5" ry="10"/>
-              <ellipse fill="#2a1a0a" cx="64" cy="34" rx="5" ry="10"/>
-              <rect fill="none" stroke="#374151" stroke-width="1.5" x="22" y="40" width="14" height="10" rx="3"/>
-              <rect fill="none" stroke="#374151" stroke-width="1.5" x="44" y="40" width="14" height="10" rx="3"/>
-              <line stroke="#374151" stroke-width="1.5" x1="36" y1="45" x2="44" y2="45"/>
-              <ellipse fill="#2a1a0a" style="animation:detBlink 4s ease-in-out infinite;transform-origin:29px 45px" cx="29" cy="45" rx="3.5" ry="3.5"/>
-              <ellipse fill="#2a1a0a" style="animation:detBlink 4s ease-in-out infinite;transform-origin:51px 45px" cx="51" cy="45" rx="3.5" ry="3.5"/>
-              <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="insightMouth2" d="M 34 58 Q 40 62 46 58"/>
-              <rect fill="#fff" stroke="#d1d5db" stroke-width="1" x="54" y="52" width="18" height="22" rx="2"/>
-              <line stroke="#9ca3af" stroke-width="1" x1="57" y1="57" x2="69" y2="57"/>
-              <line stroke="#9ca3af" stroke-width="1" x1="57" y1="61" x2="69" y2="61"/>
-              <line stroke="#9ca3af" stroke-width="1" x1="57" y1="65" x2="65" y2="65"/>
-              <rect fill="#e8440a" x="66" y="48" width="2" height="10" rx="1"/>
-            </g>
-          </svg>
-        </div>
-        <div class="feedback-text-wrap">
-          <span class="feedback-chip" id="insightChip"></span>
-          <div class="feedback-points" id="feedbackPoints">
-            <div class="feedback-point"><div class="feedback-point-dot"></div><span>Click <strong>Start Session</strong> to begin live emotion tracking.</span></div>
-            <div class="feedback-point"><div class="feedback-point-dot"></div><span>Your engagement will be monitored in real-time.</span></div>
-            <div class="feedback-point"><div class="feedback-point-dot"></div><span>Use 👍 👎 ✋ to react during the session.</span></div>
+  <!-- Overall Analysis (LLM) -->
+  <div class="card analysis-card">
+    <div class="card-body">
+      <div class="analysis-hdr">
+        <div class="analysis-hdr-left">
+          <div class="analysis-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
           </div>
-          <div class="feedback-motivate" id="motivateBox"></div>
+          <span class="analysis-title">Overall Analysis</span>
         </div>
+        <button class="btn-analyse" id="btnAnalyse" onclick="runOverallAnalysis()">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Generate Analysis
+        </button>
+      </div>
+      <div class="analysis-body" id="analysisBody">
+        <span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary of the session.</span>
       </div>
     </div>
   </div>
 
-  <!-- Session Feedback Rating -->
-  <div class="bottom-col">
-    <div class="col-hdr">
-      <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>
-      Session Feedback
-    </div>
-    <div style="display:flex;align-items:stretch;gap:10px;flex:1;overflow:hidden">
-      <!-- CHANGE 2: Session Feedback avatar enlarged to match Result/Tips avatars (width=88 height=105) -->
-      <div class="feedback-avatar-col">
-        <svg viewBox="0 0 80 96" width="88" height="105" style="display:block">
-          <g style="animation:detFloat 3.5s ease-in-out infinite;transform-origin:40px 48px">
-            <rect fill="#f5d0a9" x="34" y="62" width="12" height="11" rx="2"/>
-            <g style="animation:breathe 3.5s ease-in-out infinite;transform-origin:40px 80px">
-              <ellipse fill="#3b82f6" cx="40" cy="80" rx="20" ry="13"/>
-              <path fill="#1d4ed8" d="M35 71 L40 77 L45 71 Q42 74 40 75 Q38 74 35 71Z"/>
-            </g>
-            <ellipse fill="#f5d0a9" cx="16" cy="46" rx="4" ry="5"/>
-            <ellipse fill="#f5d0a9" cx="64" cy="46" rx="4" ry="5"/>
-            <ellipse fill="#f5d0a9" cx="40" cy="44" rx="24" ry="27"/>
-            <ellipse fill="#2a1a0a" cx="40" cy="24" rx="24" ry="12"/>
-            <rect fill="#2a1a0a" x="16" y="22" width="48" height="8"/>
-            <ellipse fill="#2a1a0a" cx="16" cy="34" rx="5" ry="10"/>
-            <ellipse fill="#2a1a0a" cx="64" cy="34" rx="5" ry="10"/>
-            <rect fill="none" stroke="#374151" stroke-width="1.5" x="22" y="40" width="14" height="10" rx="3"/>
-            <rect fill="none" stroke="#374151" stroke-width="1.5" x="44" y="40" width="14" height="10" rx="3"/>
-            <line stroke="#374151" stroke-width="1.5" x1="36" y1="45" x2="44" y2="45"/>
-            <g style="animation:detBlink 4.5s ease-in-out infinite;transform-origin:29px 45px"><ellipse fill="#fff" cx="29" cy="45" rx="4" ry="4"/><ellipse fill="#2a1a0a" cx="30" cy="46" rx="2.5" ry="2.5"/></g>
-            <g style="animation:detBlink 4.5s ease-in-out infinite;transform-origin:51px 45px"><ellipse fill="#fff" cx="51" cy="45" rx="4" ry="4"/><ellipse fill="#2a1a0a" cx="52" cy="46" rx="2.5" ry="2.5"/></g>
-            <path stroke="#c06040" stroke-width="1.5" fill="none" stroke-linecap="round" id="fbMouth" d="M 34 58 Q 40 62 46 58"/>
-          </g>
-        </svg>
-      </div>
-      <!-- rating area -->
-      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px">
-        <div style="font-size:10.5px;font-weight:600;color:var(--text2)" id="fbQuestion">How was your session?</div>
-        <div class="rating-row" id="ratingRow">
-          <button class="rating-btn" id="ratingGood" onclick="submitRating('good')">
-            <span class="rating-emoji">😊</span>Good
-          </button>
-          <button class="rating-btn" id="ratingModerate" onclick="submitRating('moderate')">
-            <span class="rating-emoji">😐</span>Moderate
-          </button>
-          <button class="rating-btn" id="ratingBad" onclick="submitRating('bad')">
-            <span class="rating-emoji">😔</span>Bad
-          </button>
-        </div>
-        <div class="rating-thankyou" id="ratingThankyou">Rate your session above after it ends.</div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script src="script/auth.js"></script>
 <script>
 // ══════════════════════════════════════════════════
-//  livecam.html — Real API integration
-//  UI: exact draft design  |  Logic: app.js API calls
+//  livecam.html — Updated UI, same logic
 // ══════════════════════════════════════════════════
 
-// ── Emotion data (matches backend order) ──
 const PROB_KEYS = ['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surprise'];
 const ENGAGEMENT_MAP = { Happiness:1.0,Surprise:1.0,Neutral:0.6,Sadness:0.3,Fear:0.3,Anger:0.1,Disgust:0.1 };
 const API_URL = '/predict/';
 
-// Draft META map (backend key → draft display)
 const BACKEND_TO_DRAFT = {
   happiness:'happy', neutral:'neutral', sadness:'sad',
   anger:'angry',     fear:'fearful',    disgust:'disgusted', surprise:'surprised',
 };
 
-const META = {
-  happy:    {label:'Happy',        color:'#16a34a',chip:'chip-green', chipTxt:'● Actively Engaged',    desc:'Great focus! You appear engaged and happy with the content.',   motivate:'',motivateClass:'',                score:90},
-  neutral:  {label:'Neutral',      color:'#6b7280',chip:'chip-yellow',chipTxt:'◑ Partially Focused',  desc:'Neither engaged nor disengaged — could improve interaction.',      motivate:'💡 Try taking a quick note — writing helps lock in your attention!',motivateClass:'yellow',score:52},
-  sad:      {label:'Sad',          color:'#dc2626',chip:'chip-red',   chipTxt:'● Disengaged',          desc:'You appear sad or unmotivated — a short break may help.',           motivate:'❤️ It\'s okay to feel this way. Take a deep breath — you\'re showing up and that already matters. One step at a time!',motivateClass:'red',score:18},
-  angry:    {label:'Frustrated',   color:'#b91c1c',chip:'chip-red',   chipTxt:'● Disengaged',          desc:'You show frustration — consider a short break or pace change.',    motivate:'🧘 Breathe. Frustration means you care. Step back for 30 seconds, then come back fresh. You\'re closer than you think!',motivateClass:'red',score:14},
-  fearful:  {label:'Anxious',      color:'#9f1239',chip:'chip-red',   chipTxt:'● Stressed / Anxious',  desc:'You appear anxious — calm yourself with a slow deep breath.',       motivate:'💙 Slow breath in, slow breath out. You\'ve prepared for this — trust yourself. You can do it! 🙌',motivateClass:'red',score:28},
-  disgusted:{label:'Disinterested',color:'#7f1d1d',chip:'chip-red',   chipTxt:'● Very Low Interest',   desc:'Very low interest detected — re-engagement needed.',               motivate:'🔥 Even 2 focused minutes can change your session. Find ONE surprising thing about this topic — go!',motivateClass:'red',score:10},
-  surprised:{label:'Surprised',    color:'#f59e0b',chip:'chip-yellow',chipTxt:'◑ Attention Spike',    desc:'Something caught your attention — perhaps unexpected content.',    motivate:'',motivateClass:'',                score:68},
+const EMOTION_COLORS = {
+  happy:'#16a34a', neutral:'#6b7280', sad:'#dc2626',
+  angry:'#b91c1c', fearful:'#9f1239', disgusted:'#7f1d1d', surprised:'#f59e0b'
 };
-
-const POINTS_MAP = {
-  happy:    {cls:'green', pts:['You\'re <strong>happy and actively engaged</strong> — great work keeping this energy!','Your focus is at its peak right now. Keep listening and absorbing.','This is the ideal state for deep learning. Stay consistent! 🌟']},
-  neutral:  {cls:'yellow',pts:['Attention is <strong>neutral right now</strong> — not fully in, not fully out.','Try writing one sentence about what was just discussed.','Shift your posture or ask a quick question to re-engage. 💡']},
-  sad:      {cls:'red',   pts:['You seem <strong>low-energy or unmotivated</strong> right now.','Take a slow deep breath — showing up already counts as progress.','One small step at a time. You don\'t have to be perfect. ❤️']},
-  angry:    {cls:'red',   pts:['<strong>Frustration detected</strong> — take a brief pause if needed.','Step back for 30 seconds, then return with a fresh perspective.','Frustration means you care — you\'re closer than you think. 🧘']},
-  fearful:  {cls:'red',   pts:['<strong>Stress or anxiety detected</strong> — breathe slowly and steadily.','You\'ve prepared for this. Trust the work you\'ve already done.','Slow breath in, slow breath out. One moment at a time. 💙']},
-  disgusted:{cls:'red',   pts:['<strong>Very low interest</strong> detected — engagement is minimal.','Find just ONE surprising fact about this topic to spark curiosity.','Even 2 fully focused minutes can reset the entire session. 🔥']},
-  surprised:{cls:'yellow',pts:['Something <strong>caught your attention</strong> — use that curiosity!','Unexpected content is a great hook. Lean into it and explore.','Jot down what surprised you — questions make great study notes. 💡']},
+const EMOTION_LABELS = {
+  happy:'Happy', neutral:'Neutral', sad:'Sad',
+  angry:'Frustrated', fearful:'Anxious', disgusted:'Disinterested', surprised:'Surprised'
 };
 
 const SCORE_MAP = {happy:90,surprised:68,neutral:52,fearful:28,sad:18,angry:14,disgusted:10};
-const MOUTHS    = {happy:'M 34 56 Q 40 62 46 56',neutral:'M 34 58 Q 40 59 46 58',sad:'M 35 61 Q 40 57 45 61',angry:'M 34 61 Q 40 57 46 61',fearful:'M 35 60 Q 40 56 45 60',disgusted:'M 35 62 Q 40 57 45 62',surprised:'M 36 57 Q 40 64 44 57'};
+
+// Bar colors for emotion distribution
+const BAR_COLORS = {
+  Anger:'#ef4444',Disgust:'#7c3aed',Fear:'#f97316',
+  Happiness:'#22c55e',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#f59e0b'
+};
 
 // ── State ──
 let isLive=false, liveInterval=null, abortCtrl=null, detectionInProgress=false;
-let _engagementScores=[], _sessionId=null, _frameCount=0;
+let _sessionId=null, _frameCount=0, _engagementScores=[];
 let sessionStart=null, sessionTimer=null, reactionCount=0;
-let engagementScore=0, attentiveTime=0, partialTime=0, disengagedTime=0, lastEmotion=null;
+let engagementScore=0, lastEmotion=null, totalDetected=0;
+let emotionCounts={};
+let lastProbs={};
 
 // ── Helpers ──
-function fmtTime(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60);return`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
-function sessionTime(){return sessionStart?fmtTime(Date.now()-sessionStart):'00:00';}
-
-// ── Typewriter ──
-const TW=['Ready to monitor your attention live…','Your engagement will be tracked continuously…','Live feedback helps improve focus…','Session data builds your timeline…','React in real-time with 👍 👎 ✋…'];
-let twIdx=0,twChar=0,twDir=1;
-function initGreeting(){
-  const h=new Date().getHours();
-  const el=document.getElementById('greetingLine');
-  if(el)el.textContent=h<12?'Good Morning, Student! 🌅':h<17?'Good Afternoon! 📚':'Good Evening! 🌙';
-  runTW();
-}
-function runTW(){
-  const el=document.getElementById('typewriterText');if(!el)return;
-  const line=TW[twIdx];
-  if(twDir===1){el.textContent=line.slice(0,++twChar);if(twChar>=line.length){twDir=-1;setTimeout(runTW,1800);return;}}
-  else{el.textContent=line.slice(0,--twChar);if(twChar<=0){twDir=1;twIdx=(twIdx+1)%TW.length;}}
-  setTimeout(runTW,twDir===1?55:28);
-}
+function fmtTime(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60);return`${m}:${String(s%60).padStart(2,'0')}`;}
+function sessionTime(){return sessionStart?fmtTime(Date.now()-sessionStart):'0:00';}
 
 // ── Dropdown ──
 function toggleDD(e){
@@ -735,10 +553,10 @@ function toggleDD(e){
 }
 document.addEventListener('click',()=>{const dd=document.getElementById('navDD');if(dd){dd.style.opacity='0';dd.style.transform='translateY(-8px) scale(0.97)';dd.style.pointerEvents='none';}});
 
-// ── Timer tick ──
+// ── Timer ──
 function tickTimer(){
   const t=sessionTime();
-  const n=document.getElementById('sessionTimerNav');const s=document.getElementById('sessionTimerSide');const d=document.getElementById('statDuration');
+  const n=document.getElementById('sessionTimerNav');const s=document.getElementById('sessionTimerSide');const d=document.getElementById('sumDuration');
   if(n)n.textContent=t;if(s)s.textContent=t;if(d)d.textContent=t;
 }
 
@@ -747,7 +565,7 @@ function setSpeedometer(score){
   const angle=(score/100)*180-90;
   const needle=document.getElementById('speedoNeedle');
   if(needle)needle.style.transform=`rotate(${angle}deg)`;
-  const cx=115,cy=112,r=95;
+  const cx=100,cy=100,r=85;
   const sR=Math.PI,eR=Math.PI-(score/100)*Math.PI;
   const x1=cx+r*Math.cos(sR),y1=cy+r*Math.sin(sR);
   const x2=cx+r*Math.cos(eR),y2=cy+r*Math.sin(eR);
@@ -760,6 +578,173 @@ function setSpeedometer(score){
   if(ss)ss.textContent=score>=70?'🟢 Actively Listening':score>=40?'🟡 Partially Engaged':score>0?'🔴 Low Engagement':'Awaiting session start';
 }
 
+// ── Trend Graph Data ──
+const TREND_HISTORY = []; // each entry: {t, probs}
+const TREND_MAX = 30;
+const TREND_COLORS = {
+  Anger:'#ef4444',Disgust:'#7c3aed',Fear:'#f97316',
+  Happiness:'#22c55e',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#f59e0b'
+};
+
+function updateTrendGraph(probs){
+  TREND_HISTORY.push({t:Date.now(), probs:{...probs}});
+  if(TREND_HISTORY.length>TREND_MAX)TREND_HISTORY.shift();
+
+  const canvas=document.getElementById('distTrendCanvas');
+  if(!canvas)return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.offsetWidth||600;
+  const H=130;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  if(TREND_HISTORY.length<2)return;
+
+  const pad={l:6,r:6,t:8,b:8};
+  const gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
+
+  // Draw each emotion line
+  PROB_KEYS.forEach(key=>{
+    const col=TREND_COLORS[key]||'#999';
+    ctx.beginPath();
+    ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.lineCap='round';
+    TREND_HISTORY.forEach((d,i)=>{
+      const x=pad.l+(i/(TREND_MAX-1))*gW;
+      const y=pad.t+gH-(((d.probs[key]||0)/100)*gH);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+
+    // dot at last point
+    const last=TREND_HISTORY[TREND_HISTORY.length-1];
+    const lx=pad.l+((TREND_HISTORY.length-1)/(TREND_MAX-1))*gW;
+    const ly=pad.t+gH-(((last.probs[key]||0)/100)*gH);
+    ctx.beginPath();ctx.arc(lx,ly,3,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+  });
+
+  // Store canvas ref for hover
+  canvas._trendW=W;canvas._trendH=H;canvas._pad=pad;
+}
+
+function initTrendHover(){
+  const canvas=document.getElementById('distTrendCanvas');
+  const tip=document.getElementById('distHoverTip');
+  if(!canvas||!tip)return;
+  canvas.addEventListener('mousemove',e=>{
+    if(!TREND_HISTORY.length){tip.classList.remove('show');return;}
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const pad=canvas._pad||{l:6,r:6,t:8,b:8};
+    const W=canvas._trendW||rect.width;
+    const idx=Math.round(((mx-pad.l)/(W-pad.l-pad.r))*(TREND_HISTORY.length-1));
+    const cIdx=Math.max(0,Math.min(TREND_HISTORY.length-1,idx));
+    const d=TREND_HISTORY[cIdx];
+    if(!d){tip.classList.remove('show');return;}
+    const top=Object.entries(d.probs).sort((a,b)=>b[1]-a[1])[0];
+    tip.textContent=`${top[0]}: ${top[1]}%`;
+    tip.style.left=mx+'px';tip.style.top='10px';
+    tip.classList.add('show');
+  });
+  canvas.addEventListener('mouseleave',()=>tip.classList.remove('show'));
+}
+
+function showDistGraph(){
+  document.getElementById('distEmpty').style.display='none';
+  document.getElementById('distGraphArea').style.display='block';
+  document.getElementById('distLegend').style.display='flex';
+}
+
+// ── Engagement Pie ──
+let _engageCounts={active:0,partial:0,low:0,none:1};
+function updateEngagePie(score){
+  if(score>=70)_engageCounts.active++;
+  else if(score>=40)_engageCounts.partial++;
+  else if(score>0)_engageCounts.low++;
+  else _engageCounts.none++;
+
+  const total=_engageCounts.active+_engageCounts.partial+_engageCounts.low+_engageCounts.none;
+  const slices=[
+    {val:_engageCounts.active/total,col:'#16a34a'},
+    {val:_engageCounts.partial/total,col:'#ca8a04'},
+    {val:_engageCounts.low/total,col:'#dc2626'},
+    {val:_engageCounts.none/total,col:'#e5e7eb'},
+  ];
+  drawDonut('engagePieCanvas',slices,110);
+  const pct=v=>total>0?Math.round((v/total)*100)+'%':'—';
+  document.getElementById('engPctActive').textContent=pct(_engageCounts.active);
+  document.getElementById('engPctPartial').textContent=pct(_engageCounts.partial);
+  document.getElementById('engPctLow').textContent=pct(_engageCounts.low);
+  document.getElementById('engPctNone').textContent=pct(_engageCounts.none);
+}
+
+// ── Summary Pie (removed — no pie chart in summary) ──
+function updateSummaryPie(){}
+
+// ── Donut draw helper ──
+function drawDonut(id,slices,size,hollow=false){
+  const canvas=document.getElementById(id);
+  if(!canvas)return;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=size*dpr;canvas.height=size*dpr;
+  canvas.style.width=size+'px';canvas.style.height=size+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx=size/2,cy=size/2,r=size/2-4,inner=hollow||id==='summaryPieCanvas'?r*0.58:r*0.52;
+  let angle=-Math.PI/2;
+  slices.forEach(s=>{
+    if(!s.val)return;
+    const sweep=s.val*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle,angle+sweep);
+    ctx.closePath();ctx.fillStyle=s.col;ctx.fill();
+    angle+=sweep;
+  });
+  // punch hole
+  ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+}
+
+// ── Overall Analysis (LLM) ──
+async function runOverallAnalysis(){
+  const btn=document.getElementById('btnAnalyse');
+  const body=document.getElementById('analysisBody');
+  if(!body)return;
+  btn.disabled=true;
+  body.innerHTML='<div class="analysis-typing"><span></span><span></span><span></span></div> Generating analysis…';
+
+  const mf=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
+  const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
+  const emotionSummary=Object.entries(emotionCounts).map(([k,v])=>`${EMOTION_LABELS[k]||k}: ${Math.round(v/total*100)}%`).join(', ');
+  const dur=document.getElementById('sumDuration')?.textContent||'unknown';
+
+  const prompt=`You are an emotion analysis AI assistant. Analyze this classroom/presentation session data and provide a concise, insightful overall analysis (3-4 short paragraphs, plain text only, no markdown, no asterisks, no headers):
+
+Session Duration: ${dur}
+Total Emotion Detections: ${totalDetected}
+Emotion Distribution: ${emotionSummary||'No data'}
+Most Frequent Emotion: ${mf?EMOTION_LABELS[mf[0]]||mf[0]:'N/A'}
+Reactions Sent: ${reactionCount}
+
+Provide insights on: (1) overall engagement and emotional state, (2) learning effectiveness indicators, (3) actionable recommendations for the presenter. Be warm, practical, and specific. Keep it concise.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'Unable to generate analysis.';
+    const paras=text.split(/\n+/).filter(p=>p.trim());
+    body.innerHTML=paras.map(p=>`<p>${p.trim()}</p>`).join('');
+  }catch(e){
+    body.innerHTML='<span class="analysis-empty">Analysis unavailable. Please check your connection and try again.</span>';
+  }
+  btn.disabled=false;
+}
+
 // ── Timeline ──
 function addTL(msg,color,icon){
   const empty=document.getElementById('tlEmpty');if(empty)empty.remove();
@@ -769,80 +754,63 @@ function addTL(msg,color,icon){
   sc.appendChild(el);sc.scrollTop=sc.scrollHeight;
 }
 
-// ── Feedback points ──
-function renderPoints(pts,cls){
-  const fp=document.getElementById('feedbackPoints');if(!fp)return;
-  fp.innerHTML=pts.map(p=>`<div class="feedback-point ${cls}"><div class="feedback-point-dot"></div><span>${p}</span></div>`).join('');
-}
+// ── Apply detection ──
+function applyDetectionResult(backendEmotion, conf, engagement, probs){
+  const draftKey=BACKEND_TO_DRAFT[backendEmotion.toLowerCase()]||'neutral';
+  const score=engagement!=null?engagement*100:(SCORE_MAP[draftKey]||50);
+  engagementScore+=(score-engagementScore)*0.4;
 
-// ── Apply detection result to all draft UI panels ──
-function applyDetectionResult(backendEmotion, conf, engagement){
-  const draftKey = BACKEND_TO_DRAFT[backendEmotion.toLowerCase()] || 'neutral';
-  const meta     = META[draftKey] || META.neutral;
-  const score    = engagement!=null ? engagement*100 : (SCORE_MAP[draftKey]||50);
+  totalDetected++;
+  emotionCounts[draftKey]=(emotionCounts[draftKey]||0)+1;
+  const mf=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
 
-  // Smooth engagement
-  engagementScore += ((score-engagementScore)*0.4);
-  setSpeedometer(engagementScore);
+  // Summary panel
+  const sd=document.getElementById('sumDetected');if(sd)sd.textContent=totalDetected;
 
-  // Attentive/partial/disengaged tracking
-  if(engagementScore>=70)attentiveTime++;else if(engagementScore>=40)partialTime++;else disengagedTime++;
-  const totalT=attentiveTime+partialTime+disengagedTime;
-  if(totalT>0){
-    const sa=document.getElementById('statAttentive');const sp=document.getElementById('statPartial');const sd=document.getElementById('statDisengaged');
-    if(sa)sa.textContent=Math.round((attentiveTime/totalT)*100)+'%';
-    if(sp)sp.textContent=Math.round((partialTime/totalT)*100)+'%';
-    if(sd)sd.textContent=Math.round((disengagedTime/totalT)*100)+'%';
-  }
+  // Camera overlay badge
+  const badge=document.getElementById('camEmotionBadge');
+  const dot=document.getElementById('camEmotionDot');
+  const name=document.getElementById('camEmotionName');
+  const scoreEl=document.getElementById('camEmotionScore');
+  const col=EMOTION_COLORS[draftKey]||'#6b7280';
+  if(badge)badge.classList.add('show');
+  if(dot)dot.style.background=col;
+  if(name){name.textContent=EMOTION_LABELS[draftKey]||draftKey;name.style.color='#fff';}
+  if(scoreEl)scoreEl.textContent=`Score: ${Math.round(engagementScore)}`;
 
-  // Result panel (bottom-left)
-  const re=document.getElementById('resultEmotion');const ra=document.getElementById('resultAwait');
-  const rb=document.getElementById('resultBadge');const rd=document.getElementById('resultDesc');const rm=document.getElementById('resultMotivate');
-  if(re){re.textContent=meta.label;re.style.color=meta.color;}
-  if(ra)ra.style.display='none';
-  if(rb){rb.classList.remove('hidden');rb.textContent=`● Score: ${Math.round(engagementScore)}`;rb.style.cssText=`background:${meta.color}18;color:${meta.color};border:1px solid ${meta.color}30`;}
-  if(rd)rd.textContent=meta.desc;
-  if(rm){if(meta.motivate){rm.textContent=meta.motivate;rm.className=`result-motivate show ${meta.motivateClass}`;}else rm.className='result-motivate';}
+  // Trend graph
+  if(probs){showDistGraph();updateTrendGraph(probs);}
 
-  // Feedback points (bottom-right)
-  const pm=POINTS_MAP[draftKey]||{cls:'yellow',pts:['Tracking your emotion in real-time.','Stay focused and engaged for best results.','Use reactions to signal the teacher. 👍']};
-  renderPoints(pm.pts,pm.cls);
+  // Engagement pie
+  updateEngagePie(engagementScore);
 
-  // Insight chip
-  const chip=document.getElementById('insightChip');const mbox=document.getElementById('motivateBox');
-  if(chip){chip.className=`feedback-chip visible ${meta.chip}`;chip.textContent=meta.chipTxt;}
-  if(mbox)mbox.className='feedback-motivate';
+  // Summary pie
+  updateSummaryPie();
 
-  // Mouth sync
-  const dm=document.getElementById('detMouth');const im=document.getElementById('insightMouth2');
-  const mPath=MOUTHS[draftKey]||MOUTHS.neutral;
-  if(dm)dm.setAttribute('d',mPath);if(im)im.setAttribute('d',mPath);
-
-  // Timeline (on emotion change)
+  // Timeline on change
   if(draftKey!==lastEmotion){
-    addTL(`${meta.label} detected`,meta.color,engagementScore>=70?'😊':engagementScore>=40?'😐':'😞');
+    addTL(`${EMOTION_LABELS[draftKey]||draftKey} detected`,col,engagementScore>=70?'😊':engagementScore>=40?'😐':'😞');
     lastEmotion=draftKey;
   }
 }
 
-// ── Capture frame ──
+// ── Capture ──
 function captureFrame(quality=0.75){
   return new Promise((resolve,reject)=>{
     const video=document.getElementById('videoEl');
-    if(!video||!video.srcObject)return reject(new Error('No camera stream'));
+    if(!video||!video.srcObject)return reject(new Error('No stream'));
     const canvas=document.createElement('canvas');canvas.width=320;canvas.height=240;
     canvas.getContext('2d').drawImage(video,0,0,320,240);
-    canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Canvas toBlob failed')),'image/jpeg',quality);
+    canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('toBlob failed')),'image/jpeg',quality);
   });
 }
 
-// ── API call ──
+// ── API ──
 async function callPredict(signal){
   const blob=await captureFrame(0.75);
   const form=new FormData();form.append('file',blob,'frame.jpg');
-  const sidParam=(_sessionId)?'&session_id='+encodeURIComponent(_sessionId):'';
-  const url=`${API_URL}?fast=true&save=false${sidParam}`;
-  const res=await Auth.apiFetch(url,{method:'POST',body:form,signal});
+  const sidParam=_sessionId?'&session_id='+encodeURIComponent(_sessionId):'';
+  const res=await Auth.apiFetch(`${API_URL}?fast=true&save=false${sidParam}`,{method:'POST',body:form,signal});
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.message||`HTTP ${res.status}`);}
   const data=await res.json();
   const probs={};
@@ -852,10 +820,10 @@ async function callPredict(signal){
   const emotion=data.emotion;
   const conf=Math.round(data.confidence>1?data.confidence:data.confidence*100);
   const engagement=data.engagement!=null?data.engagement:(ENGAGEMENT_MAP[emotion]??0.5);
-  return{emotion,conf,engagement};
+  return{emotion,conf,engagement,probs};
 }
 
-// ── Live detection loop ──
+// ── Loop ──
 function scheduleLive(){
   if(!isLive)return;
   liveInterval=setTimeout(async()=>{
@@ -865,14 +833,14 @@ function scheduleLive(){
       try{
         if(abortCtrl)abortCtrl.abort();
         abortCtrl=new AbortController();
-        const{emotion,conf,engagement}=await callPredict(abortCtrl.signal);
+        const{emotion,conf,engagement,probs}=await callPredict(abortCtrl.signal);
         _frameCount++;_engagementScores.push(engagement);
-        applyDetectionResult(emotion,conf,engagement);
+        applyDetectionResult(emotion,conf,engagement,probs);
+        document.getElementById('signalBar')?.classList.remove('show');
       }catch(err){
         if(err.name!=='AbortError'){
           console.error('[EmotionAI]',err);
-          document.getElementById('signalWarning')?.classList.add('show');
-          document.getElementById('insightSignalWarn')?.classList.add('show');
+          document.getElementById('signalBar')?.classList.add('show');
         }
       }finally{detectionInProgress=false;}
     }
@@ -883,79 +851,66 @@ function scheduleLive(){
 // ── Reactions ──
 function sendReaction(type,btn){
   btn.classList.add('active');setTimeout(()=>btn.classList.remove('active'),600);
-  reactionCount++;const sr=document.getElementById('statReactions');if(sr)sr.textContent=reactionCount;
-  const labels={thumbsup:'👍 Liked content',thumbsdown:'👎 Unclear / boring',handraise:'✋ Doubt raised',confused:'😕 Feeling confused',clap:'👏 Appreciated'};
+  reactionCount++;
+  const sr=document.getElementById('sumReactions');if(sr)sr.textContent=reactionCount;
+  const labels={thumbsup:'👍 Liked content',thumbsdown:'👎 Unclear / boring',handraise:'✋ Doubt raised',confused:'😕 Confused',clap:'👏 Appreciated'};
   const colors={thumbsup:'#16a34a',thumbsdown:'#dc2626',handraise:'#e8440a',confused:'#ca8a04',clap:'#3b82f6'};
   const icons={thumbsup:'👍',thumbsdown:'👎',handraise:'✋',confused:'😕',clap:'👏'};
   addTL(labels[type],colors[type]||'#6b7280',icons[type]||'⭐');
   const emoji=icons[type],camBox=document.getElementById('camBox');
-  for(let i=0;i<3;i++){setTimeout(()=>{const el=document.createElement('div');el.className='float-reaction';el.textContent=emoji;el.style.cssText=`left:${15+Math.random()*50}%;bottom:60px`;camBox.appendChild(el);setTimeout(()=>el.remove(),1800);},i*200);}
+  for(let i=0;i<3;i++){setTimeout(()=>{const el=document.createElement('div');el.className='float-emoji';el.textContent=emoji;el.style.cssText=`left:${20+Math.random()*45}%;bottom:60px`;camBox.appendChild(el);setTimeout(()=>el.remove(),1600);},i*180);}
 }
 
-// ── START SESSION ──
+// ── START ──
 async function doStart(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
     const v=document.getElementById('videoEl');v.srcObject=stream;v.style.display='block';
     document.getElementById('camIdle').style.display='none';
-    document.getElementById('camBox').classList.add('live-active');
+    document.getElementById('camRing').classList.add('active');
+    document.getElementById('camScan').classList.add('active');
     document.getElementById('camStatusDot').className='cam-status-dot live';
     document.getElementById('camStatusTxt').textContent='LIVE';
-    document.getElementById('reactionBox').classList.add('show');
-    document.getElementById('camScanLive').classList.add('active');
+    document.getElementById('reactionBar').classList.add('show');
     document.getElementById('navLiveBadge').style.display='flex';
-    document.getElementById('sessionTimerNav').style.display='block';
-    document.getElementById('endAvatarRow').classList.remove('show');
-    // Reset state
+    document.getElementById('sessionTimerNav').style.display='inline';
+
     isLive=true;detectionInProgress=false;_frameCount=0;_engagementScores=[];_sessionId=null;
-    engagementScore=0;attentiveTime=0;partialTime=0;disengagedTime=0;reactionCount=0;lastEmotion=null;
-    _sessionRated=false;
-    // Reset rating widget
-    ['ratingGood','ratingModerate','ratingBad'].forEach(id=>{const b=document.getElementById(id);if(b)b.className='rating-btn';});
-    const fq=document.getElementById('fbQuestion');if(fq)fq.textContent='How was your session?';
-    const ty=document.getElementById('ratingThankyou');if(ty){ty.textContent='Rate your session above after it ends.';ty.className='rating-thankyou';}
-    const fbM=document.getElementById('fbMouth');if(fbM)fbM.setAttribute('d','M 34 58 Q 40 62 46 58');
+    engagementScore=0;lastEmotion=null;totalDetected=0;emotionCounts={};reactionCount=0;
+    TREND_HISTORY.length=0;
+    _engageCounts={active:0,partial:0,low:0,none:0};
+
     sessionStart=Date.now();
-    const sr=document.getElementById('statReactions');if(sr)sr.textContent='0';
-    // Clear & init timeline
-    const sc=document.getElementById('timelineScroll');
-    if(sc){sc.innerHTML='';const e=document.createElement('div');e.className='tl-empty';e.id='tlEmpty';e.textContent='Session started. Monitoring…';sc.appendChild(e);}
+    const sr=document.getElementById('sumReactions');if(sr)sr.textContent='0';
+    const sd=document.getElementById('sumDetected');if(sd)sd.textContent='0';
+    document.getElementById('analysisBody').innerHTML='<span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary.</span>';
+    initTrendHover();
+
+    const tl=document.getElementById('timelineScroll');
+    if(tl){tl.innerHTML='<div class="tl-empty" id="tlEmpty" style="display:none"></div>';}
+
     sessionTimer=setInterval(tickTimer,1000);
     document.getElementById('btnStart').disabled=true;
     document.getElementById('btnStop').disabled=false;
+
+    // Reset dist graph
+    document.getElementById('distEmpty').style.display='flex';
+    document.getElementById('distGraphArea').style.display='none';
+    document.getElementById('distLegend').style.display='none';
+
     addTL('Session started','#16a34a','🎬');
-    // Start backend session
+
     try{const res=await Auth.apiFetch('/sessions/start/',{method:'POST'});const d=await res.json();_sessionId=d.session_id;}catch(e){console.warn('[EmotionAI] Session start:',e);}
     scheduleLive();
-  }catch(e){alert('Camera access denied or unavailable. Allow camera permission and try again.');}
+  }catch(e){alert('Camera access denied or unavailable. Please allow camera permission and try again.');}
 }
 
-// ── Session Rating ──
-let _sessionRated = false;
-function submitRating(type) {
-  if (!_sessionRated) return; // only active after session stops
-  const map = { good: 'selected-good', moderate: 'selected-moderate', bad: 'selected-bad' };
-  const mouths = { good: 'M 34 55 Q 40 62 46 55', moderate: 'M 34 58 Q 40 59 46 58', bad: 'M 34 62 Q 40 56 46 62' };
-  ['ratingGood','ratingModerate','ratingBad'].forEach(id => {
-    const b = document.getElementById(id);
-    if (b) b.className = 'rating-btn';
-  });
-  const btn = document.getElementById('rating' + type.charAt(0).toUpperCase() + type.slice(1));
-  if (btn) btn.className = 'rating-btn ' + map[type];
-  const fbMouth = document.getElementById('fbMouth');
-  if (fbMouth) fbMouth.setAttribute('d', mouths[type] || mouths.moderate);
-  const ty = document.getElementById('ratingThankyou');
-  if (ty) { ty.textContent = 'Thanks for your feedback! 🙌'; ty.className = 'rating-thankyou show'; }
-}
-
-// ── STOP SESSION ──
+// ── STOP ──
 async function doStop(){
   if(!isLive)return;
   isLive=false;
-
   document.getElementById('btnStop').disabled=true;
   document.getElementById('btnStart').disabled=false;
-
   if(liveInterval){clearTimeout(liveInterval);liveInterval=null;}
   if(sessionTimer){clearInterval(sessionTimer);sessionTimer=null;}
   if(abortCtrl){abortCtrl.abort();abortCtrl=null;}
@@ -963,40 +918,18 @@ async function doStop(){
 
   const v=document.getElementById('videoEl');
   if(v&&v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;v.style.display='none';}
-
   document.getElementById('camIdle').style.display='flex';
-  document.getElementById('camBox').classList.remove('live-active');
+  document.getElementById('camRing').classList.remove('active');
+  document.getElementById('camScan').classList.remove('active');
   document.getElementById('camStatusDot').className='cam-status-dot ready';
   document.getElementById('camStatusTxt').textContent='STOPPED';
-  document.getElementById('reactionBox').classList.remove('show');
-  document.getElementById('camScanLive').classList.remove('active');
+  document.getElementById('reactionBar').classList.remove('show');
   document.getElementById('navLiveBadge').style.display='none';
-  document.getElementById('signalWarning')?.classList.remove('show');
-  document.getElementById('insightSignalWarn')?.classList.remove('show');
+  document.getElementById('camEmotionBadge').classList.remove('show');
+  document.getElementById('signalBar')?.classList.remove('show');
 
   const elapsed=sessionStart?Date.now()-sessionStart:0;
-  const t=fmtTime(elapsed);
-  addTL(`Session ended — ${t} total`,'#6b7280','🏁');
-
-  const total2=attentiveTime+partialTime+disengagedTime||1;
-  const attPct=Math.round((attentiveTime/total2)*100);
-  const disPct=Math.round((disengagedTime/total2)*100);
-  let chipCls,chipTxt,pts;
-  if(attPct>=60){chipCls='chip-green';chipTxt='● Actively Engaged';pts=[`You were <strong>actively engaged ${attPct}%</strong> of the session — excellent!`,'Your focus streaks were strong. This is the ideal study habit.','Great work today — keep this consistency in future sessions! 🌟'];renderPoints(pts,'green');}
-  else if(disPct>=50){chipCls='chip-red';chipTxt='● Low Engagement';pts=[`Engagement was low for <strong>${disPct}%</strong> of the session — let\'s improve.`,'Try shorter focused blocks next time and reduce distractions.','Every session is a fresh start — you can do better next time! 🔥'];renderPoints(pts,'red');}
-  else{chipCls='chip-yellow';chipTxt='◑ Partial Focus';pts=['You were <strong>partially focused</strong> for most of the session.','Reduce distractions and aim for longer active-attention streaks.','Good baseline — small improvements each session add up fast. 💪'];renderPoints(pts,'yellow');}
-  const chip=document.getElementById('insightChip');if(chip){chip.className=`feedback-chip visible ${chipCls}`;chip.textContent=chipTxt;}
-  document.getElementById('motivateBox').className='feedback-motivate';
-  const note=engagementScore>=70?'Outstanding session! 🌟':engagementScore>=40?'Good effort — keep it up! 💪':'Keep pushing — every session counts! 🔥';
-  const endT=document.getElementById('endAvatarTime');const endN=document.getElementById('endAvatarNote');const endR=document.getElementById('endAvatarRow');
-  if(endT)endT.textContent=t;if(endN)endN.textContent=note;if(endR)endR.classList.add('show');
-  const statD=document.getElementById('statDuration');if(statD)statD.textContent=t;
-
-  // Activate rating widget
-  _sessionRated=true;
-  const fq=document.getElementById('fbQuestion');if(fq)fq.textContent='How was your session?';
-  const ty=document.getElementById('ratingThankyou');if(ty){ty.textContent='Tap a button to rate your session.';ty.className='rating-thankyou';}
-  ['ratingGood','ratingModerate','ratingBad'].forEach(id=>{const b=document.getElementById(id);if(b)b.className='rating-btn';});
+  addTL(`Session ended — ${fmtTime(elapsed)} total`,'#6b7280','🏁');
 
   if(_sessionId){
     try{await Auth.apiFetch('/sessions/end/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:_sessionId,total_frames:_frameCount})});}
@@ -1007,9 +940,23 @@ async function doStop(){
 
 // ── Auth & Init ──
 if(!Auth.requireAuth())throw new Error('Not authenticated');
-const _user=Auth.getUser();const _userEl=document.getElementById('topbarUser');
-if(_userEl&&_user)_userEl.textContent=_user.username||_user.email||'';
-window.addEventListener('load',()=>{initGreeting();setSpeedometer(0);});
+window.addEventListener('load',()=>{initTrendHover();drawDonut('engagePieCanvas',[{val:1,col:'#e5e7eb'}],110);});
+</script>
+
+<script>
+// ── Hamburger ──
+(function(){
+  var btn=document.getElementById('hamburgerBtn');
+  var drawer=document.getElementById('mobileDrawer');
+  var overlay=document.getElementById('mobileOverlay');
+  if(!btn)return;
+  function open(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');document.body.style.overflow='hidden';}
+  function close(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){btn.classList.contains('open')?close():open();});
+  overlay.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  drawer.querySelectorAll('a,button').forEach(function(el){el.addEventListener('click',close);});
+})();
 </script>
 </body>
 </html>

@@ -32,7 +32,9 @@ body {
   overflow: hidden !important;
 }
 
-/* ── TOPBAR ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   TOPBAR
+   ══════════════════════════════════════════════════════════════════════════ */
 .topbar {
   display: flex;
   align-items: center;
@@ -42,7 +44,10 @@ body {
   background: var(--panel);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
+  z-index: 100;
 }
+
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
 .logo-icon {
   width: 30px; height: 30px; border-radius: 8px;
@@ -70,12 +75,94 @@ body {
 .back-btn:hover { background: var(--border); color: var(--text); }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   NAV GREETING — floating typewriter badge below the logo
-   Used on both the landing page (index.html) and the app page (app.html).
-   The #navGreeting element sits inside .nav-logo-wrap, right below the logo.
+   HAMBURGER BUTTON — hidden on desktop, visible on mobile
    ══════════════════════════════════════════════════════════════════════════ */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.hamburger-btn:hover { background: var(--bg); }
+.hamburger-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+  transform-origin: center;
+}
+/* Animated X when open */
+.hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-/* Wraps logo + greeting together in the top-left corner */
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE NAV DRAWER — slides in from top on mobile
+   ══════════════════════════════════════════════════════════════════════════ */
+.mobile-nav-drawer {
+  display: none; /* shown via JS class on mobile */
+  position: fixed;
+  top: 42px; /* sits below topbar */
+  left: 0; right: 0;
+  background: var(--panel);
+  border-bottom: 2px solid var(--border);
+  z-index: 99;
+  padding: 8px 0 12px;
+  transform: translateY(-110%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+}
+.mobile-nav-drawer.open {
+  transform: translateY(0);
+}
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s;
+  border-radius: 0;
+}
+.mobile-nav-item:hover { background: var(--bg); }
+.mobile-nav-item .nav-icon { font-size: 1rem; width: 22px; text-align: center; flex-shrink: 0; }
+.mobile-nav-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 16px;
+}
+/* Overlay that closes drawer on tap-outside */
+.mobile-nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+  background: rgba(0,0,0,0.18);
+}
+.mobile-nav-overlay.open { display: block; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NAV GREETING — floating typewriter badge below the logo
+   ══════════════════════════════════════════════════════════════════════════ */
 .nav-logo-wrap {
   display: flex;
   flex-direction: column;
@@ -85,33 +172,24 @@ body {
   flex-shrink: 0;
 }
 
-/* The greeting pill itself */
 .nav-greeting {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   width: fit-content;
-
-  /* Typography */
   font-size: 11px;
   font-weight: 500;
   color: var(--muted);
   letter-spacing: 0.01em;
   line-height: 1;
   white-space: nowrap;
-
-  /* Pill shape */
   margin-top: 3px;
   padding: 3px 9px 3px 7px;
   background: #f5f4f0;
   border: 1px solid var(--border);
   border-radius: 99px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-
-  /* Reserve height before text arrives */
   min-height: 14px;
-
-  /* Slide-in on page load — starts invisible, settles after 550 ms */
   opacity: 0;
   transform: translateY(4px);
   animation: navGreetAppear 0.4s ease 0.55s forwards;
@@ -121,7 +199,6 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Blinking caret shown while the typewriter is still running */
 .nav-cursor {
   display: inline-block;
   width: 1.5px;
@@ -137,13 +214,12 @@ body {
   50% { opacity: 0; }
 }
 
-/* Applied once typing completes — slightly darker text, caret gone */
 .nav-greeting--done {
   color: #444;
 }
 
 /* ══════════════════════════════════════════
-   MAIN LAYOUT  — 2 columns like reference
+   MAIN LAYOUT  — 2 columns
    Left ~38%  :  camera  +  session timeline
    Right ~62% :  breakdown  +  probs  +  notes
    ══════════════════════════════════════════ */
@@ -236,8 +312,6 @@ body {
 }
 .live-tag.visible { display: block; }
 
-/* cam-result-overlay, cam-eng-* — removed from view; kept as JS ghosts */
-
 .detection-bar {
   position: absolute; bottom: 40px; left: 0; right: 0;
   background: rgba(15,140,60,.90); color: white;
@@ -292,7 +366,7 @@ body {
 .tl-stat-cell:last-child { border-right: none; }
 .tl-stat-val { font-size: 14px; font-weight: 700; color: var(--text); }
 .tl-stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 2px; }
- 
+
 .timeline-tags {
   display: flex; flex-wrap: wrap; gap: 5px;
   padding: 8px 12px;
@@ -343,7 +417,6 @@ body {
   scrollbar-width: none; height: 26px;
 }
 .timeline-dots::-webkit-scrollbar { display: none; }
-.timeline-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .timeline-empty { font-size: 0.75rem; color: var(--muted); }
 
 /* Stats row — used ONLY inside session-pane (left col) if ever needed */
@@ -361,24 +434,6 @@ body {
 .session-pane .tl-stat-cell:last-child { border-right: none; }
 .session-pane .tl-stat-val { font-size: 14px; font-weight: 700; color: var(--text); }
 .session-pane .tl-stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 1px; }
-
-/* Timeline chips (reused from original) */
-.tl-chip {
-  display: flex; align-items: center; gap: 5px;
-  padding: 3px 8px; border-radius: 20px;
-  border: 1px solid transparent; flex-shrink: 0; cursor: default;
-}
-.tl-chip--done  { background: #f1f5f9; border-color: #e2e8f0; }
-.tl-chip--active { border-width: 1.5px; }
-.tl-chip-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.tl-chip-label { font-size: 11px; font-weight: 500; color: #64748b; white-space: nowrap; }
-.tl-chip--active .tl-chip-label { font-weight: 700; }
-.tl-connector { width: 14px; height: 1px; background: #e2e8f0; flex-shrink: 0; }
-.tl-summary-chip {
-  font-size: 11px; padding: 3px 8px; border-radius: 20px;
-  border: 1px solid transparent; white-space: nowrap;
-}
-.tl-summary-chip b { font-weight: 700; }
 
 /* ══ BREAKDOWN / INSIGHT PANE (top-right) — compact, no scroll ══ */
 .breakdown-pane {
@@ -653,64 +708,11 @@ body {
   transition: color .15s;
 }
 .note-delete:hover { color: #ef4444; }
-/* ══ NOTES inside session-pane (left col bottom) ══ */
-.notes-add-btn {
-  font-size: 11px; color: var(--accent2);
-  background: none; border: 1px solid #fde8d4; border-radius: 5px;
-  padding: 2px 9px; cursor: pointer; transition: background .15s;
-}
-.notes-add-btn:hover { background: #fff4ec; }
 
+/* ══ NOTES inside session-pane (left col bottom) ══ */
 .notes-input-wrap {
   padding: 7px 14px 6px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
-.notes-textarea {
-  width: 100%; resize: none;
-  border: 1px solid var(--border); border-radius: 7px;
-  padding: 6px 10px; font-size: 12px; font-family: inherit;
-  color: var(--text); background: #fafaf9;
-  outline: none; transition: border .15s;
-  line-height: 1.5; height: 58px;
-}
-.notes-textarea:focus { border-color: var(--accent); }
-.notes-textarea::placeholder { color: var(--muted); }
-.notes-actions {
-  display: flex; justify-content: flex-end; gap: 6px; margin-top: 5px;
-}
-.notes-cancel-btn {
-  font-size: 11px; background: none; border: 1px solid var(--border);
-  border-radius: 5px; padding: 3px 10px; cursor: pointer; color: var(--muted);
-  transition: background .15s;
-}
-.notes-cancel-btn:hover { background: var(--border); }
-.notes-save-btn {
-  font-size: 11px; font-weight: 600; background: var(--accent); color: white;
-  border: none; border-radius: 5px; padding: 3px 12px; cursor: pointer;
-  transition: background .15s;
-}
-.notes-save-btn:hover { background: #d4441a; }
-
-.notes-list {
-  flex: 1; overflow-y: auto; padding: 6px 14px;
-  display: flex; flex-direction: column; gap: 5px;
-  scrollbar-width: thin; scrollbar-color: #d1cfc8 transparent;
-}
-.notes-list::-webkit-scrollbar { width: 4px; }
-.notes-list::-webkit-scrollbar-thumb { background: #d1cfc8; border-radius: 2px; }
-.notes-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; }
-.note-item {
-  display: flex; gap: 8px; align-items: flex-start;
-  background: #f8f7f4; border: 1px solid var(--border);
-  border-radius: 7px; padding: 6px 10px; flex-shrink: 0;
-}
-.note-ts   { font-size: 10px; color: var(--muted); white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
-.note-text { font-size: 12px; color: #444; line-height: 1.5; }
-.note-delete {
-  margin-left: auto; flex-shrink: 0; font-size: 12px; color: var(--muted);
-  background: none; border: none; cursor: pointer; padding: 0 2px; line-height: 1;
-  transition: color .15s;
-}
-.note-delete:hover { color: #ef4444; }
 
 /* ══ SESSION TIMELINE — stats row (no top border, part of notes-pane) ══ */
 .notes-pane .tl-stats-row {
@@ -738,11 +740,12 @@ body {
 }
 .timeline-tags::-webkit-scrollbar { width: 3px; }
 .timeline-tags::-webkit-scrollbar-thumb { background: #d1cfc8; border-radius: 2px; }
+
 /* ══════════════════════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
-   1280px+  → large desktop (default, no changes needed)
+   1280px+  → large desktop (default)
    1024px   → small laptop / tablet landscape
-   768px    → tablet portrait
+   768px    → tablet portrait   ← hamburger activates here
    480px    → large mobile (phablet)
    360px    → small mobile
    ══════════════════════════════════════════════════════════════════════════ */
@@ -787,16 +790,50 @@ body {
   .notes-pane { height: 160px; }
 }
 
-/* ── Tablet portrait (≤768px) ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   TABLET PORTRAIT (≤768px) — Hamburger menu activates
+   ══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* Stack layout vertically */
+  /* Body becomes scrollable */
   body {
     height: auto;
     min-height: 100dvh;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
+  /* ── Hamburger button becomes visible ── */
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* ── Mobile drawer activates ── */
+  .mobile-nav-drawer {
+    display: block;
+    top: 44px;
+  }
+
+  /* ── Topbar: logo + hamburger only; hide crowded right-side items ── */
+  .topbar {
+    padding: 0 12px;
+    height: 44px;
+    gap: 8px;
+  }
+
+  /* Hide desktop topbar-right elements — they move into the drawer */
+  .topbar-right {
+    display: none;
+  }
+
+  /* Show back-btn and live-badge inside the drawer via .mobile-nav-item */
+  /* (JS should mirror these into the drawer or they can be .mobile-nav-item elements) */
+
+  .logo { font-size: 0.92rem; gap: 7px; }
+  .logo-icon { width: 26px; height: 26px; font-size: 0.85rem; }
+  .nav-greeting { font-size: 10px; padding: 2px 8px 2px 6px; }
+
+  /* ── Layout: single column, stacked ── */
   .app-body {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
@@ -824,15 +861,6 @@ body {
     min-height: 260px;
     max-height: 340px;
   }
-
-  /* Topbar */
-  .topbar { padding: 0 12px; height: 44px; gap: 8px; }
-  .logo { font-size: 0.92rem; gap: 7px; }
-  .logo-icon { width: 26px; height: 26px; font-size: 0.85rem; }
-  .nav-greeting { font-size: 10px; padding: 2px 8px 2px 6px; }
-  .topbar-right { gap: 8px; }
-  .back-btn { padding: 4px 10px; font-size: 0.78rem; }
-  .live-badge { padding: 3px 9px; font-size: 0.72rem; }
 
   /* Buttons row */
   .btn { font-size: 11px; padding: 9px 0; }
@@ -872,6 +900,21 @@ body {
   .tutor-log { padding: 6px 12px 8px; }
   .tutor-msg { font-size: 0.7rem; padding: 6px 9px; }
   .tutor-msg-tag { font-size: 9px; }
+
+  /* Touch targets */
+  .btn,
+  .back-btn,
+  .notes-add-btn,
+  .notes-save-btn,
+  .notes-cancel-btn,
+  .note-delete,
+  .hamburger-btn,
+  .mobile-nav-item {
+    min-height: 36px;
+  }
+
+  /* Slightly larger tap area for chips */
+  .tl-chip { padding: 4px 10px; }
 }
 
 /* ── Large mobile / phablet (≤480px) ── */
@@ -880,10 +923,9 @@ body {
   .topbar { padding: 0 10px; height: 42px; }
   .logo { font-size: 0.88rem; gap: 6px; }
   .logo-icon { width: 24px; height: 24px; border-radius: 6px; font-size: 0.78rem; }
-  .nav-greeting { display: none; } /* hide greeting on small phones to save space */
-  .back-btn { padding: 3px 8px; font-size: 0.74rem; }
-  .live-badge { font-size: 0.68rem; padding: 2px 8px; }
-  .live-dot { width: 6px; height: 6px; }
+  .nav-greeting { display: none; }
+  .hamburger-btn { width: 34px; height: 34px; }
+  .mobile-nav-drawer { top: 42px; }
 
   .cam-pane {
     min-height: 220px;
@@ -941,6 +983,9 @@ body {
   .breakdown-hdr, .timeline-hdr, .notes-hdr, .prob-header {
     padding: 5px 10px 4px;
   }
+
+  /* Mobile nav drawer items slightly smaller */
+  .mobile-nav-item { font-size: 0.85rem; padding: 10px 16px; }
 }
 
 /* ── Small mobile (≤360px) ── */
@@ -949,6 +994,8 @@ body {
   .topbar { padding: 0 8px; height: 40px; }
   .logo { font-size: 0.82rem; gap: 5px; }
   .logo-icon { width: 22px; height: 22px; font-size: 0.72rem; }
+  .hamburger-btn { width: 32px; height: 32px; }
+  .mobile-nav-drawer { top: 40px; }
 
   .cam-pane {
     min-height: 190px;
@@ -972,36 +1019,305 @@ body {
   .tutor-msg { font-size: 0.63rem; }
 }
 
-/* ── Ensure touch targets are comfortably large on all mobile ── */
-@media (max-width: 768px) {
-  .btn,
-  .back-btn,
-  .notes-add-btn,
-  .notes-save-btn,
-  .notes-cancel-btn,
-  .note-delete {
-    min-height: 36px;
-  }
-
-  /* Slightly larger tap area for chips */
-  .tl-chip { padding: 4px 10px; }
-}
-
-/* ── Landscape phone: keep layout from becoming too tall ── */
+/* ── Landscape phone: side-by-side layout, no overflow ── */
 @media (max-width: 768px) and (orientation: landscape) {
-  .cam-pane {
-    max-height: 200px;
-    min-height: 160px;
-  }
+  body { height: 100dvh; overflow: hidden; }
 
   .app-body {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;
     overflow: hidden;
-    height: calc(100dvh - 42px);
+    height: calc(100dvh - 44px);
   }
 
   .left-col  { overflow-y: auto; border-right: 1px solid var(--border); border-bottom: none; }
   .right-col { overflow-y: auto; }
-  body { height: 100dvh; overflow: hidden; }
+
+  .cam-pane {
+    max-height: 200px;
+    min-height: 160px;
+  }
+
+  /* In landscape, hamburger stays but drawer is lower priority */
+  .mobile-nav-drawer { top: 44px; }
+}
+
+@media (max-width: 480px) and (orientation: landscape) {
+  .mobile-nav-drawer { top: 42px; }
+  .app-body { height: calc(100dvh - 42px); }
+}
+
+@media (max-width: 360px) and (orientation: landscape) {
+  .mobile-nav-drawer { top: 40px; }
+  .app-body { height: calc(100dvh - 40px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE PATCH — full device support additions
+   Covers: safe-area insets, touch improvements, cam aspect-ratio,
+   right-col scroll fix, better btn-row on mobile, font scaling,
+   fine-grained portrait/landscape corrections.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Safe-area insets for notched / rounded phones (iOS & Android) ── */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.topbar {
+  padding-left:  max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+footer {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* ── Touch: prevent 300ms click delay on tap targets ── */
+.btn, .hamburger-btn, .mobile-nav-item,
+.back-btn, .notes-add-btn, .notes-save-btn,
+.notes-cancel-btn, .note-delete {
+  touch-action: manipulation;
+}
+
+/* ── Camera: keep a proper aspect ratio so it never collapses ── */
+.cam-pane {
+  aspect-ratio: unset; /* desktop keeps flex behaviour */
+}
+
+/* ── Prevent text overflow in tutor messages on narrow screens ── */
+.tutor-msg-body, .dom-message, .note-text {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── Prevent the breakdown section overflowing its container ── */
+.dominant-card {
+  min-width: 0;
+}
+.message-col {
+  min-width: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LARGE DESKTOP GUARD (≥1440px) — give the grid more breathing room
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  .app-body {
+    grid-template-columns: 36fr 64fr;
+  }
+  .prob-label { width: 96px; }
+  .dom-name   { font-size: 1.15rem; }
+  .dom-message { font-size: 0.8rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MEDIUM LAPTOP (≤1180px) — tighten spacing without losing columns
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1180px) {
+  .prob-row    { padding: 4px 14px; gap: 7px; }
+  .prob-label  { width: 82px; font-size: 0.76rem; }
+  .prob-pct    { width: 32px; font-size: 0.73rem; }
+  .dom-name    { font-size: 1rem; }
+  .dom-message { font-size: 0.74rem; }
+  .tutor-msg   { font-size: 0.73rem; }
+  .tl-stat-val { font-size: 13px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TABLET PORTRAIT PATCH  (≤768px) — additions on top of existing rules
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Safe-area: topbar & drawer */
+  .topbar {
+    padding-left:  max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .mobile-nav-drawer {
+    padding-left:  env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Camera: fixed aspect ratio, no collapse */
+  .cam-pane {
+    aspect-ratio: 4 / 3;
+    min-height: unset;
+    max-height: unset;
+  }
+
+  /* Btn-row: 2-column grid on tablet portrait */
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Right col: force scroll when stacked */
+  .right-col {
+    overflow-y: auto;
+    max-height: unset;
+  }
+
+  /* Timeline pane: give it a defined height so it doesn't collapse */
+  .timeline-pane {
+    min-height: 140px;
+    max-height: 220px;
+  }
+
+  /* Notes pane: sensible height */
+  .notes-pane {
+    height: auto;
+    min-height: 140px;
+    max-height: 220px;
+  }
+
+  /* Probabilities: full width, no horizontal overflow */
+  .prob-list {
+    overflow: visible;
+  }
+  .prob-bar-bg {
+    min-width: 0;
+  }
+
+  /* Dominant card: keep content inside */
+  .dominant-card {
+    flex-wrap: nowrap;
+    min-height: 64px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LARGE MOBILE  (≤480px) — additions
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+  /* Safe-area */
+  .topbar {
+    padding-left:  max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+
+  /* Camera: taller on phones */
+  .cam-pane {
+    aspect-ratio: 3 / 4;
+  }
+
+  /* Btn-row: still 2-col but items fill naturally */
+  .btn-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+  }
+
+  /* Dominant card: allow full-width avatar strip */
+  .avatar-col {
+    padding: 5px;
+  }
+
+  /* Probabilities */
+  .prob-label {
+    width: 64px;
+    font-size: 0.68rem;
+  }
+  .prob-pct {
+    width: 26px;
+    font-size: 0.66rem;
+  }
+  .prob-bar-bg {
+    height: 5px;
+  }
+
+  /* Timeline */
+  .tl-stat-val { font-size: 12px; }
+  .tl-stat-lbl { font-size: 8px;  }
+  .tl-chip-label { font-size: 10px; }
+
+  /* Notes textarea: comfortable thumb height */
+  .notes-textarea {
+    height: 52px;
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
+  }
+
+  /* Select / input: prevent iOS zoom */
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SMALL MOBILE  (≤360px) — additions
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+
+  /* Cam: square feels best on tiny screens */
+  .cam-pane {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Btn-row: 2-col still, tighter labels */
+  .btn { font-size: 10px; }
+
+  /* Probabilities */
+  .prob-label { width: 56px; font-size: 0.63rem; }
+  .prob-pct   { width: 22px; font-size: 0.62rem; }
+
+  /* Reduce tutor-log padding */
+  .tutor-log { padding: 4px 8px 6px; }
+  .tutor-msg { padding: 5px 8px; font-size: 0.62rem; gap: 5px; }
+  .tutor-msg-tag { font-size: 8.5px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LANDSCAPE PHONE — refined (≤768px, landscape)
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) and (orientation: landscape) {
+
+  /* Camera: wider than tall in landscape */
+  .cam-pane {
+    aspect-ratio: 16 / 9;
+    min-height: unset;
+    max-height: unset;
+  }
+
+  /* Btn-row back to full row in landscape */
+  .btn-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Drawer: full screen height minus topbar */
+  .mobile-nav-drawer {
+    max-height: calc(100dvh - 44px);
+    overflow-y: auto;
+  }
+
+  /* Safe-area landscape (notch on side) */
+  .topbar {
+    padding-left:  max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+  .left-col, .right-col {
+    padding-left:  env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PRINT — simple readable layout
+   ══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  body   { overflow: visible; height: auto; }
+  .topbar, .btn-row, .hamburger-btn,
+  .mobile-nav-drawer, .mobile-nav-overlay { display: none !important; }
+  .app-body { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .left-col, .right-col { overflow: visible; height: auto; border: none; }
+  .cam-pane { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION — respect user preference
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:  0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

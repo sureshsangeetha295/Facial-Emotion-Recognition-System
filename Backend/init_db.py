@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS users (
     security_a1       TEXT,
     security_q2       TEXT,
     security_a2       TEXT,
-    password_reset_at TEXT
+    password_reset_hash TEXT
 );
 
 -- 2. detections
@@ -81,7 +81,6 @@ CREATE TABLE IF NOT EXISTS feedback (
     rating        INTEGER,
     category      TEXT     NOT NULL DEFAULT 'General',
     message       TEXT     NOT NULL,
-    status        TEXT     NOT NULL DEFAULT 'new',
     created_at    TEXT     NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -132,13 +131,12 @@ CREATE INDEX IF NOT EXISTS idx_prl_step1  ON password_reset_log(step1_at);
         "ALTER TABLE feedback ADD COLUMN email     TEXT",
         "ALTER TABLE feedback ADD COLUMN rating    INTEGER",
         "ALTER TABLE feedback ADD COLUMN category  TEXT NOT NULL DEFAULT 'General'",
-        "ALTER TABLE feedback ADD COLUMN status    TEXT NOT NULL DEFAULT 'new'",
         # Security question columns + reset timestamp on users
         "ALTER TABLE users ADD COLUMN security_q1       TEXT",
         "ALTER TABLE users ADD COLUMN security_a1       TEXT",
         "ALTER TABLE users ADD COLUMN security_q2       TEXT",
         "ALTER TABLE users ADD COLUMN security_a2       TEXT",
-        "ALTER TABLE users ADD COLUMN password_reset_at TEXT",
+        "ALTER TABLE users ADD COLUMN password_reset_hash TEXT",
     ]
     for _sql in sqlite_migrations:
         try:
@@ -196,7 +194,7 @@ CREATE TABLE IF NOT EXISTS users (
     security_a1       TEXT,
     security_q2       TEXT,
     security_a2       TEXT,
-    password_reset_at TIMESTAMPTZ
+    password_reset_hash TEXT
 );
 
 -- 2. detections
@@ -223,7 +221,6 @@ CREATE TABLE IF NOT EXISTS feedback (
     rating     SMALLINT     CHECK (rating BETWEEN 1 AND 5),
     category   VARCHAR(60)  NOT NULL DEFAULT 'General',
     message    TEXT         NOT NULL,
-    status     VARCHAR(20)  NOT NULL DEFAULT 'new',
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
@@ -278,14 +275,13 @@ CREATE INDEX IF NOT EXISTS idx_prl_step1 ON password_reset_log(step1_at);
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS email     VARCHAR(254)",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS rating    SMALLINT",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS category  VARCHAR(60)  NOT NULL DEFAULT 'General'",
-        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS status    VARCHAR(20)  NOT NULL DEFAULT 'new'",
         # Security question columns on users (added for password reset flow)
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q1 TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a1 TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q2 TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a2 TEXT",
         # Tracks when password was last reset (NULL = never reset, only registered)
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_at TIMESTAMPTZ",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_hash TEXT",
     ]
     for _sql in pg_migrations:
         try:

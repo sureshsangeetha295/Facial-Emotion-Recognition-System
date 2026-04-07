@@ -159,7 +159,7 @@ def init_db():
             security_a1       TEXT,
             security_q2       TEXT,
             security_a2       TEXT,
-            password_reset_at TIMESTAMPTZ
+            password_reset_hash TEXT
         )
     """)
     # Migrate existing users table — safe to re-run, skips already-existing columns
@@ -168,7 +168,7 @@ def init_db():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a1       TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q2       TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a2       TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_at TIMESTAMPTZ",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_hash TEXT",
     ]:
         try:
             cur.execute(_col_sql)
@@ -217,19 +217,15 @@ def init_db():
             rating     SMALLINT     CHECK (rating BETWEEN 1 AND 5),
             category   VARCHAR(60)  NOT NULL DEFAULT 'General',
             message    TEXT         NOT NULL,
-            status     VARCHAR(20)  NOT NULL DEFAULT 'new',
             created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
         )
     """)
     # ── Migrate existing feedback table ──────────────────────────────────────
-    # Adds any columns that were introduced after the initial deploy.
-    # Each ALTER runs in isolation so an already-existing column is just skipped.
     _fb_migrations = [
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS username  VARCHAR(80)  NOT NULL DEFAULT 'Guest'",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS email     VARCHAR(254)",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS rating    SMALLINT",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS category  VARCHAR(60)  NOT NULL DEFAULT 'General'",
-        "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS status    VARCHAR(20)  NOT NULL DEFAULT 'new'",
     ]
     for _sql in _fb_migrations:
         try:
@@ -259,6 +255,29 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_prl_user    ON password_reset_log(user_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_prl_step1   ON password_reset_log(step1_at)")
 
+    # ── Study Timer Sessions ──────────────────────────────────────────────────
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS study_timer_sessions (
+            id              BIGSERIAL    PRIMARY KEY,
+            user_id         BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+            total_seconds   INTEGER      NOT NULL DEFAULT 0,
+            study_seconds   INTEGER      NOT NULL DEFAULT 0,
+            break_seconds   INTEGER      NOT NULL DEFAULT 0,
+            focus_blocks    SMALLINT     NOT NULL DEFAULT 0,
+            break_count     SMALLINT     NOT NULL DEFAULT 0,
+            pause_count     SMALLINT     NOT NULL DEFAULT 0,
+            avg_engagement  REAL         NOT NULL DEFAULT 0,
+            focused_pct     SMALLINT     NOT NULL DEFAULT 0,
+            bored_pct       SMALLINT     NOT NULL DEFAULT 0,
+            frustrated_pct  SMALLINT     NOT NULL DEFAULT 0,
+            distracted_pct  SMALLINT     NOT NULL DEFAULT 0,
+            created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_sts_user    ON study_timer_sessions(user_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_sts_created ON study_timer_sessions(created_at)")
+    con.commit()
+
     # Sync admin account from .env — find by username OR existing admin email
     admin_email_clean = ADMIN_EMAIL.strip().lower()
     cur.execute(
@@ -274,7 +293,6 @@ def init_db():
         print(f"[Emotional Analysis] Default admin created  ->  email: {admin_email_clean}")
         print("[Emotional Analysis] Please change the admin password after first login!")
     else:
-        # Always sync both email AND password so .env changes take effect on restart
         cur.execute(
             "UPDATE users SET password_hash=%s, email=%s WHERE id=%s",
             (hash_password(ADMIN_PASSWORD), admin_email_clean, existing_admin[0])
@@ -375,6 +393,19 @@ class AdminCreateUserRequest(BaseModel):
     password: str
     is_admin: bool = False
 
+class StudyTimerSummaryRequest(BaseModel):
+    total_seconds:   int
+    study_seconds:   int
+    break_seconds:   int
+    focus_blocks:    int
+    break_count:     int
+    pause_count:     int
+    avg_engagement:  float
+    focused_pct:     int
+    bored_pct:       int
+    frustrated_pct:  int
+    distracted_pct:  int
+
 
 # ── ML ────────────────────────────────────────────────────────────────────────
 
@@ -424,7 +455,6 @@ async def register(body: RegisterRequest):
     if err:
         raise HTTPException(status_code=400, detail=err)
 
-    # Derive username from email local-part if not provided
     email_clean = body.email.strip().lower()
     if body.username and body.username.strip():
         username = body.username.strip()
@@ -432,7 +462,6 @@ async def register(body: RegisterRequest):
         if un_err:
             raise HTTPException(status_code=400, detail=un_err)
     else:
-        # Auto-derive: take part before @, replace non-alphanum with _
         local = email_clean.split("@")[0]
         username = re.sub(r"[^A-Za-z0-9._-]", "_", local)[:30] or "user"
 
@@ -442,7 +471,6 @@ async def register(body: RegisterRequest):
         cur.execute("SELECT id FROM users WHERE email=%s", (email_clean,))
         if cur.fetchone():
             raise HTTPException(status_code=400, detail="An account with this email already exists.")
-        # Ensure derived username is unique by appending a short suffix if needed
         base_username = username
         suffix = 1
         while True:
@@ -465,10 +493,6 @@ async def register(body: RegisterRequest):
 
 @app.post("/auth/login")
 async def login(form: OAuth2PasswordRequestForm = Depends()):
-    """
-    FIX: Removed AND is_admin=FALSE — now works for all active users.
-    is_admin is returned so the frontend can route to admin panel if needed.
-    """
     con = db_conn()
     cur = con.cursor()
     try:
@@ -544,7 +568,8 @@ async def me(current: dict = Depends(get_current_user)):
         "email":      current["email"],
         "is_admin":   current["is_admin"],
         "created_at": current["created_at"],
-        "last_login": current["last_login"],
+        "last_login":        current["last_login"],
+        "password_reset_hash": current.get("password_reset_hash"),
     }
 
 
@@ -567,7 +592,6 @@ async def reset_verify_email(body: dict, request: Request):
             raise HTTPException(status_code=404, detail="No account found for that email. Please sign up first.")
         if not row.get("security_q1") or not row.get("security_q2"):
             raise HTTPException(status_code=400, detail="This account has no security questions set. Please contact support.")
-        # Open a new log row for this reset attempt
         cur.execute(
             """INSERT INTO password_reset_log
                (user_id, email, security_q1, security_q2, step1_at, ip_address)
@@ -602,7 +626,6 @@ async def reset_verify_answers(body: dict):
             a1 == (row.get("security_a1") or "").strip().lower() and
             a2 == (row.get("security_a2") or "").strip().lower()
         )
-        # Update the most recent log row for this email
         cur.execute(
             """UPDATE password_reset_log
                SET step2_at=NOW(), step2_passed=%s
@@ -637,10 +660,9 @@ async def reset_password(body: dict):
         row = fetchone(cur)
         if not row:
             raise HTTPException(status_code=404, detail="Account not found.")
-        # Update password in users table + stamp reset timestamp
-        cur.execute("UPDATE users SET password_hash=%s, password_reset_at=NOW() WHERE id=%s",
-                    (hash_password(new_pw), row["id"]))
-        # Mark reset log as completed
+        new_pw_hash = hash_password(new_pw)
+        cur.execute("UPDATE users SET password_hash=%s, password_reset_hash=%s WHERE id=%s",
+                    (new_pw_hash, new_pw_hash, row["id"]))
         cur.execute(
             """UPDATE password_reset_log
                SET step3_at=NOW(), completed=TRUE
@@ -661,8 +683,6 @@ async def reset_password(body: dict):
 # ══════════════════════════════════════════════════════════════════════════════
 
 # In-memory store of active sessions per user: user_id -> session_id
-# This ensures every /predict call within a continuous webcam session shares
-# the same session_id even when the frontend does not call /sessions/start/ first.
 _active_sessions: dict[int, str] = {}
 
 @app.post("/predict/")
@@ -673,18 +693,6 @@ async def predict(
     session_id: Optional[str] = Query(None),
     current: dict = Depends(get_current_user),
 ):
-    """
-    Accepts webcam frames for real-time emotion detection.
-
-    Session-ID resolution order:
-      1. Use the session_id query param if the frontend passed one.
-      2. Reuse the in-memory active session for this user (so consecutive frames
-         that don't carry a session_id still group into the same session).
-      3. Create a new UUID and cache it as the active session for this user.
-
-    This means detections will always have a session_id in the DB — no more
-    null/dash rows in the admin detections table.
-    """
     try:
         contents = await file.read()
         img = Image.open(io.BytesIO(contents)).convert("RGB")
@@ -695,14 +703,11 @@ async def predict(
 
         uid = current["id"]
         if session_id:
-            # Frontend provided explicit session — update the cache
             sid = session_id
             _active_sessions[uid] = sid
         elif uid in _active_sessions:
-            # Reuse the existing active session for this user
             sid = _active_sessions[uid]
         else:
-            # No session at all — create one and cache it
             sid = str(uuid.uuid4())
             _active_sessions[uid] = sid
 
@@ -840,7 +845,6 @@ async def session_start(current: dict = Depends(get_current_user)):
 async def session_stop(body: SessionStopRequest, current: dict = Depends(get_current_user)):
     # Clear the in-memory active session so the next start gets a fresh UUID
     _active_sessions.pop(current["id"], None)
-    """Compute summary from stored detections and write to session_timeline."""
     con = db_conn()
     cur = con.cursor()
     try:
@@ -899,6 +903,100 @@ async def session_end(body: SessionEndRequest, current: dict = Depends(get_curre
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  STUDY TIMER
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/studytimer/summary")
+async def save_study_timer_summary(
+    body: StudyTimerSummaryRequest,
+    current: dict = Depends(get_current_user),
+):
+    """Called by studytimer.js at the end of every study session."""
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO study_timer_sessions
+              (user_id, total_seconds, study_seconds, break_seconds,
+               focus_blocks, break_count, pause_count,
+               avg_engagement, focused_pct, bored_pct,
+               frustrated_pct, distracted_pct)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                current["id"],
+                body.total_seconds,
+                body.study_seconds,
+                body.break_seconds,
+                body.focus_blocks,
+                body.break_count,
+                body.pause_count,
+                body.avg_engagement,
+                body.focused_pct,
+                body.bored_pct,
+                body.frustrated_pct,
+                body.distracted_pct,
+            ),
+        )
+        con.commit()
+        return {"message": "Study timer summary saved"}
+    except Exception as e:
+        con.rollback()
+        print(f"[StudyTimer] summary save error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close(); con.close()
+
+
+@app.get("/studytimer/history")
+async def get_study_timer_history(
+    limit: int = Query(20, ge=1, le=100),
+    current: dict = Depends(get_current_user),
+):
+    """Returns the most recent study timer sessions for the logged-in user."""
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT id, total_seconds, study_seconds, break_seconds,
+                   focus_blocks, break_count, pause_count,
+                   avg_engagement, focused_pct, bored_pct,
+                   frustrated_pct, distracted_pct, created_at
+            FROM study_timer_sessions
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT %s
+            """,
+            (current["id"], limit),
+        )
+        return fetchall(cur)
+    finally:
+        cur.close(); con.close()
+
+
+@app.get("/admin/studytimer")
+async def admin_study_timer_sessions(admin: dict = Depends(get_admin_user)):
+    """Admin view: all study timer sessions across all users."""
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT s.*, u.username
+            FROM study_timer_sessions s
+            LEFT JOIN users u ON s.user_id = u.id
+            ORDER BY s.created_at DESC
+            LIMIT 500
+            """
+        )
+        return fetchall(cur)
+    finally:
+        cur.close(); con.close()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  FEEDBACK
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -907,7 +1005,6 @@ async def _do_save_feedback(body: FeedbackRequest, request: Request):
     if not body.username or not body.username.strip():
         raise HTTPException(status_code=400, detail="Username is required.")
 
-    # Resolve user_id from token — non-fatal, falls back to guest
     user_id = None
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
@@ -922,7 +1019,7 @@ async def _do_save_feedback(body: FeedbackRequest, request: Request):
                     user_id = uid
                 cur_check.close(); con_check.close()
         except Exception:
-            pass  # treat as guest
+            pass
 
     con = db_conn()
     cur = con.cursor()
@@ -949,10 +1046,6 @@ async def _do_save_feedback(body: FeedbackRequest, request: Request):
         cur.close(); con.close()
 
 
-# Register BOTH /feedback and /api/feedback so the POST works regardless of
-# whether the deployed feedback.html has been updated to use /api/feedback yet.
-# FastAPI explicit POST routes ALWAYS take priority over the catch-all
-# StaticFiles mount, so /feedback POST is never intercepted by static serving.
 @app.post("/feedback")
 async def submit_feedback_compat(body: FeedbackRequest, request: Request):
     return await _do_save_feedback(body, request)
@@ -1030,11 +1123,6 @@ async def admin_list_users(admin: dict = Depends(get_admin_user)):
 
 @app.post("/admin/users")
 async def admin_create_user(body: AdminCreateUserRequest, admin: dict = Depends(get_admin_user)):
-    """
-    FIX: This endpoint was missing entirely. Without it the admin dashboard had
-    no API to call, so users were added directly to DB without a bcrypt hash,
-    causing all login attempts to fail with 'Incorrect username or password'.
-    """
     err = validate_password_strength(body.password)
     if err:
         raise HTTPException(status_code=400, detail=err)
@@ -1091,8 +1179,9 @@ async def admin_reset_password(user_id: int, body: dict, admin: dict = Depends(g
         cur.execute("SELECT id FROM users WHERE id=%s", (user_id,))
         if not cur.fetchone():
             raise HTTPException(status_code=404, detail="User not found")
-        cur.execute("UPDATE users SET password_hash=%s WHERE id=%s",
-                    (hash_password(new_password), user_id))
+        new_pw_hash = hash_password(new_password)
+        cur.execute("UPDATE users SET password_hash=%s, password_reset_hash=%s WHERE id=%s",
+                    (new_pw_hash, new_pw_hash, user_id))
         con.commit()
         return {"message": f"Password reset for user {user_id}"}
     finally:
@@ -1151,7 +1240,7 @@ async def admin_list_feedback(admin: dict = Depends(get_admin_user)):
     cur = con.cursor()
     cur.execute("""
         SELECT f.id, f.user_id, f.username, f.email, f.rating,
-               f.category, f.message, f.status, f.created_at,
+               f.category, f.message, f.created_at,
                u.username AS registered_username
         FROM feedback f
         LEFT JOIN users u ON f.user_id = u.id
@@ -1170,25 +1259,6 @@ async def delete_feedback(feedback_id: int, admin: dict = Depends(get_admin_user
         cur.execute("DELETE FROM feedback WHERE id=%s", (feedback_id,))
         con.commit()
         return {"message": "Deleted"}
-    finally:
-        cur.close(); con.close()
-
-
-@app.patch("/admin/feedback/{feedback_id}/status")
-async def update_feedback_status(feedback_id: int, body: dict, admin: dict = Depends(get_admin_user)):
-    """Allow admin to mark feedback as new / read / resolved."""
-    status = body.get("status", "read")
-    if status not in ("new", "read", "resolved"):
-        raise HTTPException(status_code=400, detail="status must be new, read, or resolved")
-    con = db_conn()
-    cur = con.cursor()
-    try:
-        cur.execute("UPDATE feedback SET status=%s WHERE id=%s RETURNING id", (status, feedback_id))
-        row = cur.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Feedback not found")
-        con.commit()
-        return {"id": feedback_id, "status": status}
     finally:
         cur.close(); con.close()
 
@@ -1328,6 +1398,11 @@ async def detect_page():
 async def livecam_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "livecam.html"))
 
+@app.get("/studytimer")
+@app.get("/studytimer.html")
+async def studytimer_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "studytimer.html"))
+
 @app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
@@ -1336,8 +1411,6 @@ async def logout():
     return response
 
 # Static mount MUST be last — it catches everything not matched above.
-# If /predict/ were not defined before this line, POST requests to it would
-# hit StaticFiles which only handles GET → 405 Method Not Allowed.
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 

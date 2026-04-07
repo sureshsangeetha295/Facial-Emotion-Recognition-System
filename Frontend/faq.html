@@ -78,15 +78,57 @@ footer{border-top:1px solid var(--border);padding:24px 48px}
 .foot-links a{font-size:12px;color:var(--text3);text-decoration:none}
 .foot-links a:hover{color:var(--accent)}
 .foot-copy{font-size:12px;color:var(--text3)}
+
+/* ══ HAMBURGER ══ */
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0;touch-action:manipulation}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
+.hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-drawer{position:fixed;top:60px;left:0;right:0;background:rgba(250,249,247,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.1)}
+.mobile-drawer.open{transform:translateY(0)}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s;touch-action:manipulation}
+.mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
+.mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)}
+.mobile-overlay.open{display:block}
+@media(min-width:769px){.hamburger-btn{display:none!important}.mobile-drawer,.mobile-overlay{display:none!important}}
+@media(max-width:768px){
+  nav{padding:0 18px;height:54px}
+  .nav-links{display:none!important}
+  .btn-sm{display:none}
+  .hamburger-btn{display:flex!important}
+  .faq-hero{padding:36px 20px}
+  .faq-main{grid-template-columns:1fr;padding:32px 20px;gap:24px}
+  .faq-sidebar{position:static;top:auto}
+  footer{padding:20px 20px}
+  .foot-inner{flex-wrap:wrap;gap:12px}
+}
+@media(max-width:480px){
+  nav{padding:0 12px;height:50px}
+  .mobile-drawer{top:50px}
+  .faq-hero{padding:28px 16px}
+  .faq-main{padding:24px 16px}
+  footer{padding:16px}
+}
 </style>
 <script src="script/auth.js"></script>
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-logo"><div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>Emotion Analysis</a>
-  <ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="faq.html" class="active">FAQ</a></li><li><a href="feedback.html">Feedback</a></li></ul>
-  <a href="app.html" class="btn-sm">Launch App</a>
+  <a href="/home" class="nav-logo"><div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>Emotion Analysis</a>
+  <ul class="nav-links"><li><a href="/home">Home</a></li><li><a href="/faq" class="active">FAQ</a></li><li><a href="/feedback">Feedback</a></li></ul>
+  <a href="/livecam" class="btn-sm">Launch App</a>
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+  <a href="/faq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a>
+  <a href="/feedback"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Feedback</a>
+  <div class="mobile-drawer-divider"></div>
+  <a href="/livecam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>Launch App</a>
+</div>
 <div class="faq-hero">
   <h1>How can we<br/><em>help you?</em></h1>
   <p>Find answers to common questions about EmotionAI</p>
@@ -137,6 +179,18 @@ footer{border-top:1px solid var(--border);padding:24px 48px}
 function toggleFAQ(item){item.classList.toggle('open');}
 function filterFAQ(q){document.querySelectorAll('.faq-item').forEach(item=>{const text=item.querySelector('.faq-q').textContent.toLowerCase();item.style.display=text.includes(q.toLowerCase())?'':'none';});}
 function filterCat(btn,cat){document.querySelectorAll('.cat-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.faq-item').forEach(item=>{item.style.display=(cat==='all'||item.dataset.cat===cat)?'':'none';});}
+</script>
+<script>
+(function(){
+  var btn=document.getElementById('hamburgerBtn'),drawer=document.getElementById('mobileDrawer'),overlay=document.getElementById('mobileOverlay');
+  if(!btn)return;
+  function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+  function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});
+  overlay.addEventListener('click',closeD);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});
+  drawer.querySelectorAll('a,button').forEach(function(el){el.addEventListener('click',closeD);});
+})();
 </script>
 </body>
 </html>
