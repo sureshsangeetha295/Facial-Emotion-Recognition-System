@@ -225,8 +225,8 @@ body{
   <div class="tabs">
     <button class="tab-btn active"  onclick="switchTab('signin')"  id="tab-signin">Sign In</button>
     <button class="tab-btn"         onclick="switchTab('signup')"  id="tab-signup">Sign Up</button>
-    <button class="tab-btn reset-tab" onclick="switchTab('reset')" id="tab-reset">Reset</button>
-    <button class="tab-btn admin-tab" onclick="switchTab('admin')" id="tab-admin">Admin</button>
+    <button class="tab-btn reset-tab" onclick="switchTab('reset')" id="tab-reset" style="display:none">Reset</button>
+    <button class="tab-btn admin-tab" onclick="switchTab('admin')" id="tab-admin" style="display:none">Admin</button>
   </div>
 
   <!-- ══ SIGN IN ══ -->
@@ -248,7 +248,6 @@ body{
         </button>
       </div>
     </div>
-    <span class="forgot-link" onclick="switchTab('reset')">Forgot password?</span>
     <button class="btn-submit" id="btn-signin" onclick="handleSignIn()">
       <div class="spinner"></div><span class="btn-txt">Sign In</span>
     </button>
@@ -428,6 +427,7 @@ body{
         <div class="spinner"></div><span class="btn-txt">Reset Password</span>
       </button>
     </div>
+    <p class="terms-note" style="margin-top:12px"><span onclick="switchTab('signin')" style="color:var(--accent);cursor:pointer">← Back to Sign In</span></p>
   </div>
 
   <!-- ══ ADMIN ══ -->
@@ -458,6 +458,7 @@ body{
     <button class="btn-submit" id="btn-admin" onclick="handleAdmin()">
       <div class="spinner"></div><span class="btn-txt">Admin Sign In</span>
     </button>
+    <p class="terms-note" style="margin-top:12px"><span onclick="switchTab('signin')" style="color:var(--accent);cursor:pointer;text-decoration:none">← Back to Sign In</span></p>
   </div>
 </div>
 
@@ -467,7 +468,7 @@ body{
   <div class="footer-dot"></div>
   <span onclick="switchTab('reset')">Forgot password?</span>
   <div class="footer-dot"></div>
-  <a href="/home">Back to home</a>
+  <span onclick="switchTab('admin')" style="cursor:pointer">Admin</span>
 </div>
 
 <script>

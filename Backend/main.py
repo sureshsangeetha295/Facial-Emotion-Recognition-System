@@ -18,6 +18,7 @@ from typing import Optional
 
 import numpy as np
 import uvicorn
+import requests
 from fastapi import FastAPI, UploadFile, File, Query, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -28,11 +29,62 @@ from PIL import Image
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+from pydantic import BaseModel
+
 
 
 # ── ENV ───────────────────────────────────────────────────────────────────────
 
-load_dotenv()
+# Always load .env from the same directory as this script,
+# regardless of where Python is launched from.
+_ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+
+# ── .env diagnostics (printed once at startup) ────────────────────────────────
+print(f"[EmotionAI] Looking for .env at: {_ENV_PATH}")
+if not os.path.exists(_ENV_PATH):
+    print("[EmotionAI] ERROR: .env file NOT FOUND at that path.")
+else:
+    print("[EmotionAI] .env file found. Checking for common formatting issues...")
+    try:
+        raw_lines = open(_ENV_PATH, encoding="utf-8-sig").readlines()  # utf-8-sig strips BOM
+    except UnicodeDecodeError:
+        raw_lines = open(_ENV_PATH, encoding="latin-1").readlines()
+    for i, line in enumerate(raw_lines, 1):
+        stripped = line.rstrip("\r\n")
+        if stripped and not stripped.startswith("#"):
+            if "=" not in stripped:
+                print(f"[EmotionAI]   Line {i}: MISSING '=' → {stripped!r}")
+            elif stripped.startswith(" ") or stripped.startswith("\t"):
+                print(f"[EmotionAI]   Line {i}: LEADING WHITESPACE → {stripped!r}")
+            else:
+                key = stripped.split("=", 1)[0].strip()
+                val = stripped.split("=", 1)[1].strip() if "=" in stripped else ""
+                masked = val[:6] + "..." if len(val) > 6 else ("(empty)" if not val else val)
+                print(f"[EmotionAI]   Line {i}: {key} = {masked}")
+# ──────────────────────────────────────────────────────────────────────────────
+
+load_dotenv(dotenv_path=_ENV_PATH, override=True)
+
+# Validate required keys early so startup fails fast with a clear message.
+_GROQ_KEY = os.getenv("GROQ_API_KEY", "").strip()
+if not _GROQ_KEY:
+    print(
+        "\n[EmotionAI] WARNING: GROQ_API_KEY is not set.\n"
+        f"  Looked for .env at: {_ENV_PATH}\n"
+        "  Add  GROQ_API_KEY=gsk_...  to that file and restart.\n"
+        "  Common causes:\n"
+        "    - The .env file has Windows BOM encoding (save as UTF-8 without BOM)\n"
+        "    - Value has quotes: GROQ_API_KEY=\"gsk_...\" → remove the quotes\n"
+        "    - Extra spaces:    GROQ_API_KEY = gsk_...  → use GROQ_API_KEY=gsk_...\n"
+        "    - Wrong filename:  .env.txt instead of .env (check in File Explorer with extensions shown)\n"
+    )
+
+_DB_PASS = os.getenv("DB_PASSWORD", "")
+if not _DB_PASS:
+    print(
+        "\n[EmotionAI] WARNING: DB_PASSWORD is not set.\n"
+        "  Add  DB_PASSWORD=your_postgres_password  to your .env file.\n"
+    )
 
 APP_HOST     = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT     = int(os.getenv("APP_PORT", "8000"))
@@ -52,7 +104,48 @@ DB_DSN = {
     "user":     os.getenv("DB_USER",     "postgres"),
     "password": os.getenv("DB_PASSWORD", ""),
 }
+def generate_summary(session_data):
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("GROQ_API_KEY is missing. Add it to your .env file.")
 
+    url = "https://api.groq.com/openai/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "llama-3.1-8b-instant",
+        "messages": [
+            {
+                "role": "user",
+                "content": f"""
+Analyze this session data:
+{json.dumps(session_data)}
+
+Give:
+1. Short summary
+2. Engagement level
+3. Emotion trend
+4. One insight
+"""
+            }
+        ]
+    }
+
+    try:
+        res = requests.post(url, headers=headers, json=payload)
+        data = res.json()
+
+        print("GROQ RESPONSE:", data)  # DEBUG
+
+        return data["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        print("ERROR:", e)
+        return "Error generating summary"
 
 # ── PASSWORD ──────────────────────────────────────────────────────────────────
 
@@ -78,15 +171,6 @@ def validate_password_strength(pw: str) -> Optional[str]:
     return None
 
 def validate_username(username: str) -> Optional[str]:
-    """
-    Allowed: letters (a-z A-Z), digits (0-9), underscore (_), dot (.), hyphen (-), space.
-    Rules:
-      - 3 to 30 characters
-      - Only letters, numbers, spaces, _ . -
-      - Must start and end with a letter or number (no leading/trailing spaces)
-      - Must contain at least one letter (not digits/symbols only)
-    Examples: "john doe", "Dayana Priya", "john_doe", "JohnDoe99", "j.doe-24"
-    """
     u = username.strip()
     if len(u) < 3:
         return "Username must be at least 3 characters."
@@ -162,7 +246,6 @@ def init_db():
             password_reset_hash TEXT
         )
     """)
-    # Migrate existing users table — safe to re-run, skips already-existing columns
     for _col_sql in [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q1       TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a1       TEXT",
@@ -176,6 +259,7 @@ def init_db():
         except Exception as _e:
             con.rollback()
             print(f"[EmotionAI] users migration skipped: {_e}")
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS detections (
             id         BIGSERIAL    PRIMARY KEY,
@@ -190,6 +274,7 @@ def init_db():
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_det_user    ON detections(user_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_det_created ON detections(created_at)")
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS session_timeline (
             id                 BIGSERIAL   PRIMARY KEY,
@@ -208,6 +293,7 @@ def init_db():
     """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_stl_session ON session_timeline(session_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_stl_user    ON session_timeline(user_id)")
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS feedback (
             id         BIGSERIAL    PRIMARY KEY,
@@ -220,7 +306,6 @@ def init_db():
             created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
         )
     """)
-    # ── Migrate existing feedback table ──────────────────────────────────────
     _fb_migrations = [
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS username  VARCHAR(80)  NOT NULL DEFAULT 'Guest'",
         "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS email     VARCHAR(254)",
@@ -255,30 +340,9 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_prl_user    ON password_reset_log(user_id)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_prl_step1   ON password_reset_log(step1_at)")
 
-    # ── Study Timer Sessions ──────────────────────────────────────────────────
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS study_timer_sessions (
-            id              BIGSERIAL    PRIMARY KEY,
-            user_id         BIGINT       REFERENCES users(id) ON DELETE SET NULL,
-            total_seconds   INTEGER      NOT NULL DEFAULT 0,
-            study_seconds   INTEGER      NOT NULL DEFAULT 0,
-            break_seconds   INTEGER      NOT NULL DEFAULT 0,
-            focus_blocks    SMALLINT     NOT NULL DEFAULT 0,
-            break_count     SMALLINT     NOT NULL DEFAULT 0,
-            pause_count     SMALLINT     NOT NULL DEFAULT 0,
-            avg_engagement  REAL         NOT NULL DEFAULT 0,
-            focused_pct     SMALLINT     NOT NULL DEFAULT 0,
-            bored_pct       SMALLINT     NOT NULL DEFAULT 0,
-            frustrated_pct  SMALLINT     NOT NULL DEFAULT 0,
-            distracted_pct  SMALLINT     NOT NULL DEFAULT 0,
-            created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
-        )
-    """)
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_sts_user    ON study_timer_sessions(user_id)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_sts_created ON study_timer_sessions(created_at)")
     con.commit()
 
-    # Sync admin account from .env — find by username OR existing admin email
+    # Sync admin account from .env
     admin_email_clean = ADMIN_EMAIL.strip().lower()
     cur.execute(
         "SELECT id FROM users WHERE is_admin=TRUE AND (username=%s OR LOWER(email)=%s) LIMIT 1",
@@ -321,7 +385,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# ── APP (must be created before auth dependencies and route decorators) ────────
+# ── APP ───────────────────────────────────────────────────────────────────────
 
 app = FastAPI(title="Emotional Analysis", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -359,7 +423,7 @@ async def get_admin_user(current: dict = Depends(get_current_user)):
 class RegisterRequest(BaseModel):
     email:       str
     password:    str
-    username:    Optional[str] = None   # optional — auto-derived from email if not provided
+    username:    Optional[str] = None
     security_q1: Optional[str] = None
     security_a1: Optional[str] = None
     security_q2: Optional[str] = None
@@ -369,8 +433,8 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 class FeedbackRequest(BaseModel):
-    username: str                    # mandatory — display name shown in admin
-    email:    Optional[str] = None   # optional
+    username: str
+    email:    Optional[str] = None
     rating:   Optional[int] = None
     category: str           = "General"
     message:  str
@@ -387,24 +451,23 @@ class SessionStopRequest(BaseModel):
     session_id:   str
     total_frames: int = 0
 
+class SummaryRequest(BaseModel):
+    duration: str
+    engagement: float
+    dominantEmotion: str
+
+class InsightsRequest(BaseModel):
+    duration: str
+    emotion_summary: str
+    most_frequent_emotion: str
+    engagement_score: float
+    reactions_sent: int
+
 class AdminCreateUserRequest(BaseModel):
     username: str
     email:    str
     password: str
     is_admin: bool = False
-
-class StudyTimerSummaryRequest(BaseModel):
-    total_seconds:   int
-    study_seconds:   int
-    break_seconds:   int
-    focus_blocks:    int
-    break_count:     int
-    pause_count:     int
-    avg_engagement:  float
-    focused_pct:     int
-    bored_pct:       int
-    frustrated_pct:  int
-    distracted_pct:  int
 
 
 # ── ML ────────────────────────────────────────────────────────────────────────
@@ -563,19 +626,18 @@ async def refresh_token(body: RefreshRequest):
 @app.get("/auth/me")
 async def me(current: dict = Depends(get_current_user)):
     return {
-        "id":         current["id"],
-        "username":   current["username"],
-        "email":      current["email"],
-        "is_admin":   current["is_admin"],
-        "created_at": current["created_at"],
-        "last_login":        current["last_login"],
+        "id":                  current["id"],
+        "username":            current["username"],
+        "email":               current["email"],
+        "is_admin":            current["is_admin"],
+        "created_at":          current["created_at"],
+        "last_login":          current["last_login"],
         "password_reset_hash": current.get("password_reset_hash"),
     }
 
 
 @app.post("/auth/reset/verify-email")
 async def reset_verify_email(body: dict, request: Request):
-    """Step 1: confirm email exists, return security question labels, open a log row."""
     email = body.get("email", "").strip().lower()
     if not email:
         raise HTTPException(status_code=400, detail="Email is required.")
@@ -606,7 +668,6 @@ async def reset_verify_email(body: dict, request: Request):
 
 @app.post("/auth/reset/verify-answers")
 async def reset_verify_answers(body: dict):
-    """Step 2: verify security answers and mark log row as step2 passed/failed."""
     email = body.get("email", "").strip().lower()
     a1    = (body.get("a1") or "").strip().lower()
     a2    = (body.get("a2") or "").strip().lower()
@@ -645,7 +706,6 @@ async def reset_verify_answers(body: dict):
 
 @app.post("/auth/reset/password")
 async def reset_password(body: dict):
-    """Step 3: set the new password and mark the log row as completed."""
     email  = body.get("email", "").strip().lower()
     new_pw = body.get("new_password", "")
     if not email or not new_pw:
@@ -682,7 +742,6 @@ async def reset_password(body: dict):
 #  EMOTION DETECTION
 # ══════════════════════════════════════════════════════════════════════════════
 
-# In-memory store of active sessions per user: user_id -> session_id
 _active_sessions: dict[int, str] = {}
 
 @app.post("/predict/")
@@ -725,7 +784,6 @@ async def analyze_frame(
     session_id: Optional[str] = Query(None),
     current: dict = Depends(get_current_user),
 ):
-    """Legacy alias — kept for backwards compatibility."""
     try:
         contents = await file.read()
         img = Image.open(io.BytesIO(contents)).convert("RGB")
@@ -832,18 +890,14 @@ async def session_report(session_id: str, current: dict = Depends(get_current_us
         cur.close(); con.close()
 
 
-# ── Session start / end ───────────────────────────────────────────────────────
-
 @app.post("/sessions/start/")
 async def session_start(current: dict = Depends(get_current_user)):
-    """Create a new session UUID and return it so the frontend can tag frames."""
     sid = str(uuid.uuid4())
     return {"session_id": sid}
 
 
 @app.post("/sessions/end/")
 async def session_stop(body: SessionStopRequest, current: dict = Depends(get_current_user)):
-    # Clear the in-memory active session so the next start gets a fresh UUID
     _active_sessions.pop(current["id"], None)
     con = db_conn()
     cur = con.cursor()
@@ -877,6 +931,172 @@ async def session_stop(body: SessionStopRequest, current: dict = Depends(get_cur
         cur.close(); con.close()
 
 
+@app.post("/generate-insights")
+async def generate_insights(body: InsightsRequest, current: dict = Depends(get_current_user)):
+    """Use Groq to generate 3 structured insight blocks from session data."""
+    import json as _json
+    import re as _re
+
+    _key = os.getenv("GROQ_API_KEY", "").strip()
+    if not _key:
+        raise HTTPException(
+            status_code=502,
+            detail="GROQ_API_KEY is not set. Add it to your .env file and restart the server."
+        )
+
+    session_data = {
+        "Session Duration": body.duration,
+        "Emotion Distribution": body.emotion_summary or "No data",
+        "Most Frequent Emotion": body.most_frequent_emotion or "N/A",
+        "Engagement Score": round(body.engagement_score),
+        "Reactions Sent": body.reactions_sent,
+    }
+
+    # Strict prompt: system role enforces JSON-only output, user role is data only.
+    system_msg = (
+        "You are a JSON-only API. You MUST respond with a single valid JSON object and nothing else. "
+        "No markdown, no code fences, no explanation, no preamble, no trailing text. "
+        'Output format: {"insights":[{"title":"...","desc":"..."},{"title":"...","desc":"..."},{"title":"...","desc":"..."}]}'
+    )
+
+    # Parse emotion summary into structured data for threshold-based tips
+    emotion_dist = body.emotion_summary or ""
+    pos_emotions = ["Happy", "Surprised"]
+    neg_emotions = ["Angry", "Sad", "Fear", "Disgust"]
+    pos_pct = sum(
+        int(p.split(":")[1].strip().rstrip("%"))
+        for p in emotion_dist.split(",")
+        if any(e in p for e in pos_emotions) and ":" in p
+    ) if emotion_dist else 0
+    neg_pct = sum(
+        int(p.split(":")[1].strip().rstrip("%"))
+        for p in emotion_dist.split(",")
+        if any(e in p for e in neg_emotions) and ":" in p
+    ) if emotion_dist else 0
+    eng = round(body.engagement_score)
+
+    # Determine context-specific guidance
+    if eng >= 75 and pos_pct >= 50:
+        engagement_context = "high engagement with positive emotions — great focus"
+        tip_direction = "Reinforce this pattern: extend sessions by 10 min, use spaced repetition"
+    elif eng >= 50 and neg_pct < 20:
+        engagement_context = "moderate engagement"
+        tip_direction = "Improve via active recall every 5 min, ask questions to self-test"
+    elif neg_pct >= 30:
+        engagement_context = "high negative emotion — possible confusion or frustration"
+        tip_direction = "Repeat unclear concepts, ask questions to instructor, use simpler examples"
+    elif neg_pct >= 15:
+        engagement_context = "some frustration signals"
+        tip_direction = "Slow down on difficult sections, use analogies and worked examples"
+    else:
+        engagement_context = "low engagement"
+        tip_direction = "Try 10-15 min focused bursts with 5 min breaks (Pomodoro technique)"
+
+    user_msg = (
+        "Analyze this emotion session and return exactly 3 insights.\n"
+        "Insight 1: What happened during this specific session (reference time stamps if notable).\n"
+        "Insight 2: What the engagement score and emotion pattern indicates.\n"
+        "Insight 3 (TIPS): Specific actionable advice based on the results — "
+        f"context is {engagement_context}. Suggested direction: {tip_direction}.\n"
+        "Each insight: short 'title' (3-5 words) and 'desc' (1 sentence, max 18 words, specific).\n\n"
+        + "\n".join(f"{k}: {v}" for k, v in session_data.items())
+    )
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {_key}", "Content-Type": "application/json"}
+    payload = {
+        "model": "llama-3.1-8b-instant",
+        "messages": [
+            {"role": "system", "content": system_msg},
+            {"role": "user",   "content": user_msg},
+        ],
+        "max_tokens": 300,   # 3 insights × ~100 tokens is plenty; low limit = less truncation risk
+        "temperature": 0.3,  # lower = more deterministic / less creative = more reliable JSON
+    }
+
+    def _extract_insights(raw: str) -> dict:
+        """
+        Multi-strategy JSON extractor so one bad character never kills the response.
+        Strategy 1 – direct parse after stripping markdown fences.
+        Strategy 2 – extract the first {...} block with a regex.
+        Strategy 3 – manually pull title/desc pairs with a regex (handles truncated JSON).
+        Strategy 4 – build fallback insights from the raw text.
+        """
+        # Strip markdown fences and stray leading/trailing text
+        text = raw.strip()
+        text = _re.sub(r"^```[a-z]*\s*", "", text, flags=_re.IGNORECASE)
+        text = _re.sub(r"\s*```$", "", text)
+        text = text.strip()
+
+        # Strategy 1: direct parse
+        try:
+            parsed = _json.loads(text)
+            if "insights" in parsed and isinstance(parsed["insights"], list) and len(parsed["insights"]) >= 1:
+                return parsed
+        except Exception:
+            pass
+
+        # Strategy 2: extract first JSON object via regex
+        match = _re.search(r'\{.*\}', text, _re.DOTALL)
+        if match:
+            try:
+                parsed = _json.loads(match.group())
+                if "insights" in parsed and isinstance(parsed["insights"], list) and len(parsed["insights"]) >= 1:
+                    return parsed
+            except Exception:
+                pass
+
+        # Strategy 3: manually extract title/desc pairs (survives truncated JSON)
+        titles = _re.findall(r'"title"\s*:\s*"([^"]+)"', text)
+        descs  = _re.findall(r'"desc"\s*:\s*"([^"]+)"', text)
+        if titles:
+            insights = []
+            for i, t in enumerate(titles[:3]):
+                d = descs[i] if i < len(descs) else "See session data for details."
+                insights.append({"title": t, "desc": d})
+            if insights:
+                return {"insights": insights}
+
+        # Strategy 4: total fallback — surface the raw text as one insight
+        print(f"[EmotionAI] /generate-insights: all parse strategies failed. Raw output:\n{raw}")
+        dominant = body.most_frequent_emotion or "Neutral"
+        eng = round(body.engagement_score)
+        return {"insights": [
+            {"title": "Session overview",        "desc": f"Most frequent emotion was {dominant} with {eng}% engagement."},
+            {"title": "Engagement summary",      "desc": f"You maintained {eng}% average engagement during this session."},
+            {"title": "Emotion distribution",    "desc": body.emotion_summary or "No emotion data recorded."},
+        ]}
+
+    def _static_fallback() -> dict:
+        """Always-safe fallback built purely from the request data."""
+        dominant = body.most_frequent_emotion or "Neutral"
+        eng = round(body.engagement_score)
+        level = "high" if eng >= 70 else ("moderate" if eng >= 40 else "low")
+        return {"insights": [
+            {"title": "Session overview",     "desc": f"Most frequent emotion was {dominant} throughout this session."},
+            {"title": "Engagement level",     "desc": f"Average engagement was {eng}%, indicating {level} attention."},
+            {"title": "Emotion distribution", "desc": body.emotion_summary or "No emotion data was recorded."},
+        ]}
+
+    try:
+        res = requests.post(url, headers=headers, json=payload, timeout=20)
+        if not res.ok:
+            err_body = {}
+            try:
+                err_body = res.json()
+            except Exception:
+                pass
+            print(f"[EmotionAI] /generate-insights Groq HTTP {res.status_code}: {err_body}")
+            return _static_fallback()
+        data = res.json()
+        raw_text = data["choices"][0]["message"]["content"]
+        print(f"[EmotionAI] /generate-insights raw LLM output: {raw_text!r}")
+        return _extract_insights(raw_text)
+    except Exception as e:
+        print(f"[EmotionAI] /generate-insights error: {e}")
+        return _static_fallback()
+
+
 @app.post("/session-end")
 async def session_end(body: SessionEndRequest, current: dict = Depends(get_current_user)):
     _active_sessions.pop(current["id"], None)
@@ -903,105 +1123,10 @@ async def session_end(body: SessionEndRequest, current: dict = Depends(get_curre
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  STUDY TIMER
-# ══════════════════════════════════════════════════════════════════════════════
-
-@app.post("/studytimer/summary")
-async def save_study_timer_summary(
-    body: StudyTimerSummaryRequest,
-    current: dict = Depends(get_current_user),
-):
-    """Called by studytimer.js at the end of every study session."""
-    con = db_conn()
-    cur = con.cursor()
-    try:
-        cur.execute(
-            """
-            INSERT INTO study_timer_sessions
-              (user_id, total_seconds, study_seconds, break_seconds,
-               focus_blocks, break_count, pause_count,
-               avg_engagement, focused_pct, bored_pct,
-               frustrated_pct, distracted_pct)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            """,
-            (
-                current["id"],
-                body.total_seconds,
-                body.study_seconds,
-                body.break_seconds,
-                body.focus_blocks,
-                body.break_count,
-                body.pause_count,
-                body.avg_engagement,
-                body.focused_pct,
-                body.bored_pct,
-                body.frustrated_pct,
-                body.distracted_pct,
-            ),
-        )
-        con.commit()
-        return {"message": "Study timer summary saved"}
-    except Exception as e:
-        con.rollback()
-        print(f"[StudyTimer] summary save error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cur.close(); con.close()
-
-
-@app.get("/studytimer/history")
-async def get_study_timer_history(
-    limit: int = Query(20, ge=1, le=100),
-    current: dict = Depends(get_current_user),
-):
-    """Returns the most recent study timer sessions for the logged-in user."""
-    con = db_conn()
-    cur = con.cursor()
-    try:
-        cur.execute(
-            """
-            SELECT id, total_seconds, study_seconds, break_seconds,
-                   focus_blocks, break_count, pause_count,
-                   avg_engagement, focused_pct, bored_pct,
-                   frustrated_pct, distracted_pct, created_at
-            FROM study_timer_sessions
-            WHERE user_id = %s
-            ORDER BY created_at DESC
-            LIMIT %s
-            """,
-            (current["id"], limit),
-        )
-        return fetchall(cur)
-    finally:
-        cur.close(); con.close()
-
-
-@app.get("/admin/studytimer")
-async def admin_study_timer_sessions(admin: dict = Depends(get_admin_user)):
-    """Admin view: all study timer sessions across all users."""
-    con = db_conn()
-    cur = con.cursor()
-    try:
-        cur.execute(
-            """
-            SELECT s.*, u.username
-            FROM study_timer_sessions s
-            LEFT JOIN users u ON s.user_id = u.id
-            ORDER BY s.created_at DESC
-            LIMIT 500
-            """
-        )
-        return fetchall(cur)
-    finally:
-        cur.close(); con.close()
-
-
-# ══════════════════════════════════════════════════════════════════════════════
 #  FEEDBACK
 # ══════════════════════════════════════════════════════════════════════════════
 
 async def _do_save_feedback(body: FeedbackRequest, request: Request):
-    """Shared: resolve user from Bearer token (or guest) and insert feedback row."""
     if not body.username or not body.username.strip():
         raise HTTPException(status_code=400, detail="Username is required.")
 
@@ -1059,7 +1184,6 @@ async def submit_feedback(body: FeedbackRequest, request: Request):
 @app.post("/api/feedback/guest")
 @app.post("/feedback/guest")
 async def submit_feedback_guest(body: FeedbackRequest, request: Request):
-    """Guest alias (no auth required, user_id always NULL)."""
     if not body.username or not body.username.strip():
         raise HTTPException(status_code=400, detail="Username is required.")
     con = db_conn()
@@ -1075,9 +1199,13 @@ async def submit_feedback_guest(body: FeedbackRequest, request: Request):
     finally:
         cur.close(); con.close()
 
+@app.post("/generate-summary")
+async def get_summary(body: SummaryRequest):
+    summary = generate_summary(body.dict())
+    return {"summary": summary}
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  ADMIN — STATS + FULL CRUD FOR ALL 4 TABLES
+#  ADMIN
 # ══════════════════════════════════════════════════════════════════════════════
 
 @app.get("/admin/stats")
@@ -1108,8 +1236,6 @@ async def admin_stats(admin: dict = Depends(get_admin_user)):
     finally:
         cur.close(); con.close()
 
-
-# ── Users ─────────────────────────────────────────────────────────────────────
 
 @app.get("/admin/users")
 async def admin_list_users(admin: dict = Depends(get_admin_user)):
@@ -1168,7 +1294,6 @@ async def toggle_admin(user_id: int, admin: dict = Depends(get_admin_user)):
 
 @app.patch("/admin/users/{user_id}/reset-password")
 async def admin_reset_password(user_id: int, body: dict, admin: dict = Depends(get_admin_user)):
-    """Allow admin to reset any user's password."""
     new_password = body.get("password", "")
     err = validate_password_strength(new_password)
     if err:
@@ -1202,8 +1327,6 @@ async def deactivate_user(user_id: int, admin: dict = Depends(get_admin_user)):
         cur.close(); con.close()
 
 
-# ── Detections ────────────────────────────────────────────────────────────────
-
 @app.get("/admin/detections")
 async def admin_list_detections(admin: dict = Depends(get_admin_user)):
     con = db_conn()
@@ -1231,8 +1354,6 @@ async def delete_detection(detection_id: int, admin: dict = Depends(get_admin_us
     finally:
         cur.close(); con.close()
 
-
-# ── Feedback ──────────────────────────────────────────────────────────────────
 
 @app.get("/admin/feedback")
 async def admin_list_feedback(admin: dict = Depends(get_admin_user)):
@@ -1262,8 +1383,6 @@ async def delete_feedback(feedback_id: int, admin: dict = Depends(get_admin_user
     finally:
         cur.close(); con.close()
 
-
-# ── Sessions ──────────────────────────────────────────────────────────────────
 
 @app.get("/admin/sessions")
 async def admin_list_sessions(admin: dict = Depends(get_admin_user)):
@@ -1398,11 +1517,6 @@ async def detect_page():
 async def livecam_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "livecam.html"))
 
-@app.get("/studytimer")
-@app.get("/studytimer.html")
-async def studytimer_page():
-    return FileResponse(os.path.join(FRONTEND_DIR, "studytimer.html"))
-
 @app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=302)
@@ -1410,7 +1524,7 @@ async def logout():
     response.delete_cookie("ea_cookie_consent")
     return response
 
-# Static mount MUST be last — it catches everything not matched above.
+# Static mount MUST be last
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 

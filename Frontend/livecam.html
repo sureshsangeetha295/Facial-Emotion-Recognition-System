@@ -20,9 +20,7 @@
 }
 html{scroll-behavior:smooth}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-
-/* ── NAV ── */
-nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:rgba(253,248,244,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:rgba(253,248,244,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:300}
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1rem;text-decoration:none;color:var(--text)}
 .logo-box{width:30px;height:30px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
 .nav-right{display:flex;align-items:center;gap:8px}
@@ -34,73 +32,50 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .nav-mode-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:var(--font-body);transition:all 0.15s}
 .nav-mode-btn:hover{background:var(--accent2);box-shadow:0 3px 10px var(--accent-glow)}
 .nav-mode-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-
-/* ── PAGE WRAPPER ── */
-.page{max-width:960px;margin:0 auto;padding:24px 20px 48px}
-
-/* ── PAGE HEADER ── */
-.page-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.page-header-icon{width:38px;height:38px;border-radius:11px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px var(--accent-glow)}
-.page-header-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.page-header-title{font-family:var(--font-display);font-size:1.45rem;font-weight:700;color:var(--text)}
-
-/* ── CARDS ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px}
-.card-body{padding:20px}
-
-/* ── HOW TO USE CARD ── */
-.how-card .card-body{padding:18px 20px}
-.how-header{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-.how-header svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.how-header-title{font-size:14px;font-weight:700;color:var(--text)}
-.steps-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.step{display:flex;align-items:flex-start;gap:11px}
-.step-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-body)}
-.step-content{flex:1}
-.step-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
-.step-desc{font-size:11.5px;color:var(--text2);line-height:1.5}
-
-/* ── CAMERA CARD ── */
-.cam-card .card-body{padding:0}
-.cam-section-title{padding:16px 20px 12px;font-size:13.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
-.cam-section-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-/* Camera box */
-.cam-box{position:relative;width:100%;aspect-ratio:16/7;background:#1a1814;overflow:hidden;cursor:pointer}
-.cam-box.live-active{background:#15130f}
+.page{max-width:100%;margin:0;padding:24px 28px 48px}
+.how-strip{margin-bottom:20px}
+.how-strip-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.how-steps-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.how-step-box{border:1.5px solid var(--border2);border-radius:10px;padding:28px 24px;background:var(--surface);display:flex;flex-direction:column;align-items:center;text-align:center;transition:background 0.2s,border-color 0.2s,box-shadow 0.2s;cursor:default}
+.how-step-box:hover{background:#fff5ee;border-color:var(--accent2);box-shadow:0 4px 18px rgba(232,68,10,0.10)}
+.how-step-label{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.08em;margin-bottom:8px}
+.how-step-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.how-step-desc{font-size:13px;color:var(--text2);line-height:1.6}
+.row1{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;align-items:stretch}
+.right-panel{display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden;height:100%}
+.right-panel .card{flex:1;min-height:0;overflow:hidden}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;align-items:stretch}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--card-shadow);overflow:hidden}
+.cam-card{display:flex;flex-direction:column}
+.cam-card .card-body{padding:0;flex:1;display:flex;flex-direction:column}
+.cam-section-title{padding:14px 16px 11px;font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cam-section-title-left{display:flex;align-items:center;gap:6px}
+.cam-section-title svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cam-live-chip{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#dc2626;letter-spacing:0.06em;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:99px;padding:2px 8px}
+.cam-live-chip-dot{width:5px;height:5px;border-radius:50%;background:#dc2626;animation:livePip 0.8s ease-in-out infinite}
+.cam-box{position:relative;width:100%;aspect-ratio:16/10;background:#1a1814;overflow:hidden;cursor:pointer}
 #videoEl{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
-
-/* Idle state */
-.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(160deg,#22201c,#1a1814);border:3px solid transparent}
-.cam-idle-icon{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,0.1)}
-.cam-idle-icon svg{width:24px;height:24px;stroke:rgba(255,255,255,0.35);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.cam-idle-text{font-size:13px;color:rgba(255,255,255,0.4);font-weight:500}
-
-/* Camera border ring when live */
-.cam-ring{position:absolute;inset:0;pointer-events:none;border:3px solid var(--accent);border-radius:0;opacity:0;transition:opacity 0.4s;z-index:3}
+.cam-fps{position:absolute;top:10px;right:10px;z-index:8;font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.06em}
+.cam-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(160deg,#22201c,#1a1814)}
+.cam-idle-icon{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,0.1)}
+.cam-idle-icon svg{width:22px;height:22px;stroke:rgba(255,255,255,0.3);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.cam-idle-text{font-size:12px;color:rgba(255,255,255,0.35);font-weight:500}
+.cam-ring{position:absolute;inset:0;pointer-events:none;border:3px solid var(--accent);opacity:0;transition:opacity 0.4s;z-index:3}
 .cam-ring.active{opacity:1;animation:ringPulse 2.5s ease-in-out infinite}
 @keyframes ringPulse{0%,100%{box-shadow:inset 0 0 0 0 rgba(232,68,10,0);border-color:#e8440a}50%{box-shadow:inset 0 0 20px rgba(232,68,10,0.12);border-color:#f06940}}
-
-/* Scan line */
 .cam-scan{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,rgba(232,68,10,0.6),transparent);z-index:5;opacity:0;pointer-events:none}
 .cam-scan.active{animation:scanLine 2.4s ease-in-out infinite}
 @keyframes scanLine{0%{top:5%;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:95%;opacity:0}}
-
-/* Status badge overlay */
-.cam-status{position:absolute;top:12px;left:12px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border-radius:20px;padding:4px 12px;border:1px solid rgba(255,255,255,0.1)}
+.cam-face-box{display:none !important}
+.cam-status{position:absolute;top:10px;left:10px;z-index:8;display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border-radius:20px;padding:4px 10px;border:1px solid rgba(255,255,255,0.1)}
 .cam-status-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;flex-shrink:0}
 .cam-status-dot.live{background:#dc2626;animation:livePip 0.8s ease-in-out infinite}
 .cam-status-dot.ready{background:#22c55e}
 .cam-status-txt{font-size:10px;font-weight:700;color:#fff;letter-spacing:0.07em}
-
-/* Emotion overlay badge */
-.cam-emotion-badge{position:absolute;bottom:14px;left:14px;z-index:8;display:none;align-items:center;gap:7px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border-radius:10px;padding:7px 12px;border:1px solid rgba(255,255,255,0.1)}
-.cam-emotion-badge.show{display:flex}
-.cam-emotion-dot{width:8px;height:8px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background 0.4s}
-.cam-emotion-name{font-size:13px;font-weight:700;color:#fff;font-family:var(--font-display)}
-.cam-emotion-score{font-size:11px;color:rgba(255,255,255,0.55);font-weight:600}
-
-/* Reaction bar — horizontal at bottom-right */
+.cam-emotion-pill{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:7px;background:var(--accent);backdrop-filter:blur(10px);border-radius:99px;padding:6px 16px}
+.cam-emotion-pill.show{display:flex}
+.cam-emotion-pill-name{font-size:13px;font-weight:700;color:#fff;font-family:var(--font-display)}
+.cam-emotion-pill-pct{font-size:12px;font-weight:700;color:rgba(255,255,255,0.75)}
 .reaction-bar{position:absolute;bottom:14px;right:14px;z-index:8;display:none;align-items:center;gap:5px;background:rgba(0,0,0,0.5);backdrop-filter:blur(12px);border-radius:10px;padding:6px 10px;border:1px solid rgba(255,255,255,0.08)}
 .reaction-bar.show{display:flex}
 .rx-lbl{font-size:8.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-right:2px}
@@ -109,98 +84,150 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .rx-btn.active{background:rgba(232,68,10,0.4);border-color:var(--accent)}
 .rx-btn .tt{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,0.85);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity 0.15s}
 .rx-btn:hover .tt{opacity:1}
-
-/* Float emojis */
 .float-emoji{position:absolute;font-size:20px;pointer-events:none;z-index:20;animation:floatUp 1.4s ease-out forwards}
 @keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}
-
-/* Start/Stop row */
-.cam-btn-row{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px}
-.btn-start{flex:1;padding:12px 20px;border:none;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.18s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:7px}
+.cam-btn-row{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.btn-start{flex:1;padding:11px 16px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);transition:all 0.18s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px}
 .btn-start:hover:not(:disabled){background:var(--accent2);box-shadow:0 4px 16px var(--accent-glow);transform:translateY(-1px)}
 .btn-start:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none}
 .btn-start svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.btn-stop{padding:12px 20px;border:none;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;color:#fff;background:#dc2626;transition:all 0.18s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:7px;min-width:100px}
+.btn-stop{padding:11px 16px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;background:#dc2626;transition:all 0.18s;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px;min-width:90px}
 .btn-stop:hover:not(:disabled){background:#b91c1c;box-shadow:0 4px 16px rgba(220,38,38,0.35);transform:translateY(-1px)}
 .btn-stop:disabled{opacity:0.4;cursor:not-allowed;transform:none}
 .btn-stop svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-
-/* Signal warning */
-.signal-bar{display:none;align-items:center;gap:8px;padding:9px 20px;background:rgba(202,138,4,0.1);border-bottom:1px solid rgba(202,138,4,0.25);font-size:11.5px;font-weight:600;color:#92400e}
+.signal-bar{display:none;align-items:center;gap:8px;padding:9px 16px;background:rgba(202,138,4,0.1);border-bottom:1px solid rgba(202,138,4,0.25);font-size:11.5px;font-weight:600;color:#92400e}
 .signal-bar.show{display:flex}
-.signal-bar svg{flex-shrink:0;animation:livePip 1s ease-in-out infinite}
-
-/* ── LIVE EMOTION DISTRIBUTION (TREND GRAPH) ── */
-.dist-card .card-body{padding:0}
-.dist-section-title{padding:16px 20px 14px;font-size:13.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
-.dist-section-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-/* Empty dist state */
-.dist-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:10px;color:var(--text3)}
-.dist-empty-icon{width:52px;height:52px;display:flex;align-items:center;justify-content:center}
-.dist-empty-icon svg{width:36px;height:36px;stroke:var(--text3);fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
-.dist-empty-text{font-size:12.5px;font-weight:500}
-
-/* Trend graph area */
-.dist-graph-wrap{padding:14px 20px 10px;position:relative}
-.dist-graph-canvas-wrap{position:relative;width:100%;height:130px}
-#distTrendCanvas{width:100%;height:130px;display:block;cursor:crosshair}
-.dist-hover-tip{position:absolute;background:rgba(26,22,18,0.88);backdrop-filter:blur(8px);border:1px solid var(--border2);color:#fff;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;pointer-events:none;opacity:0;transition:opacity 0.15s;white-space:nowrap;z-index:10;transform:translate(-50%,-110%)}
+.engage-card{display:flex;flex-direction:column}
+.engage-card .card-body{padding:0;display:flex;flex-direction:column;flex:1}
+.engage-section-title{padding:14px 16px 11px;font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.engage-section-title-left{display:flex;align-items:center;gap:6px}
+.engage-section-title svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.engage-last5{font-size:10px;color:var(--text3);font-weight:500}
+.engage-pie-wrap{padding:16px 16px 12px;display:flex;flex-direction:column;align-items:center;gap:14px;flex:1;justify-content:center}
+.engage-pie-container{position:relative;flex-shrink:0;width:130px;height:130px}
+#engagePieCanvas{width:130px;height:130px;display:block}
+.engage-pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.engage-pie-score{font-size:20px;font-weight:700;color:var(--accent);font-family:var(--font-display);line-height:1}
+.engage-pie-lbl{font-size:8px;color:var(--text3);font-weight:600;letter-spacing:0.04em}
+.engage-pie-dominant{font-size:11px;font-weight:700;color:var(--text);line-height:1.2;text-align:center}
+.engage-pie-legend{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 10px;width:100%}
+.engage-leg-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.engage-leg-left{display:flex;align-items:center;gap:4px}
+.engage-leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.engage-leg-name{font-weight:600;font-size:10px;color:var(--text2)}
+.engage-leg-pct{font-size:10px;font-weight:700;color:var(--text3)}
+.timeline-card{display:flex;flex-direction:column;height:100%}
+.timeline-card .card-body{padding:0;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.timeline-section-title{padding:14px 16px 11px;font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.timeline-section-title-left{display:flex;align-items:center;gap:6px}
+.timeline-section-title svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.timeline-scroll-wrap{overflow-x:auto;overflow-y:hidden;padding:0 20px;flex:1;min-height:0;display:flex;align-items:center;scrollbar-width:none;-ms-overflow-style:none;min-height:100px}
+.timeline-scroll-wrap::-webkit-scrollbar{display:none}
+.timeline-track{display:flex;align-items:center;gap:0;position:relative;min-width:max-content}
+.timeline-connector{width:40px;flex-shrink:0;display:flex;align-items:center;margin-top:0}
+.timeline-connector-line{flex:1;height:1.5px;background:var(--border2)}
+.timeline-event{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;max-width:88px;min-height:0;justify-content:center}
+.timeline-event-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 0 0 2px var(--accent);flex-shrink:0;margin-top:5px}
+.timeline-event-dot.start{background:#22c55e;box-shadow:0 0 0 2px #22c55e}
+.timeline-event-dot.end{background:#dc2626;box-shadow:0 0 0 2px #dc2626}
+.timeline-event-dot.neutral{background:#6b7280;box-shadow:0 0 0 2px #6b7280}
+.timeline-event-dot.happy{background:#e8440a;box-shadow:0 0 0 2px #e8440a}
+.timeline-event-dot.sad{background:#3b82f6;box-shadow:0 0 0 2px #3b82f6}
+.timeline-event-dot.angry{background:#dc2626;box-shadow:0 0 0 2px #dc2626}
+.timeline-event-dot.surprised{background:#f59e0b;box-shadow:0 0 0 2px #f59e0b}
+.timeline-event-dot.fearful{background:#f97316;box-shadow:0 0 0 2px #f97316}
+.timeline-event-dot.disgusted{background:#7c3aed;box-shadow:0 0 0 2px #7c3aed}
+.timeline-event-inner{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
+.timeline-event-time{font-size:10px;font-weight:700;color:var(--accent);font-family:var(--font-display)}
+.timeline-event-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin:2px 0}
+.timeline-event-icon svg{width:14px;height:14px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.timeline-event-label{font-size:9.5px;font-weight:600;color:var(--text2);text-align:center;line-height:1.35;max-width:82px;padding:0 2px}
+.timeline-event-conf{font-size:9px;color:var(--text3);font-weight:500;text-align:center}
+.timeline-empty{padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text3)}
+.timeline-empty svg{width:28px;height:28px;stroke:var(--text3);fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.timeline-empty-text{font-size:11.5px;font-weight:500;text-align:center}
+.dist-card{display:flex;flex-direction:column}
+.dist-card .card-body{padding:0;flex:1;display:flex;flex-direction:column}
+.dist-section-title{padding:12px 16px 10px;font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.dist-section-title-left{display:flex;align-items:center;gap:6px}
+.dist-section-title svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dist-hover-hint{font-size:10px;color:var(--text3);font-weight:500}
+.dist-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:7px;color:var(--text3)}
+.dist-empty svg{width:28px;height:28px;stroke:var(--text3);fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.dist-empty-text{font-size:11.5px;font-weight:500;text-align:center}
+.dist-graph-wrap{padding:10px 14px 8px;display:flex;flex-direction:column;gap:6px;flex:1}
+.dist-graph-canvas-wrap{position:relative;width:100%;height:160px}
+#distTrendCanvas{width:100%;height:100%;display:block;cursor:crosshair}
+.dist-hover-tip{position:absolute;background:rgba(26,22,18,0.88);backdrop-filter:blur(8px);border:1px solid var(--border2);color:#fff;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;pointer-events:none;opacity:0;transition:opacity 0.15s;white-space:nowrap;z-index:10;transform:translate(-50%,-110%)}
 .dist-hover-tip.show{opacity:1}
-.dist-graph-legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 20px 14px;border-top:1px solid var(--border)}
-.dist-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
-.dist-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-/* ── SESSION TIMELINE (embedded in summary) ── */
-.timeline-scroll{overflow-y:auto;padding:8px 0 0;display:flex;flex-direction:column;gap:5px;max-height:160px;min-height:60px}
-.timeline-scroll::-webkit-scrollbar{width:3px}
-.timeline-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
-.tl-empty{font-size:11px;color:var(--text3);font-style:italic;text-align:center;padding:12px 0}
-.tl-item{display:flex;align-items:flex-start;gap:7px;font-size:10.5px}
-.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px}
-.tl-time{font-weight:700;color:var(--text);flex-shrink:0;min-width:34px;font-size:9.5px}
-.tl-msg{flex:1;line-height:1.4;color:var(--text2)}
-.tl-icon{font-size:11px;flex-shrink:0}
-
-/* ── ENGAGEMENT PIE ── */
-.engage-pie-card .card-body{padding:16px 20px}
-.engage-pie-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
-.engage-pie-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.engage-pie-inner{display:flex;align-items:center;gap:20px}
-.engage-pie-canvas-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
-#engagePieCanvas{width:110px;height:110px;display:block}
-.engage-pie-legend{flex:1;display:flex;flex-direction:column;gap:8px}
-.engage-leg-item{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:500;color:var(--text2)}
-.engage-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.engage-leg-pct{font-weight:700;color:var(--text);margin-left:auto}
-
-/* Session Summary */
-.summary-card .card-body{padding:18px 20px}
-.summary-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:13px;display:flex;align-items:center;gap:7px}
-.summary-title svg{width:14px;height:14px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.summary-rows{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
-.summary-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
-.summary-row:last-child{border-bottom:none}
-.summary-lbl{font-size:12px;color:var(--text2);font-weight:500}
-.summary-val{font-size:12px;font-weight:700;color:var(--accent)}
-.summary-val.grey{color:var(--text3)}
-/* Timeline embedded in summary */
-.sum-tl-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;border-top:1px solid var(--border);margin-top:2px}
-.sum-tl-hdr-left{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text)}
-.sum-tl-hdr-left svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-
-/* ── OVERALL ANALYSIS (LLM) ── */
-.analysis-card .card-body{padding:18px 20px}
-.analysis-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.analysis-hdr-left{display:flex;align-items:center;gap:8px}
-.analysis-icon{width:28px;height:28px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px var(--accent-glow)}
-.analysis-icon svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.analysis-title{font-size:13.5px;font-weight:700;color:var(--text)}
-.btn-analyse{padding:7px 15px;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);font-family:var(--font-body);display:flex;align-items:center;gap:6px;transition:all 0.15s}
+.dist-graph-legend{display:flex;flex-wrap:wrap;gap:4px 10px;padding:8px 14px 12px;border-top:1px solid var(--border)}
+.dist-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text2)}
+.dist-leg-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.summary-card{display:flex;flex-direction:column}
+.summary-card .card-body{padding:0;display:flex;flex-direction:column}
+.summary-section-title{padding:12px 16px 10px;font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.summary-session-chip{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:0.04em}
+.stat-tiles{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.stat-tile{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat-tile-label{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:0.04em}
+.stat-tile-value{font-size:22px;font-weight:700;color:var(--text);line-height:1.1;font-family:var(--font-display)}
+.stat-tile-sub{font-size:10px;color:var(--text3);font-weight:500}
+.stat-tile-emotion{font-size:18px;font-weight:700;color:var(--accent);font-family:var(--font-display);line-height:1.1}
+.stat-tile-emotion-sub{font-size:10px;color:var(--text3);font-weight:500}
+.dominant-section{padding:10px 14px 12px;border-top:1px solid var(--border)}
+.dominant-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.dominant-chips{display:flex;flex-wrap:wrap;gap:6px}
+.dom-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid transparent}
+.dom-chip.happy{background:rgba(232,68,10,0.1);border-color:rgba(232,68,10,0.25);color:var(--accent)}
+.dom-chip.neutral{background:rgba(107,101,96,0.1);border-color:rgba(107,101,96,0.2);color:#6b6560}
+.dom-chip.surprised{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:#b45309}
+.dom-chip.sad{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25);color:#1d4ed8}
+.dom-chip.angry{background:rgba(220,38,38,0.1);border-color:rgba(220,38,38,0.25);color:#dc2626}
+.dom-chip.fearful{background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.25);color:#c2410c}
+.dom-chip.disgusted{background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.25);color:#7c3aed}
+.analysis-card{margin-bottom:16px}
+.analysis-card .card-body{padding:0}
+.analysis-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 13px;border-bottom:1px solid var(--border)}
+.analysis-hdr-left{display:flex;align-items:center;gap:10px}
+.analysis-icon{width:26px;height:26px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px var(--accent-glow)}
+.analysis-icon svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.analysis-hdr-titles{display:flex;flex-direction:column;gap:1px}
+.analysis-title{font-size:13px;font-weight:700;color:var(--text)}
+.analysis-subtitle{font-size:10px;color:var(--text3);font-weight:500}
+.btn-analyse{padding:7px 14px;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--accent);font-family:var(--font-body);display:flex;align-items:center;gap:6px;transition:all 0.15s}
 .btn-analyse:hover:not(:disabled){background:var(--accent2);box-shadow:0 3px 10px var(--accent-glow)}
 .btn-analyse:disabled{opacity:0.45;cursor:not-allowed}
 .btn-analyse svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.analysis-inner{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:240px;align-items:start}
+.analysis-left{padding:16px 18px;border-right:1px solid var(--border)}
+.analysis-right{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.analysis-section-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px}
+/* How-to-use style cards for emotion breakdown */
+.emo-cat-card{border-radius:10px;padding:10px 12px;border:1.5px solid transparent;cursor:default;transition:all 0.2s}
+.emo-cat-positive{background:rgba(22,163,74,0.05);border-color:rgba(22,163,74,0.18)}
+.emo-cat-positive:hover{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.35);box-shadow:0 2px 12px rgba(22,163,74,0.12)}
+.emo-cat-negative{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.15)}
+.emo-cat-negative:hover{background:rgba(220,38,38,0.09);border-color:rgba(220,38,38,0.3);box-shadow:0 2px 12px rgba(220,38,38,0.10)}
+.emo-cat-neutral{background:rgba(107,114,128,0.05);border-color:rgba(107,114,128,0.15)}
+.emo-cat-neutral:hover{background:rgba(107,114,128,0.09);border-color:rgba(107,114,128,0.3);box-shadow:0 2px 12px rgba(107,114,128,0.10)}
+.emotion-bars{display:flex;flex-direction:column;gap:8px}
+.emo-bar-row{display:flex;align-items:center;gap:8px}
+.emo-bar-name{font-size:11px;font-weight:600;color:var(--text2);width:64px;flex-shrink:0}
+.emo-bar-track{flex:1;height:6px;background:rgba(0,0,0,0.06);border-radius:99px;overflow:hidden}
+.emo-bar-fill{height:100%;border-radius:99px;transition:width 0.6s ease}
+.emo-bar-delta{font-size:11px;font-weight:700;min-width:30px;text-align:right}
+.emo-bar-delta.pos{color:#16a34a}
+.emo-bar-delta.neg{color:#dc2626}
+.emo-bar-delta.zero{color:var(--text3)}
+.engage-score-chip{margin-top:14px;background:var(--elevated);border:1.5px solid var(--border2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.engage-score-chip-num{font-size:22px;font-weight:700;color:var(--accent);font-family:var(--font-display)}
+.engage-score-chip-info{flex:1}
+.engage-score-chip-title{font-size:12px;font-weight:700;color:var(--text)}
+.engage-score-chip-sub{font-size:10px;color:var(--text3);font-weight:500}
+.insights-list{display:flex;flex-direction:column;gap:10px}
+.insight-item{padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg)}
+.insight-item-title{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:3px}
+.insight-item-desc{font-size:10.5px;color:var(--text2);line-height:1.55}
 .analysis-body{font-size:12.5px;line-height:1.7;color:var(--text2)}
 .analysis-body p{margin-bottom:8px}
 .analysis-body p:last-child{margin-bottom:0}
@@ -210,33 +237,63 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .analysis-typing span:nth-child(2){animation-delay:0.2s}
 .analysis-typing span:nth-child(3){animation-delay:0.4s}
 @keyframes typingDot{0%,60%,100%{opacity:0.2;transform:scale(0.8)}30%{opacity:1;transform:scale(1)}}
-
-/* ── HAMBURGER ── */
 .hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0}
 .hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
 .hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
 .hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.mobile-drawer{position:fixed;top:54px;left:0;right:0;background:rgba(253,248,244,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.08)}
-.mobile-drawer.open{transform:translateY(0)}
+.mobile-drawer{position:fixed;top:54px;left:0;right:0;background:rgba(253,248,244,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.08);visibility:hidden}
+.mobile-drawer.open{transform:translateY(0);visibility:visible}
 .mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s}
 .mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
 .mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
 .mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.1)}
 .mobile-overlay.open{display:block}
-
-/* ── RESPONSIVE ── */
-@media(max-width:768px){
-  .hamburger-btn{display:flex!important}
-  .back-btn{display:none}
-  .steps-row{grid-template-columns:1fr;gap:10px}
-  .two-col{grid-template-columns:1fr}
-  .page{padding:16px 14px 40px}
-}
-@media(max-width:480px){
-  .cam-box{aspect-ratio:4/3}
-  .steps-row{grid-template-columns:1fr}
-}
+/* ── Emotion category cards ─────────────────────────────────────── */
+.emo-category-cards{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.emo-cat-card{border-radius:10px;padding:8px 12px;border:1.5px solid transparent;cursor:default;transition:all 0.2s}
+.emo-cat-positive{background:rgba(22,163,74,0.05);border-color:rgba(22,163,74,0.18)}
+.emo-cat-positive:hover{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.35);box-shadow:0 2px 12px rgba(22,163,74,0.12)}
+.emo-cat-negative{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.15)}
+.emo-cat-negative:hover{background:rgba(220,38,38,0.09);border-color:rgba(220,38,38,0.3);box-shadow:0 2px 12px rgba(220,38,38,0.10)}
+.emo-cat-neutral{background:rgba(107,114,128,0.05);border-color:rgba(107,114,128,0.15)}
+.emo-cat-neutral:hover{background:rgba(107,114,128,0.09);border-color:rgba(107,114,128,0.3);box-shadow:0 2px 12px rgba(107,114,128,0.10)}
+.emo-cat-header{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.emo-cat-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.emo-cat-positive .emo-cat-icon{background:rgba(22,163,74,0.12);color:#16a34a}
+.emo-cat-negative .emo-cat-icon{background:rgba(220,38,38,0.1);color:#dc2626}
+.emo-cat-neutral .emo-cat-icon{background:rgba(107,114,128,0.1);color:#6b7280}
+.emo-cat-icon svg{stroke:currentColor}
+.emo-cat-title{font-size:11.5px;font-weight:700;flex:1}
+.emo-cat-positive .emo-cat-title{color:#15803d}
+.emo-cat-negative .emo-cat-title{color:#dc2626}
+.emo-cat-neutral .emo-cat-title{color:#4b5563}
+.emo-cat-pct{font-size:13px;font-weight:700;font-family:var(--font-display)}
+.emo-cat-positive .emo-cat-pct{color:#16a34a}
+.emo-cat-negative .emo-cat-pct{color:#dc2626}
+.emo-cat-neutral .emo-cat-pct{color:#6b7280}
+.emo-cat-tags{display:flex;flex-wrap:wrap;gap:5px}
+.emo-cat-bar{height:4px;border-radius:99px;margin:6px 0 5px;transition:width 0.6s ease}
+.emo-cat-positive .emo-cat-bar{background:rgba(22,163,74,0.4)}
+.emo-cat-negative .emo-cat-bar{background:rgba(220,38,38,0.4)}
+.emo-cat-neutral .emo-cat-bar{background:rgba(107,114,128,0.4)}
+.emo-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600}
+.emo-tag-pct{font-weight:700;opacity:0.85}
+.emo-tag-happy{background:rgba(232,68,10,0.1);color:var(--accent)}
+.emo-tag-surprised{background:rgba(245,158,11,0.12);color:#b45309}
+.emo-tag-angry{background:rgba(220,38,38,0.1);color:#dc2626}
+.emo-tag-sad{background:rgba(59,130,246,0.1);color:#1d4ed8}
+.emo-tag-fearful{background:rgba(249,115,22,0.1);color:#c2410c}
+.emo-tag-disgusted{background:rgba(124,58,237,0.1);color:#7c3aed}
+.emo-tag-neutral{background:rgba(107,114,128,0.1);color:#4b5563}
+/* ── Tips box ──────────────────────────────────────────────────── */
+.tips-box{border:1.5px solid var(--border2);border-radius:10px;padding:10px 13px;background:var(--elevated);flex-shrink:0}
+.tips-header{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:7px;letter-spacing:0.04em;text-transform:uppercase}
+.tips-body{display:flex;flex-direction:column;gap:5px}
+.tip-item{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;color:var(--text2);line-height:1.5}
+.tip-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+@media(max-width:1024px){.row1{grid-template-columns:1fr}.row2{grid-template-columns:1fr}.analysis-inner{grid-template-columns:1fr}.analysis-left{border-right:none;border-bottom:1px solid var(--border)}}
+@media(max-width:768px){.hamburger-btn{display:flex!important}.back-btn{display:none}.nav-mode-btn span{display:none}.how-steps-row{grid-template-columns:1fr}.page{padding:16px 14px 40px}nav{z-index:300}}
 </style>
 </head>
 <body>
@@ -246,11 +303,11 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
     <div class="logo-box">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
     </div>
-    Emotion Analysis System
+    Emotion Analysis
   </a>
   <div style="display:flex;align-items:center;gap:8px">
     <div class="nav-live-badge" id="navLiveBadge" style="display:none"><div class="nav-live-dot"></div>LIVE</div>
-    <span style="font-size:11.5px;font-weight:700;color:var(--text2);letter-spacing:0.04em" id="sessionTimerNav" style="display:none"></span>
+    <span id="sessionTimerNav" style="display:none!important;visibility:hidden"></span>
   </div>
   <div class="nav-right">
     <div style="position:relative" id="navModeWrap">
@@ -266,16 +323,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
           <div style="width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
           <div><div style="font-weight:700;font-size:12px">Live Cam</div><div style="font-size:10px;color:var(--accent2)">Current page</div></div>
         </a>
-        <a href="/studytimer" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:500">
-          <div style="width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div><div style="font-weight:700;font-size:12px">Study Timer</div><div style="font-size:10px;color:var(--text3)">Adaptive emotion timer</div></div>
-        </a>
       </div>
     </div>
     <a class="back-btn" href="/home">
-      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Back
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Back
     </a>
+    <button class="back-btn" onclick="if(typeof Auth!=='undefined')Auth.logout()">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
     <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
@@ -292,340 +347,332 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 
 <div class="page">
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="page-header-icon">
-      <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-    </div>
-    <div class="page-header-title">Live Camera Feed</div>
-  </div>
-
-  <!-- How to Use Card -->
-  <div class="card how-card">
-    <div class="card-body">
-      <div class="how-header">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div class="how-header-title">How to Use &amp; Analyze</div>
-      </div>
-      <div class="steps-row">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-content">
-            <div class="step-title">Start Camera</div>
-            <div class="step-desc">Click "Start Session" button and allow camera access when prompted.</div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <div class="step-title">Position Yourself</div>
-            <div class="step-desc">Face the camera directly with good lighting. Keep your face centered in the frame.</div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-content">
-            <div class="step-title">View Results</div>
-            <div class="step-desc">Watch real-time emotion analysis in the distribution chart and engagement meter below.</div>
-          </div>
-        </div>
-      </div>
+  <div class="how-strip">
+    <div class="how-strip-label">HOW TO USE</div>
+    <div class="how-steps-row">
+      <div class="how-step-box"><div class="how-step-label">Step 01</div><div class="how-step-title">Allow camera access</div><div class="how-step-desc">Grant browser permission to activate your webcam.</div></div>
+      <div class="how-step-box"><div class="how-step-label">Step 02</div><div class="how-step-title">Start a session</div><div class="how-step-desc">Click "Begin session" to start real-time tracking.</div></div>
+      <div class="how-step-box"><div class="how-step-label">Step 03</div><div class="how-step-title">Review analysis</div><div class="how-step-desc">View distribution, engagement, and session summary below.</div></div>
     </div>
   </div>
 
-  <!-- Camera Card -->
-  <div class="card cam-card">
-    <div class="cam-section-title">
-      <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-      Live Camera Feed
-    </div>
-
-    <!-- Signal warning -->
-    <div class="signal-bar" id="signalBar">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      ⚠️ Weak Signal Detected — try moving closer to your router or near a window.
-    </div>
-
-    <div class="cam-box" id="camBox">
-      <!-- Idle -->
-      <div class="cam-idle" id="camIdle">
-        <div class="cam-idle-icon">
-          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+  <div class="row1">
+    <div class="card cam-card">
+      <div class="cam-section-title">
+        <div class="cam-section-title-left">
+          <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Live detection
         </div>
-        <div class="cam-idle-text">Click "Start Session" to begin</div>
+        <div class="cam-live-chip" id="liveFeedChip" style="display:none"><div class="cam-live-chip-dot"></div>Live</div>
       </div>
-
-      <video id="videoEl" autoplay muted playsinline></video>
-      <div class="cam-ring" id="camRing"></div>
-      <div class="cam-scan" id="camScan"></div>
-
-      <div class="cam-status" id="camStatus">
-        <div class="cam-status-dot ready" id="camStatusDot"></div>
-        <span class="cam-status-txt" id="camStatusTxt">READY</span>
+      <div class="signal-bar" id="signalBar">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Weak Signal Detected — move closer to your router.
       </div>
-
-      <!-- Emotion badge overlay -->
-      <div class="cam-emotion-badge" id="camEmotionBadge">
-        <div class="cam-emotion-dot" id="camEmotionDot"></div>
-        <span class="cam-emotion-name" id="camEmotionName">—</span>
-        <span class="cam-emotion-score" id="camEmotionScore"></span>
-      </div>
-
-      <!-- Reaction bar -->
-      <div class="reaction-bar" id="reactionBar">
-        <span class="rx-lbl">React</span>
-        <button class="rx-btn" onclick="sendReaction('thumbsup',this)">👍<span class="tt">Content is great!</span></button>
-        <button class="rx-btn" onclick="sendReaction('thumbsdown',this)">👎<span class="tt">Not clear</span></button>
-        <button class="rx-btn" onclick="sendReaction('handraise',this)">✋<span class="tt">Repeat / Doubt</span></button>
-        <button class="rx-btn" onclick="sendReaction('confused',this)">😕<span class="tt">Confused</span></button>
-        <button class="rx-btn" onclick="sendReaction('clap',this)">👏<span class="tt">Great explanation!</span></button>
-      </div>
-    </div>
-
-    <div class="cam-btn-row">
-      <button class="btn-start" id="btnStart" onclick="doStart()">
-        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Start Session
-      </button>
-      <button class="btn-stop" id="btnStop" onclick="doStop()" disabled>
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-        Stop
-      </button>
-    </div>
-  </div>
-
-  <!-- Live Emotion Distribution (Trend Graph) -->
-  <div class="card dist-card">
-    <div class="dist-section-title">
-      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Live Emotion Distribution
-    </div>
-    <div class="dist-graph-wrap" id="distGraphWrap">
-      <div class="dist-empty" id="distEmpty">
-        <div class="dist-empty-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-        <div class="dist-empty-text">Start the camera to see emotion trend.</div>
-      </div>
-      <div id="distGraphArea" style="display:none">
-        <div class="dist-graph-canvas-wrap">
-          <canvas id="distTrendCanvas" height="130"></canvas>
-          <div class="dist-hover-tip" id="distHoverTip"></div>
+      <div class="cam-box" id="camBox">
+        <div class="cam-idle" id="camIdle">
+          <div class="cam-idle-icon"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+          <div class="cam-idle-text">Click "Start Session" to begin</div>
+        </div>
+        <video id="videoEl" autoplay muted playsinline></video>
+        <div class="cam-fps" id="camFps" style="display:none">30 fps</div>
+        <div class="cam-ring" id="camRing"></div>
+        <div class="cam-scan" id="camScan"></div>
+        <div class="cam-face-box" id="camFaceBox" style="top:20%;left:30%;width:38%;height:48%"></div>
+        <div class="cam-status" id="camStatus">
+          <div class="cam-status-dot ready" id="camStatusDot"></div>
+          <span class="cam-status-txt" id="camStatusTxt">READY</span>
+        </div>
+        <div class="cam-emotion-pill" id="camEmotionPill">
+          <span class="cam-emotion-pill-name" id="camEmotionName">—</span>
+          <span class="cam-emotion-pill-pct" id="camEmotionScore"></span>
+        </div>
+        <div class="reaction-bar" id="reactionBar">
+          <span class="rx-lbl">React</span>
+          <button class="rx-btn" onclick="sendReaction('thumbsup',this)">👍<span class="tt">Content is great!</span></button>
+          <button class="rx-btn" onclick="sendReaction('thumbsdown',this)">👎<span class="tt">Not clear</span></button>
+          <button class="rx-btn" onclick="sendReaction('handraise',this)">✋<span class="tt">Repeat / Doubt</span></button>
+          <button class="rx-btn" onclick="sendReaction('confused',this)">😕<span class="tt">Confused</span></button>
+          <button class="rx-btn" onclick="sendReaction('clap',this)">👏<span class="tt">Great explanation!</span></button>
         </div>
       </div>
-    </div>
-    <div class="dist-graph-legend" id="distLegend" style="display:none">
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#22c55e"></div>Happiness</div>
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f59e0b"></div>Surprise</div>
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#6b7280"></div>Neutral</div>
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#3b82f6"></div>Sadness</div>
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#ef4444"></div>Anger</div>
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f97316"></div>Fear</div>
-      <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#7c3aed"></div>Disgust</div>
-    </div>
-  </div>
-
-  <!-- Session Summary (with embedded timeline, no chart) -->
-  <div class="card summary-card">
-    <div class="card-body">
-      <div class="summary-title">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Session Summary
-      </div>
-      <div class="summary-rows">
-        <div class="summary-row">
-          <span class="summary-lbl">Session Duration</span>
-          <span class="summary-val" id="sumDuration">0:00</span>
-        </div>
-        <div class="summary-row">
-          <span class="summary-lbl">Emotions Detected</span>
-          <span class="summary-val" id="sumDetected">0</span>
-        </div>
-        <div class="summary-row">
-          <span class="summary-lbl">Reactions Sent</span>
-          <span class="summary-val grey" id="sumReactions">0</span>
-        </div>
-      </div>
-      <!-- Embedded Timeline -->
-      <div class="sum-tl-hdr">
-        <div class="sum-tl-hdr-left">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Session Timeline
-        </div>
-        <span style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:0.04em" id="sessionTimerSide">—</span>
-      </div>
-      <div class="timeline-scroll" id="timelineScroll">
-        <div class="tl-empty" id="tlEmpty">Session not started. Timeline will appear here.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Engagement Pie -->
-  <div class="card engage-pie-card">
-    <div class="card-body">
-      <div class="engage-pie-title">
-        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
-        Engagement
-      </div>
-      <div class="engage-pie-inner">
-        <div class="engage-pie-canvas-wrap">
-          <canvas id="engagePieCanvas" width="110" height="110"></canvas>
-        </div>
-        <div class="engage-pie-legend" id="engagePieLegend">
-          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#16a34a"></div><span>Actively Listening</span><span class="engage-leg-pct" id="engPctActive">—</span></div>
-          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#ca8a04"></div><span>Partially Engaged</span><span class="engage-leg-pct" id="engPctPartial">—</span></div>
-          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#dc2626"></div><span>Low Engagement</span><span class="engage-leg-pct" id="engPctLow">—</span></div>
-          <div class="engage-leg-item"><div class="engage-leg-dot" style="background:#e5e7eb"></div><span>Not Tracked</span><span class="engage-leg-pct" id="engPctNone">—</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Overall Analysis (LLM) -->
-  <div class="card analysis-card">
-    <div class="card-body">
-      <div class="analysis-hdr">
-        <div class="analysis-hdr-left">
-          <div class="analysis-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          </div>
-          <span class="analysis-title">Overall Analysis</span>
-        </div>
-        <button class="btn-analyse" id="btnAnalyse" onclick="runOverallAnalysis()">
-          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Generate Analysis
+      <div class="cam-btn-row">
+        <button class="btn-start" id="btnStart" onclick="doStart()">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Session
+        </button>
+        <button class="btn-stop" id="btnStop" onclick="doStop()" disabled>
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Stop
         </button>
       </div>
-      <div class="analysis-body" id="analysisBody">
-        <span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary of the session.</span>
+    </div>
+
+    <div class="right-panel">
+      <div class="card engage-card">
+        <div class="engage-section-title">
+          <div class="engage-section-title-left">
+            <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            Engagement session flow
+          </div>
+          <span class="engage-last5">Last 5 min</span>
+        </div>
+        <div class="card-body">
+          <div class="engage-pie-wrap">
+            <div class="engage-pie-container">
+              <canvas id="engagePieCanvas" width="130" height="130"></canvas>
+              <div class="engage-pie-center">
+                <div class="engage-pie-score" id="engageScoreNum">—</div>
+                <div class="engage-pie-lbl">score</div>
+                <div class="engage-pie-dominant" id="engageDominantCenter" style="margin-top:2px;font-size:9px;color:var(--text3)"></div>
+              </div>
+            </div>
+            <div class="engage-pie-legend" id="engagePieLegend">
+              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#e8440a"></div><span class="engage-leg-name">Happy</span></div></div>
+              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#6b7280"></div><span class="engage-leg-name">Neutral</span></div></div>
+              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#f59e0b"></div><span class="engage-leg-name">Surprised</span></div></div>
+              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#3b82f6"></div><span class="engage-leg-name">Sad</span></div></div>
+              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#dc2626"></div><span class="engage-leg-name">Angry</span></div></div>
+              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#f97316"></div><span class="engage-leg-name">Fear</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card timeline-card">
+        <div class="timeline-section-title">
+          <div class="timeline-section-title-left">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Session timeline
+          </div>
+          <span style="font-size:10px;color:var(--text3);font-weight:500" id="timelineCountLabel">0 events</span>
+        </div>
+        <div id="timelineEmpty" class="timeline-empty">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="timeline-empty-text">Start a session to see the event timeline.</div>
+        </div>
+        <div id="timelineScrollWrap" class="timeline-scroll-wrap" style="display:none">
+          <div class="timeline-track" id="timelineTrack"></div>
+        </div>
       </div>
     </div>
   </div>
 
+  <div class="row2">
+    <div class="card dist-card">
+      <div class="dist-section-title">
+        <div class="dist-section-title-left">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Live emotion trend
+        </div>
+        <span class="dist-hover-hint">hover for details</span>
+      </div>
+      <div class="card-body">
+        <div class="dist-empty" id="distEmpty">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <div class="dist-empty-text">Start the camera to see emotion trend.</div>
+        </div>
+        <div id="distGraphArea" style="display:none;flex-direction:column">
+          <div class="dist-graph-wrap">
+            <div class="dist-graph-canvas-wrap">
+              <canvas id="distTrendCanvas"></canvas>
+              <div class="dist-hover-tip" id="distHoverTip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dist-graph-legend" id="distLegend" style="display:none">
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#22c55e"></div>Happy</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f59e0b"></div>Surprised</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#6b7280"></div>Neutral</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#3b82f6"></div>Sad</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#ef4444"></div>Angry</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f97316"></div>Fear</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#7c3aed"></div>Disgust</div>
+      </div>
+    </div>
+
+    <div class="card summary-card">
+      <div class="summary-section-title">
+        <span style="font-size:12.5px;font-weight:700;color:var(--text)">Session summary</span>
+        <span class="summary-session-chip" id="sessionChipLabel">Session #—</span>
+      </div>
+      <div class="stat-tiles">
+        <div class="stat-tile"><div class="stat-tile-label">Duration</div><div class="stat-tile-value" id="sumDuration">0:00</div><div class="stat-tile-sub">minutes</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Frames analyzed</div><div class="stat-tile-value" id="sumFrames">0</div><div class="stat-tile-sub" id="sumFramesSub">at 30 fps</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Peak emotion</div><div class="stat-tile-emotion" id="sumPeakEmotion">—</div><div class="stat-tile-emotion-sub" id="sumPeakConf"></div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Engagement avg</div><div class="stat-tile-value" id="sumEngagAvg">—</div><div class="stat-tile-sub">out of 100</div></div>
+      </div>
+      <div class="dominant-section">
+        <div class="dominant-label">Dominant this session</div>
+        <div class="dominant-chips" id="dominantChips"><span style="font-size:11px;color:var(--text3);font-style:italic">No data yet</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card analysis-card">
+    <div class="analysis-hdr">
+      <div class="analysis-hdr-left">
+        <div class="analysis-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+        <div class="analysis-hdr-titles">
+          <div class="analysis-title">Overall analysis</div>
+          <div class="analysis-subtitle">All sessions combined</div>
+        </div>
+      </div>
+      <button class="btn-analyse" id="btnAnalyse" onclick="runOverallAnalysis()">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Generate Analysis
+      </button>
+    </div>
+    <div class="analysis-inner" id="analysisInner">
+      <div class="analysis-left">
+        <div class="analysis-section-title">Emotion breakdown</div>
+        <div class="emo-category-cards" id="emoCategoryCards">
+          <div class="emo-cat-card emo-cat-positive" id="emoCatPositive">
+            <div class="emo-cat-header">
+              <div class="emo-cat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+              <div class="emo-cat-title">Positive</div>
+              <div class="emo-cat-pct" id="emoPosTotal">—%</div>
+            </div>
+            <div class="emo-cat-bar" id="emoPosBar" style="width:0%"></div>
+            <div class="emo-cat-tags" id="emoPosTags">
+              <span class="emo-tag emo-tag-happy" id="tagHappy">Happy <span class="emo-tag-pct" id="tagHappyPct">—%</span></span>
+              <span class="emo-tag emo-tag-surprised" id="tagSurprised">Surprised <span class="emo-tag-pct" id="tagSurprisedPct">—%</span></span>
+            </div>
+          </div>
+          <div class="emo-cat-card emo-cat-negative" id="emoCatNegative">
+            <div class="emo-cat-header">
+              <div class="emo-cat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+              <div class="emo-cat-title">Negative</div>
+              <div class="emo-cat-pct" id="emoNegTotal">—%</div>
+            </div>
+            <div class="emo-cat-bar" id="emoNegBar" style="width:0%"></div>
+            <div class="emo-cat-tags" id="emoNegTags">
+              <span class="emo-tag emo-tag-angry" id="tagAngry">Angry <span class="emo-tag-pct" id="tagAngryPct">—%</span></span>
+              <span class="emo-tag emo-tag-sad" id="tagSad">Sad <span class="emo-tag-pct" id="tagSadPct">—%</span></span>
+              <span class="emo-tag emo-tag-fearful" id="tagFear">Fear <span class="emo-tag-pct" id="tagFearPct">—%</span></span>
+              <span class="emo-tag emo-tag-disgusted" id="tagDisgust">Disgust <span class="emo-tag-pct" id="tagDisgustPct">—%</span></span>
+            </div>
+          </div>
+          <div class="emo-cat-card emo-cat-neutral" id="emoCatNeutral">
+            <div class="emo-cat-header">
+              <div class="emo-cat-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+              <div class="emo-cat-title">Neutral</div>
+              <div class="emo-cat-pct" id="emoNeutralTotal">—%</div>
+            </div>
+            <div class="emo-cat-bar" id="emoNeuBar" style="width:0%"></div>
+            <div class="emo-cat-tags" id="emoNeutralTags">
+              <span class="emo-tag emo-tag-neutral" id="tagNeutral">Neutral <span class="emo-tag-pct" id="tagNeutralPct">—%</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="engage-score-chip" id="engScoreChip" style="display:none">
+          <div class="engage-score-chip-num" id="engScoreChipNum">74</div>
+          <div class="engage-score-chip-info">
+            <div class="engage-score-chip-title">Engagement score</div>
+            <div class="engage-score-chip-sub">Weighted sum across all emotion segments</div>
+          </div>
+        </div>
+      </div>
+      <div class="analysis-right" style="display:flex;flex-direction:column;gap:14px;padding:18px 20px">
+        <div style="flex:2;min-height:0;display:flex;flex-direction:column">
+          <div class="analysis-section-title" style="margin-bottom:10px">Key insights</div>
+          <div class="analysis-body" id="analysisBody" style="flex:1">
+            <span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary of the session.</span>
+          </div>
+        </div>
+        <div class="tips-box" id="tipsBox">
+          <div class="tips-header">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Tips
+          </div>
+          <div class="tips-body" id="tipsBody">
+            <span style="font-size:10.5px;color:var(--text3);font-style:italic">Generate analysis to get personalized tips.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
 
 <script src="script/auth.js"></script>
 <script>
-// ══════════════════════════════════════════════════
-//  livecam.html — Updated UI, same logic
-// ══════════════════════════════════════════════════
+const PROB_KEYS=['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surprise'];
+const ENGAGEMENT_MAP={Happiness:1.0,Surprise:1.0,Neutral:0.6,Sadness:0.3,Fear:0.3,Anger:0.1,Disgust:0.1};
+const API_URL='/predict/';
+const BACKEND_TO_DRAFT={happiness:'happy',neutral:'neutral',sadness:'sad',anger:'angry',fear:'fearful',disgust:'disgusted',surprise:'surprised'};
+const EMOTION_COLORS={happy:'#e8440a',neutral:'#6b7280',sad:'#3b82f6',angry:'#dc2626',fearful:'#f97316',disgusted:'#7c3aed',surprised:'#f59e0b'};
+const EMOTION_LABELS={happy:'Happy',neutral:'Neutral',sad:'Sad',angry:'Angry',fearful:'Fear',disgusted:'Disgust',surprised:'Surprised'};
+const EMOTION_EMOJIS={happy:'😊',neutral:'😐',sad:'😞',angry:'😠',fearful:'😨',disgusted:'🤢',surprised:'😲'};
+const SCORE_MAP={happy:90,surprised:68,neutral:52,fearful:28,sad:18,angry:14,disgusted:10};
+const TREND_COLORS={Anger:'#ef4444',Disgust:'#7c3aed',Fear:'#f97316',Happiness:'#22c55e',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#f59e0b'};
+const PIE_COLORS={happy:'#e8440a',neutral:'#6b7280',surprised:'#f59e0b',sad:'#3b82f6',angry:'#dc2626',fearful:'#f97316',disgusted:'#7c3aed'};
 
-const PROB_KEYS = ['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surprise'];
-const ENGAGEMENT_MAP = { Happiness:1.0,Surprise:1.0,Neutral:0.6,Sadness:0.3,Fear:0.3,Anger:0.1,Disgust:0.1 };
-const API_URL = '/predict/';
+let isLive=false,liveInterval=null,abortCtrl=null,detectionInProgress=false;
+let _sessionId=null,_frameCount=0,_engagementScores=[];
+let sessionStart=null,sessionTimer=null,reactionCount=0;
+let engagementScore=0,lastEmotion=null,totalDetected=0;
+let emotionCounts={},peakConf=0;
+let _sessionNum=Math.floor(Math.random()*20)+1;
+const TREND_HISTORY=[];
+const TREND_MAX=30;
+let timelineEvents=[];
 
-const BACKEND_TO_DRAFT = {
-  happiness:'happy', neutral:'neutral', sadness:'sad',
-  anger:'angry',     fear:'fearful',    disgust:'disgusted', surprise:'surprised',
-};
-
-const EMOTION_COLORS = {
-  happy:'#16a34a', neutral:'#6b7280', sad:'#dc2626',
-  angry:'#b91c1c', fearful:'#9f1239', disgusted:'#7f1d1d', surprised:'#f59e0b'
-};
-const EMOTION_LABELS = {
-  happy:'Happy', neutral:'Neutral', sad:'Sad',
-  angry:'Frustrated', fearful:'Anxious', disgusted:'Disinterested', surprised:'Surprised'
-};
-
-const SCORE_MAP = {happy:90,surprised:68,neutral:52,fearful:28,sad:18,angry:14,disgusted:10};
-
-// Bar colors for emotion distribution
-const BAR_COLORS = {
-  Anger:'#ef4444',Disgust:'#7c3aed',Fear:'#f97316',
-  Happiness:'#22c55e',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#f59e0b'
-};
-
-// ── State ──
-let isLive=false, liveInterval=null, abortCtrl=null, detectionInProgress=false;
-let _sessionId=null, _frameCount=0, _engagementScores=[];
-let sessionStart=null, sessionTimer=null, reactionCount=0;
-let engagementScore=0, lastEmotion=null, totalDetected=0;
-let emotionCounts={};
-let lastProbs={};
-
-// ── Helpers ──
 function fmtTime(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60);return`${m}:${String(s%60).padStart(2,'0')}`;}
 function sessionTime(){return sessionStart?fmtTime(Date.now()-sessionStart):'0:00';}
+function pct(k){const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;return Math.round((emotionCounts[k]||0)/total*100);}
 
-// ── Dropdown ──
 function toggleDD(e){
   e.stopPropagation();
   const dd=document.getElementById('navDD'),open=dd.style.opacity==='1';
-  dd.style.opacity=open?'0':'1';dd.style.transform=open?'translateY(-8px) scale(0.97)':'translateY(0) scale(1)';dd.style.pointerEvents=open?'none':'all';
+  dd.style.opacity=open?'0':'1';
+  dd.style.transform=open?'translateY(-8px) scale(0.97)':'translateY(0) scale(1)';
+  dd.style.pointerEvents=open?'none':'all';
 }
 document.addEventListener('click',()=>{const dd=document.getElementById('navDD');if(dd){dd.style.opacity='0';dd.style.transform='translateY(-8px) scale(0.97)';dd.style.pointerEvents='none';}});
 
-// ── Timer ──
 function tickTimer(){
   const t=sessionTime();
-  const n=document.getElementById('sessionTimerNav');const s=document.getElementById('sessionTimerSide');const d=document.getElementById('sumDuration');
-  if(n)n.textContent=t;if(s)s.textContent=t;if(d)d.textContent=t;
+  const n=document.getElementById('sessionTimerNav');
+  const d=document.getElementById('sumDuration');
+  /* timer removed from nav */;
+  if(d)d.textContent=t;
+  const sf=document.getElementById('sumFrames');
+  if(sf)sf.textContent=_frameCount.toLocaleString();
+  if(_engagementScores.length>0){
+    const avg=Math.round(_engagementScores.reduce((a,b)=>a+b,0)/_engagementScores.length*100);
+    const sa=document.getElementById('sumEngagAvg');
+    if(sa)sa.textContent=avg;
+  }
 }
-
-// ── Speedometer ──
-function setSpeedometer(score){
-  const angle=(score/100)*180-90;
-  const needle=document.getElementById('speedoNeedle');
-  if(needle)needle.style.transform=`rotate(${angle}deg)`;
-  const cx=100,cy=100,r=85;
-  const sR=Math.PI,eR=Math.PI-(score/100)*Math.PI;
-  const x1=cx+r*Math.cos(sR),y1=cy+r*Math.sin(sR);
-  const x2=cx+r*Math.cos(eR),y2=cy+r*Math.sin(eR);
-  const largeArc=score>50?1:0;
-  const col=score>=70?'#16a34a':score>=40?'#ca8a04':'#dc2626';
-  const arc=document.getElementById('speedoArc');
-  if(arc){arc.setAttribute('d',`M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`);arc.setAttribute('stroke',col);}
-  const sv=document.getElementById('speedoValue');const ss=document.getElementById('speedoStatus');
-  if(sv){sv.textContent=score>0?Math.round(score):'—';sv.style.color=col;}
-  if(ss)ss.textContent=score>=70?'🟢 Actively Listening':score>=40?'🟡 Partially Engaged':score>0?'🔴 Low Engagement':'Awaiting session start';
-}
-
-// ── Trend Graph Data ──
-const TREND_HISTORY = []; // each entry: {t, probs}
-const TREND_MAX = 30;
-const TREND_COLORS = {
-  Anger:'#ef4444',Disgust:'#7c3aed',Fear:'#f97316',
-  Happiness:'#22c55e',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#f59e0b'
-};
 
 function updateTrendGraph(probs){
-  TREND_HISTORY.push({t:Date.now(), probs:{...probs}});
+  TREND_HISTORY.push({t:Date.now(),probs:{...probs}});
   if(TREND_HISTORY.length>TREND_MAX)TREND_HISTORY.shift();
-
   const canvas=document.getElementById('distTrendCanvas');
   if(!canvas)return;
   const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.offsetWidth||600;
-  const H=130;
+  const W=canvas.parentElement.offsetWidth||400;
+  const H=canvas.parentElement.offsetHeight||90;
   canvas.width=W*dpr;canvas.height=H*dpr;
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,W,H);
-
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
   if(TREND_HISTORY.length<2)return;
-
-  const pad={l:6,r:6,t:8,b:8};
-  const gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
-
-  // Draw each emotion line
+  const pad={l:6,r:6,t:6,b:6};
+  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
   PROB_KEYS.forEach(key=>{
     const col=TREND_COLORS[key]||'#999';
-    ctx.beginPath();
-    ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.lineCap='round';
     TREND_HISTORY.forEach((d,i)=>{
       const x=pad.l+(i/(TREND_MAX-1))*gW;
       const y=pad.t+gH-(((d.probs[key]||0)/100)*gH);
       i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
     ctx.stroke();
-
-    // dot at last point
     const last=TREND_HISTORY[TREND_HISTORY.length-1];
     const lx=pad.l+((TREND_HISTORY.length-1)/(TREND_MAX-1))*gW;
     const ly=pad.t+gH-(((last.probs[key]||0)/100)*gH);
-    ctx.beginPath();ctx.arc(lx,ly,3,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+    ctx.beginPath();ctx.arc(lx,ly,2.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
   });
-
-  // Store canvas ref for hover
   canvas._trendW=W;canvas._trendH=H;canvas._pad=pad;
 }
 
@@ -637,7 +684,7 @@ function initTrendHover(){
     if(!TREND_HISTORY.length){tip.classList.remove('show');return;}
     const rect=canvas.getBoundingClientRect();
     const mx=e.clientX-rect.left;
-    const pad=canvas._pad||{l:6,r:6,t:8,b:8};
+    const pad=canvas._pad||{l:6,r:6,t:6,b:6};
     const W=canvas._trendW||rect.width;
     const idx=Math.round(((mx-pad.l)/(W-pad.l-pad.r))*(TREND_HISTORY.length-1));
     const cIdx=Math.max(0,Math.min(TREND_HISTORY.length-1,idx));
@@ -653,148 +700,276 @@ function initTrendHover(){
 
 function showDistGraph(){
   document.getElementById('distEmpty').style.display='none';
-  document.getElementById('distGraphArea').style.display='block';
+  const ga=document.getElementById('distGraphArea');
+  ga.style.display='flex';ga.style.flexDirection='column';
   document.getElementById('distLegend').style.display='flex';
 }
 
-// ── Engagement Pie ──
-let _engageCounts={active:0,partial:0,low:0,none:1};
-function updateEngagePie(score){
-  if(score>=70)_engageCounts.active++;
-  else if(score>=40)_engageCounts.partial++;
-  else if(score>0)_engageCounts.low++;
-  else _engageCounts.none++;
-
-  const total=_engageCounts.active+_engageCounts.partial+_engageCounts.low+_engageCounts.none;
-  const slices=[
-    {val:_engageCounts.active/total,col:'#16a34a'},
-    {val:_engageCounts.partial/total,col:'#ca8a04'},
-    {val:_engageCounts.low/total,col:'#dc2626'},
-    {val:_engageCounts.none/total,col:'#e5e7eb'},
-  ];
-  drawDonut('engagePieCanvas',slices,110);
-  const pct=v=>total>0?Math.round((v/total)*100)+'%':'—';
-  document.getElementById('engPctActive').textContent=pct(_engageCounts.active);
-  document.getElementById('engPctPartial').textContent=pct(_engageCounts.partial);
-  document.getElementById('engPctLow').textContent=pct(_engageCounts.low);
-  document.getElementById('engPctNone').textContent=pct(_engageCounts.none);
-}
-
-// ── Summary Pie (removed — no pie chart in summary) ──
-function updateSummaryPie(){}
-
-// ── Donut draw helper ──
-function drawDonut(id,slices,size,hollow=false){
-  const canvas=document.getElementById(id);
+function updateEngagePieChart(){
+  const canvas=document.getElementById('engagePieCanvas');
   if(!canvas)return;
   const dpr=window.devicePixelRatio||1;
+  const size=130;
   canvas.width=size*dpr;canvas.height=size*dpr;
   canvas.style.width=size+'px';canvas.style.height=size+'px';
   const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  const cx=size/2,cy=size/2,r=size/2-4,inner=hollow||id==='summaryPieCanvas'?r*0.58:r*0.52;
-  let angle=-Math.PI/2;
-  slices.forEach(s=>{
-    if(!s.val)return;
-    const sweep=s.val*Math.PI*2;
-    ctx.beginPath();ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,angle,angle+sweep);
-    ctx.closePath();ctx.fillStyle=s.col;ctx.fill();
-    angle+=sweep;
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,size,size);
+  const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
+  const keys=['happy','neutral','surprised','sad','angry','fearful','disgusted'];
+  const data=keys.map(k=>({key:k,val:(emotionCounts[k]||0)/total,color:PIE_COLORS[k]}));
+  const cx=size/2,cy=size/2,r=56,inner=36;
+  let startAngle=-Math.PI/2,dominantKey=null,dominantVal=0;
+  data.forEach(d=>{
+    if(d.val<=0)return;
+    const sweep=d.val*2*Math.PI;
+    ctx.beginPath();ctx.arc(cx,cy,r,startAngle,startAngle+sweep);
+    ctx.arc(cx,cy,inner,startAngle+sweep,startAngle,true);
+    ctx.closePath();ctx.fillStyle=d.color;ctx.fill();
+    if(d.val>dominantVal){dominantVal=d.val;dominantKey=d.key;}
+    startAngle+=sweep;
   });
-  // punch hole
-  ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#fff';
+  ctx.fill();
+  const dc=document.getElementById('engageDominantCenter');
+  if(dc&&dominantKey)dc.textContent=dominantKey.charAt(0).toUpperCase()+dominantKey.slice(1);
 }
 
-// ── Overall Analysis (LLM) ──
+function addTimelineEvent(label,emoji,dotClass){
+  timelineEvents.push({timeLabel:sessionTime(),label,emoji,dotClass});
+  renderTimeline();
+}
+
+function renderTimeline(){
+  const wrap=document.getElementById('timelineScrollWrap');
+  const empty=document.getElementById('timelineEmpty');
+  const track=document.getElementById('timelineTrack');
+  const countLbl=document.getElementById('timelineCountLabel');
+  if(!timelineEvents.length){wrap.style.display='none';empty.style.display='flex';if(countLbl)countLbl.textContent='0 events';return;}
+  wrap.style.display='block';empty.style.display='none';
+  if(countLbl)countLbl.textContent=`${timelineEvents.length} event${timelineEvents.length===1?'':'s'}`;
+  track.innerHTML='';
+  const TIMELINE_ICONS={
+    start:'<svg viewBox="0 0 24 24" stroke="#22c55e"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+    end:'<svg viewBox="0 0 24 24" stroke="#dc2626"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
+    happy:'<svg viewBox="0 0 24 24" stroke="#e8440a"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    neutral:'<svg viewBox="0 0 24 24" stroke="#6b7280"><circle cx="12" cy="12" r="10"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    sad:'<svg viewBox="0 0 24 24" stroke="#3b82f6"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    angry:'<svg viewBox="0 0 24 24" stroke="#dc2626"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><path d="M9 9l1 1M15 9l-1 1"/></svg>',
+    surprised:'<svg viewBox="0 0 24 24" stroke="#f59e0b"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="14" r="2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    fearful:'<svg viewBox="0 0 24 24" stroke="#f97316"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    disgusted:'<svg viewBox="0 0 24 24" stroke="#7c3aed"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><path d="M9 9h1M14 9h1"/></svg>',
+    reaction:'<svg viewBox="0 0 24 24" stroke="#e8440a"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>',
+  };
+  const ICON_BG={start:'rgba(34,197,94,0.12)',end:'rgba(220,38,38,0.12)',happy:'rgba(232,68,10,0.1)',neutral:'rgba(107,114,128,0.1)',sad:'rgba(59,130,246,0.1)',angry:'rgba(220,38,38,0.1)',surprised:'rgba(245,158,11,0.1)',fearful:'rgba(249,115,22,0.1)',disgusted:'rgba(124,58,237,0.1)',reaction:'rgba(232,68,10,0.08)'};
+  timelineEvents.forEach((ev,i)=>{
+    if(i>0){const conn=document.createElement('div');conn.className='timeline-connector';conn.innerHTML='<div class="timeline-connector-line"></div>';track.appendChild(conn);}
+    const dc=ev.dotClass||'neutral';
+    const iconKey=dc==='start'?'start':dc==='end'?'end':dc.replace('fearful','fearful').replace('disgusted','disgusted')||'neutral';
+    const reactionKeys=['thumbsup','thumbsdown','handraise','confused','clap'];
+    const isReaction=reactionKeys.some(r=>ev.label.toLowerCase().includes(r)||ev.label.toLowerCase().includes('thumb')||ev.label.toLowerCase().includes('hand')||ev.label.toLowerCase().includes('clap')||ev.label.toLowerCase().includes('confus')||ev.label.toLowerCase().includes('applaud'));
+    const finalKey=isReaction?'reaction':iconKey;
+    const iconSvg=TIMELINE_ICONS[finalKey]||TIMELINE_ICONS['neutral'];
+    const bgColor=ICON_BG[finalKey]||ICON_BG['neutral'];
+    const evEl=document.createElement('div');evEl.className='timeline-event';
+    evEl.innerHTML=`<div class="timeline-event-inner"><div class="timeline-event-time">${ev.timeLabel}</div><div class="timeline-event-icon" style="background:${bgColor}">${iconSvg}</div><div class="timeline-event-label">${ev.label}</div></div><div class="timeline-event-dot ${ev.dotClass}"></div>`;
+    track.appendChild(evEl);
+  });
+  setTimeout(()=>{wrap.scrollLeft=wrap.scrollWidth;},50);
+}
+
+function updateEngageLegend(){
+  updateEngagePieChart();
+}
+
+function updateEmotionBars(){
+  const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
+  const p=k=>Math.round((emotionCounts[k]||0)/total*100);
+  // Positive
+  const posTotal=p('happy')+p('surprised');
+  const negTotal=p('angry')+p('sad')+p('fearful')+p('disgusted');
+  const neuTotal=p('neutral');
+  const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setText('emoPosTotal',posTotal+'%');
+  setText('emoNegTotal',negTotal+'%');
+  setText('emoNeutralTotal',neuTotal+'%');
+  // Animate bars
+  const setBar=(id,v)=>{const el=document.getElementById(id);if(el)el.style.width=v+'%';};
+  setBar('emoPosBar',posTotal);setBar('emoNegBar',negTotal);setBar('emoNeuBar',neuTotal);
+  setText('tagHappyPct',p('happy')+'%');
+  setText('tagSurprisedPct',p('surprised')+'%');
+  setText('tagAngryPct',p('angry')+'%');
+  setText('tagSadPct',p('sad')+'%');
+  setText('tagFearPct',p('fearful')+'%');
+  setText('tagDisgustPct',p('disgusted')+'%');
+  setText('tagNeutralPct',neuTotal+'%');
+  const chip=document.getElementById('engScoreChip');
+  const chipNum=document.getElementById('engScoreChipNum');
+  if(chip&&chipNum){chip.style.display='flex';chipNum.textContent=Math.round(engagementScore);}
+}
+
+function updateDominantChips(){
+  const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
+  const sorted=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const container=document.getElementById('dominantChips');
+  if(!container)return;
+  if(!sorted.length){container.innerHTML='<span style="font-size:11px;color:var(--text3);font-style:italic">No data yet</span>';return;}
+  container.innerHTML=sorted.map(([k,v])=>`<span class="dom-chip ${k}">${EMOTION_LABELS[k]||k} ${Math.round(v/total*100)}%</span>`).join('');
+}
+
+// ── FIXED: routes through backend /generate-insights (uses Groq via Auth.apiFetch) ──
 async function runOverallAnalysis(){
   const btn=document.getElementById('btnAnalyse');
   const body=document.getElementById('analysisBody');
   if(!body)return;
   btn.disabled=true;
   body.innerHTML='<div class="analysis-typing"><span></span><span></span><span></span></div> Generating analysis…';
-
-  const mf=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
   const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
-  const emotionSummary=Object.entries(emotionCounts).map(([k,v])=>`${EMOTION_LABELS[k]||k}: ${Math.round(v/total*100)}%`).join(', ');
-  const dur=document.getElementById('sumDuration')?.textContent||'unknown';
-
-  const prompt=`You are an emotion analysis AI assistant. Analyze this classroom/presentation session data and provide a concise, insightful overall analysis (3-4 short paragraphs, plain text only, no markdown, no asterisks, no headers):
-
-Session Duration: ${dur}
-Total Emotion Detections: ${totalDetected}
-Emotion Distribution: ${emotionSummary||'No data'}
-Most Frequent Emotion: ${mf?EMOTION_LABELS[mf[0]]||mf[0]:'N/A'}
-Reactions Sent: ${reactionCount}
-
-Provide insights on: (1) overall engagement and emotional state, (2) learning effectiveness indicators, (3) actionable recommendations for the presenter. Be warm, practical, and specific. Keep it concise.`;
-
+  const mf=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
+  const emotionSummary=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`${EMOTION_LABELS[k]||k}: ${Math.round(v/total*100)}%`).join(', ');
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const _rawDur=document.getElementById('sumDuration')?.textContent||'';
+    let _durLabel='unknown';
+    if(_rawDur){
+      const _parts=_rawDur.trim().split(':').map(Number);
+      if(_parts.length===2){
+        const [m,s]=_parts;
+        _durLabel=m>0?`${m} min ${s} sec`:`${s} sec`;
+      } else if(_parts.length===3){
+        const [h,m,s]=_parts;
+        _durLabel=h>0?`${h} hr ${m} min ${s} sec`:`${m} min ${s} sec`;
+      } else {
+        _durLabel=_rawDur;
+      }
+    }
+    const payload={
+      duration: _durLabel,
+      emotion_summary: emotionSummary||'No data',
+      most_frequent_emotion: mf?(EMOTION_LABELS[mf[0]]||mf[0]):'N/A',
+      engagement_score: Math.round(engagementScore),
+      reactions_sent: reactionCount
+    };
+    const total2=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
+    const posPct=Math.round(((emotionCounts.happy||0)+(emotionCounts.surprised||0))/total2*100);
+    const negPct=Math.round(((emotionCounts.angry||0)+(emotionCounts.sad||0)+(emotionCounts.fearful||0)+(emotionCounts.disgusted||0))/total2*100);
+    const neuPct=Math.round((emotionCounts.neutral||0)/total2*100);
+    const eng=Math.round(engagementScore);
+    // Session timeline context for time-aware insights
+    const recentEvents=timelineEvents.slice(-5).map(e=>`${e.timeLabel}: ${e.label}`).join('; ');
+    const timelineContext=recentEvents?`Recent events — ${recentEvents}`:'No timeline events yet.';
+    const res=await Auth.apiFetch('/generate-insights',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({...payload, timeline_context: timelineContext, positive_pct: posPct, negative_pct: negPct, neutral_pct: neuPct})
     });
-    const data=await res.json();
-    const text=data.content?.map(c=>c.text||'').join('')||'Unable to generate analysis.';
-    const paras=text.split(/\n+/).filter(p=>p.trim());
-    body.innerHTML=paras.map(p=>`<p>${p.trim()}</p>`).join('');
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err.detail||`Server error ${res.status}`);
+    }
+    const parsed=await res.json();
+    if(parsed.insights&&Array.isArray(parsed.insights)){
+      // Build a time-aware insight from timeline events
+      const lastEmoEvents=timelineEvents.filter(e=>['happy','neutral','sad','angry','surprised','fearful','disgusted'].includes(e.dotClass));
+      let timeNote='';
+      if(lastEmoEvents.length>=2){
+        const last=lastEmoEvents[lastEmoEvents.length-1];
+        const prev=lastEmoEvents[lastEmoEvents.length-2];
+        if(last.dotClass!==prev.dotClass){
+          timeNote=`<div class="insight-item" style="border-color:rgba(232,68,10,0.25);background:rgba(232,68,10,0.04)"><div class="insight-item-title">Recent shift at ${last.timeLabel}</div><div class="insight-item-desc">Emotion changed from <strong>${EMOTION_LABELS[prev.dotClass]||prev.dotClass}</strong> → <strong>${EMOTION_LABELS[last.dotClass]||last.dotClass}</strong>. Check what content was shown at this moment to understand the trigger.</div></div>`;
+        }
+      }
+      // Split: first 2 insights → AI panel, last 1 → tips
+      const aiInsights=parsed.insights.slice(0,2);
+      const tipInsights=parsed.insights.slice(2);
+      body.innerHTML='<div class="insights-list">'+timeNote+
+        aiInsights.map(ins=>
+          `<div class="insight-item"><div class="insight-item-title">${ins.title}</div><div class="insight-item-desc">${ins.desc}</div></div>`
+        ).join('')+
+      '</div>';
+      const tipsBody=document.getElementById('tipsBody');
+      if(tipsBody){
+        if(tipInsights.length>0){
+          // Prepend a threshold-based tip to LLM tips
+          let thresholdTip='';
+          if(posPct>=60) thresholdTip=`<div class="tip-item"><div class="tip-dot" style="background:#16a34a"></div><div><strong style="font-size:10.5px;color:var(--text)">Positive session (${posPct}%):</strong> Above 60% positive threshold — good learning state. Keep the same structure.</div></div>`;
+          else if(negPct>=20) thresholdTip=`<div class="tip-item"><div class="tip-dot" style="background:#dc2626"></div><div><strong style="font-size:10.5px;color:var(--text)">Attention needed (${negPct}% negative):</strong> Revisit unclear concepts, ask comprehension questions, and slow delivery pace.</div></div>`;
+          else if(neuPct>=50) thresholdTip=`<div class="tip-item"><div class="tip-dot" style="background:#6b7280"></div><div><strong style="font-size:10.5px;color:var(--text)">High neutral (${neuPct}%):</strong> Learner may be passive. Add interactive questions or change delivery style to spark engagement.</div></div>`;
+          tipsBody.innerHTML=thresholdTip+tipInsights.map(t=>
+            `<div class="tip-item"><div class="tip-dot"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`
+          ).join('');
+        } else {
+          // Threshold-based actionable tips from session data
+          const eng2=Math.round(engagementScore);
+          let tips=[];
+          // Tip 1: based on positive % threshold
+          if(posPct>=60){
+            tips.push({title:'Strong positive session',desc:`${posPct}% positive emotions detected — great engagement. Maintain this content pace and structure for future sessions.`});
+          } else if(posPct>=40){
+            tips.push({title:'Moderate positivity',desc:`Only ${posPct}% positive emotions. Try adding relatable examples or light interactive questions to boost mood and interest.`});
+          } else {
+            tips.push({title:'Low positive emotions',desc:`Positive emotions at ${posPct}%. Consider revisiting unclear concepts and use real-world analogies to rebuild engagement.`});
+          }
+          // Tip 2: based on negative % threshold
+          if(negPct>=30){
+            tips.push({title:'High frustration detected',desc:`${negPct}% negative emotions observed. Pause and revisit the last topic — ask direct questions like "Is this clear?" and slow down delivery.`});
+          } else if(negPct>=10){
+            tips.push({title:'Some discomfort noted',desc:`${negPct}% negative emotions. Identify the moment frustration spiked (check timeline) and simplify that segment next time.`});
+          } else {
+            tips.push({title:'Minimal negative emotions',desc:'Content was well-received with little frustration. Keep the same clarity and pacing in future sessions.'});
+          }
+          // Tip 3: engagement score
+          if(eng2<50){
+            tips.push({title:'Boost engagement',desc:`Score of ${eng2}/100 is low. Try 10–15 min focused bursts with short breaks, and add interactive polls or Q&A moments.`});
+          } else if(eng2<75){
+            tips.push({title:'Improve focus',desc:`Score of ${eng2}/100 is moderate. Use active recall every 5 min — pause and ask the learner to summarize what was covered.`});
+          }
+          tipsBody.innerHTML=tips.map(t=>`<div class="tip-item"><div class="tip-dot"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`).join('');
+        }
+      }
+    }else{
+      body.innerHTML='<span class="analysis-empty">Could not parse analysis. Please try again.</span>';
+    }
   }catch(e){
-    body.innerHTML='<span class="analysis-empty">Analysis unavailable. Please check your connection and try again.</span>';
+    body.innerHTML=`<span class="analysis-empty">Analysis unavailable: ${e.message||'Please try again.'}</span>`;
   }
   btn.disabled=false;
 }
 
-// ── Timeline ──
-function addTL(msg,color,icon){
-  const empty=document.getElementById('tlEmpty');if(empty)empty.remove();
-  const sc=document.getElementById('timelineScroll');if(!sc)return;
-  const el=document.createElement('div');el.className='tl-item';
-  el.innerHTML=`<div class="tl-dot" style="background:${color}"></div><div class="tl-time">${sessionTime()}</div><div class="tl-msg">${msg}</div><div class="tl-icon">${icon}</div>`;
-  sc.appendChild(el);sc.scrollTop=sc.scrollHeight;
-}
+let lastEmotionKey=null,emotionChangeCooldown=0;
 
-// ── Apply detection ──
-function applyDetectionResult(backendEmotion, conf, engagement, probs){
+function applyDetectionResult(backendEmotion,conf,engagement,probs){
   const draftKey=BACKEND_TO_DRAFT[backendEmotion.toLowerCase()]||'neutral';
   const score=engagement!=null?engagement*100:(SCORE_MAP[draftKey]||50);
   engagementScore+=(score-engagementScore)*0.4;
-
+  _engagementScores.push(engagementScore/100);
   totalDetected++;
   emotionCounts[draftKey]=(emotionCounts[draftKey]||0)+1;
-  const mf=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
-
-  // Summary panel
-  const sd=document.getElementById('sumDetected');if(sd)sd.textContent=totalDetected;
-
-  // Camera overlay badge
-  const badge=document.getElementById('camEmotionBadge');
-  const dot=document.getElementById('camEmotionDot');
+  if(conf>peakConf){peakConf=conf;}
+  emotionChangeCooldown--;
+  if(draftKey!==lastEmotionKey&&emotionChangeCooldown<=0){
+    addTimelineEvent(`${EMOTION_LABELS[draftKey]||draftKey} detected`,EMOTION_EMOJIS[draftKey]||'🔍',draftKey);
+    lastEmotionKey=draftKey;emotionChangeCooldown=5;
+  }
+  const pill=document.getElementById('camEmotionPill');
   const name=document.getElementById('camEmotionName');
   const scoreEl=document.getElementById('camEmotionScore');
-  const col=EMOTION_COLORS[draftKey]||'#6b7280';
-  if(badge)badge.classList.add('show');
-  if(dot)dot.style.background=col;
-  if(name){name.textContent=EMOTION_LABELS[draftKey]||draftKey;name.style.color='#fff';}
-  if(scoreEl)scoreEl.textContent=`Score: ${Math.round(engagementScore)}`;
-
-  // Trend graph
+  if(pill)pill.classList.add('show');
+  if(name)name.textContent=EMOTION_LABELS[draftKey]||draftKey;
+  if(scoreEl)scoreEl.textContent=`· ${Math.round(conf)}%`;
+  const esn=document.getElementById('engageScoreNum');
+  if(esn)esn.textContent=Math.round(engagementScore);
+  updateEngageLegend();
   if(probs){showDistGraph();updateTrendGraph(probs);}
-
-  // Engagement pie
-  updateEngagePie(engagementScore);
-
-  // Summary pie
-  updateSummaryPie();
-
-  // Timeline on change
-  if(draftKey!==lastEmotion){
-    addTL(`${EMOTION_LABELS[draftKey]||draftKey} detected`,col,engagementScore>=70?'😊':engagementScore>=40?'😐':'😞');
-    lastEmotion=draftKey;
-  }
+  updateEmotionBars();updateDominantChips();
+  const pe=document.getElementById('sumPeakEmotion');
+  const pc=document.getElementById('sumPeakConf');
+  const totalAll=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
+  const dominantEntry=Object.entries(emotionCounts).sort((a,b)=>b[1]-a[1])[0];
+  if(pe&&dominantEntry)pe.textContent=EMOTION_LABELS[dominantEntry[0]]||dominantEntry[0];
+  if(pc&&dominantEntry)pc.textContent=`${Math.round(dominantEntry[1]/totalAll*100)}% of session · highest share`;
 }
 
-// ── Capture ──
 function captureFrame(quality=0.75){
   return new Promise((resolve,reject)=>{
     const video=document.getElementById('videoEl');
@@ -805,7 +980,6 @@ function captureFrame(quality=0.75){
   });
 }
 
-// ── API ──
 async function callPredict(signal){
   const blob=await captureFrame(0.75);
   const form=new FormData();form.append('file',blob,'frame.jpg');
@@ -823,7 +997,6 @@ async function callPredict(signal){
   return{emotion,conf,engagement,probs};
 }
 
-// ── Loop ──
 function scheduleLive(){
   if(!isLive)return;
   liveInterval=setTimeout(async()=>{
@@ -834,78 +1007,84 @@ function scheduleLive(){
         if(abortCtrl)abortCtrl.abort();
         abortCtrl=new AbortController();
         const{emotion,conf,engagement,probs}=await callPredict(abortCtrl.signal);
-        _frameCount++;_engagementScores.push(engagement);
+        _frameCount++;
         applyDetectionResult(emotion,conf,engagement,probs);
         document.getElementById('signalBar')?.classList.remove('show');
       }catch(err){
-        if(err.name!=='AbortError'){
-          console.error('[EmotionAI]',err);
-          document.getElementById('signalBar')?.classList.add('show');
-        }
+        if(err.name!=='AbortError'){console.error('[EmotionAI]',err);document.getElementById('signalBar')?.classList.add('show');}
       }finally{detectionInProgress=false;}
     }
     scheduleLive();
   },300);
 }
 
-// ── Reactions ──
 function sendReaction(type,btn){
   btn.classList.add('active');setTimeout(()=>btn.classList.remove('active'),600);
   reactionCount++;
-  const sr=document.getElementById('sumReactions');if(sr)sr.textContent=reactionCount;
-  const labels={thumbsup:'👍 Liked content',thumbsdown:'👎 Unclear / boring',handraise:'✋ Doubt raised',confused:'😕 Confused',clap:'👏 Appreciated'};
-  const colors={thumbsup:'#16a34a',thumbsdown:'#dc2626',handraise:'#e8440a',confused:'#ca8a04',clap:'#3b82f6'};
-  const icons={thumbsup:'👍',thumbsdown:'👎',handraise:'✋',confused:'😕',clap:'👏'};
-  addTL(labels[type],colors[type]||'#6b7280',icons[type]||'⭐');
-  const emoji=icons[type],camBox=document.getElementById('camBox');
+  const labels={thumbsup:'👍',thumbsdown:'👎',handraise:'✋',confused:'😕',clap:'👏'};
+  const rLabels={thumbsup:'Thumbs up sent',thumbsdown:'Thumbs down sent',handraise:'Hand raised',confused:'Confusion flagged',clap:'Applauded'};
+  const camBox=document.getElementById('camBox');
+  const emoji=labels[type];
   for(let i=0;i<3;i++){setTimeout(()=>{const el=document.createElement('div');el.className='float-emoji';el.textContent=emoji;el.style.cssText=`left:${20+Math.random()*45}%;bottom:60px`;camBox.appendChild(el);setTimeout(()=>el.remove(),1600);},i*180);}
+  addTimelineEvent(rLabels[type]||'Reaction',emoji,'neutral');
 }
 
-// ── START ──
 async function doStart(){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
     const v=document.getElementById('videoEl');v.srcObject=stream;v.style.display='block';
     document.getElementById('camIdle').style.display='none';
+    document.getElementById('camFps').style.display='block';
+    document.getElementById('camFaceBox').classList.add('show');
     document.getElementById('camRing').classList.add('active');
     document.getElementById('camScan').classList.add('active');
     document.getElementById('camStatusDot').className='cam-status-dot live';
     document.getElementById('camStatusTxt').textContent='LIVE';
     document.getElementById('reactionBar').classList.add('show');
+    document.getElementById('liveFeedChip').style.display='flex';
     document.getElementById('navLiveBadge').style.display='flex';
-    document.getElementById('sessionTimerNav').style.display='inline';
-
+    /* timer removed from nav */;
     isLive=true;detectionInProgress=false;_frameCount=0;_engagementScores=[];_sessionId=null;
     engagementScore=0;lastEmotion=null;totalDetected=0;emotionCounts={};reactionCount=0;
-    TREND_HISTORY.length=0;
-    _engageCounts={active:0,partial:0,low:0,none:0};
-
-    sessionStart=Date.now();
-    const sr=document.getElementById('sumReactions');if(sr)sr.textContent='0';
-    const sd=document.getElementById('sumDetected');if(sd)sd.textContent='0';
+    peakConf=0;lastEmotionKey=null;emotionChangeCooldown=0;
+    TREND_HISTORY.length=0;timelineEvents=[];
+    _sessionNum++;
+    document.getElementById('sumDuration').textContent='0:00';
+    document.getElementById('sumFrames').textContent='0';
+    document.getElementById('sumEngagAvg').textContent='—';
+    document.getElementById('sumPeakEmotion').textContent='—';
+    document.getElementById('sumPeakConf').textContent='';
+    document.getElementById('dominantChips').innerHTML='<span style="font-size:11px;color:var(--text3);font-style:italic">No data yet</span>';
+    document.getElementById('engageScoreNum').textContent='—';
+    const dc=document.getElementById('engageDominantCenter');if(dc)dc.textContent='';
+    document.getElementById('sessionChipLabel').textContent=`Session #${_sessionNum}`;
     document.getElementById('analysisBody').innerHTML='<span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary.</span>';
-    initTrendHover();
-
-    const tl=document.getElementById('timelineScroll');
-    if(tl){tl.innerHTML='<div class="tl-empty" id="tlEmpty" style="display:none"></div>';}
-
-    sessionTimer=setInterval(tickTimer,1000);
-    document.getElementById('btnStart').disabled=true;
-    document.getElementById('btnStop').disabled=false;
-
-    // Reset dist graph
+    const _tipsReset=document.getElementById('tipsBody');if(_tipsReset)_tipsReset.innerHTML='<span style="font-size:10.5px;color:var(--text3);font-style:italic">Generate analysis to get personalized tips.</span>';
+    // Reset category pct labels and bars
+    ['emoPosTotal','emoNegTotal','emoNeutralTotal','tagHappyPct','tagSurprisedPct','tagAngryPct','tagSadPct','tagFearPct','tagDisgustPct','tagNeutralPct'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—%';});
+    ['emoPosBar','emoNegBar','emoNeuBar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.width='0%';});
+    document.getElementById('engScoreChip').style.display='none';
+    ['Happy','Neutral','Surprised','Sad','Angry','Fear','Disgust'].forEach(l=>{
+      const id='engLeg'+l+'Pct';const el=document.getElementById(id);if(el)el.textContent='—%';
+    });
     document.getElementById('distEmpty').style.display='flex';
     document.getElementById('distGraphArea').style.display='none';
     document.getElementById('distLegend').style.display='none';
-
-    addTL('Session started','#16a34a','🎬');
-
-    try{const res=await Auth.apiFetch('/sessions/start/',{method:'POST'});const d=await res.json();_sessionId=d.session_id;}catch(e){console.warn('[EmotionAI] Session start:',e);}
+    renderTimeline();
+    const ec=document.getElementById('engagePieCanvas');
+    if(ec){const ctx=ec.getContext('2d');ctx.clearRect(0,0,ec.width,ec.height);}
+    initTrendHover();
+    sessionStart=Date.now();
+    sessionTimer=setInterval(tickTimer,1000);
+    document.getElementById('btnStart').disabled=true;
+    document.getElementById('btnStop').disabled=false;
+    addTimelineEvent('Session started','🎬','start');
+    try{const res=await Auth.apiFetch('/sessions/start/',{method:'POST'});const d=await res.json();_sessionId=d.session_id;}
+    catch(e){console.warn('[EmotionAI] Session start:',e);}
     scheduleLive();
   }catch(e){alert('Camera access denied or unavailable. Please allow camera permission and try again.');}
 }
 
-// ── STOP ──
 async function doStop(){
   if(!isLive)return;
   isLive=false;
@@ -915,22 +1094,22 @@ async function doStop(){
   if(sessionTimer){clearInterval(sessionTimer);sessionTimer=null;}
   if(abortCtrl){abortCtrl.abort();abortCtrl=null;}
   detectionInProgress=false;
-
   const v=document.getElementById('videoEl');
   if(v&&v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;v.style.display='none';}
   document.getElementById('camIdle').style.display='flex';
+  document.getElementById('camFps').style.display='none';
+  document.getElementById('camFaceBox').classList.remove('show');
   document.getElementById('camRing').classList.remove('active');
   document.getElementById('camScan').classList.remove('active');
   document.getElementById('camStatusDot').className='cam-status-dot ready';
   document.getElementById('camStatusTxt').textContent='STOPPED';
   document.getElementById('reactionBar').classList.remove('show');
   document.getElementById('navLiveBadge').style.display='none';
-  document.getElementById('camEmotionBadge').classList.remove('show');
+  document.getElementById('liveFeedChip').style.display='none';
+  document.getElementById('camEmotionPill').classList.remove('show');
   document.getElementById('signalBar')?.classList.remove('show');
-
-  const elapsed=sessionStart?Date.now()-sessionStart:0;
-  addTL(`Session ended — ${fmtTime(elapsed)} total`,'#6b7280','🏁');
-
+  const dur=sessionTime();
+  addTimelineEvent(`Session ended — ${dur} total`,'🏁','end');
   if(_sessionId){
     try{await Auth.apiFetch('/sessions/end/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:_sessionId,total_frames:_frameCount})});}
     catch(e){console.warn('[EmotionAI] Session end:',e);}
@@ -938,13 +1117,14 @@ async function doStop(){
   }
 }
 
-// ── Auth & Init ──
-if(!Auth.requireAuth())throw new Error('Not authenticated');
-window.addEventListener('load',()=>{initTrendHover();drawDonut('engagePieCanvas',[{val:1,col:'#e5e7eb'}],110);});
+if(typeof Auth!=='undefined'&&!Auth.requireAuth())throw new Error('Not authenticated');
+window.addEventListener('load',()=>{
+  initTrendHover();
+  document.getElementById('sessionChipLabel').textContent=`Session #${_sessionNum}`;
+});
 </script>
 
 <script>
-// ── Hamburger ──
 (function(){
   var btn=document.getElementById('hamburgerBtn');
   var drawer=document.getElementById('mobileDrawer');

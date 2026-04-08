@@ -100,10 +100,12 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
 }
 .stat-card{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:22px 22px 18px;
+  border-radius:var(--radius);padding:24px 22px 22px;
   box-shadow:var(--shadow-xs);position:relative;overflow:hidden;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,border-color .2s;
   cursor:default;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  min-height:130px;
 }
 .stat-card::before{
   content:'';position:absolute;inset:0;
@@ -112,25 +114,24 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
 }
 .stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:rgba(232,68,10,0.18)}
 .stat-card:hover::before{opacity:1}
-.stat-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.stat-card-top{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:10px}
 .stat-card-icon{
-  width:40px;height:40px;border-radius:12px;
+  width:44px;height:44px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1);
-  flex-shrink:0;
+  flex-shrink:0;margin:0 auto 10px;
 }
 .stat-card:hover .stat-card-icon{transform:scale(1.15) rotate(-8deg)}
-.stat-card-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stat-card-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .stat-trend{
   font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;
   display:flex;align-items:center;gap:3px;
+  position:absolute;top:14px;right:14px;
 }
 .stat-trend.up{background:var(--green-bg);color:var(--green)}
 .stat-trend.neutral{background:#f1f5f9;color:#64748b}
-.stat-val{font-size:2.2rem;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.04em}
+.stat-val{font-size:2.3rem;font-weight:800;color:var(--text);line-height:1;letter-spacing:-0.04em}
 .stat-lbl{font-size:10.5px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
-.stat-bar{height:3px;border-radius:2px;margin-top:14px;overflow:hidden;background:rgba(0,0,0,0.06)}
-.stat-bar-fill{height:100%;border-radius:2px;background:var(--grad);transition:width .8s cubic-bezier(.4,0,.2,1)}
 .s-users .stat-card-icon{background:rgba(232,68,10,0.10);color:var(--accent)}
 .s-users .stat-val{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .s-detections .stat-card-icon{background:#fff7ed;color:#ea580c}
@@ -160,24 +161,25 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
   display:flex;gap:0;flex:1;
 }
 .ttab{
-  padding:12px 20px 14px;border:none;
-  font-size:13px;font-weight:600;cursor:pointer;
+  padding:14px 24px 16px;border:none;
+  font-size:14px;font-weight:600;cursor:pointer;
   font-family:var(--font-body);color:var(--text3);
-  background:none;transition:all .18s;
+  background:none;transition:all .2s;
   display:flex;align-items:center;gap:8px;
-  position:relative;border-bottom:2px solid transparent;
-  margin-bottom:-1px;
+  position:relative;border-bottom:2.5px solid transparent;
+  margin-bottom:-1px;border-radius:8px 8px 0 0;
 }
-.ttab:hover:not(.active){color:var(--text2);background:var(--bg)}
-.ttab.active{color:var(--text);border-bottom-color:var(--accent)}
+.ttab:hover:not(.active){color:var(--text);background:linear-gradient(180deg,rgba(232,68,10,0.07) 0%,rgba(245,158,74,0.04) 100%);border-bottom-color:rgba(232,68,10,0.25)}
+.ttab.active{color:var(--text);border-bottom-color:var(--accent);background:linear-gradient(180deg,rgba(232,68,10,0.05) 0%,transparent 100%)}
 .ttab-badge{
   font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;
   background:rgba(0,0,0,0.06);color:var(--text3);
   transition:all .2s;min-width:20px;text-align:center;
 }
 .ttab.active .ttab-badge{background:var(--grad);color:#fff;box-shadow:0 2px 8px var(--accent-glow)}
-.ttab-icon{opacity:.6;transition:opacity .18s}
-.ttab.active .ttab-icon{opacity:1}
+.ttab:hover:not(.active) .ttab-badge{background:rgba(232,68,10,0.12);color:var(--accent)}
+.ttab-icon{opacity:.5;transition:opacity .18s}
+.ttab.active .ttab-icon,.ttab:hover .ttab-icon{opacity:1}
 
 /* ────────── TOOLBAR ────────── */
 .toolbar{
@@ -431,60 +433,48 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
 <!-- STATS -->
 <div class="stats-row" id="stats-row">
   <div class="stat-card s-users">
-    <div class="stat-card-top">
-      <div class="stat-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
-      <span class="stat-trend neutral">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-        Active
-      </span>
+    <span class="stat-trend neutral">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+      Active
+    </span>
+    <div class="stat-card-icon">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
     <div class="stat-val" id="s-users">—</div>
     <div class="stat-lbl">Total Users</div>
-    <div class="stat-bar"><div class="stat-bar-fill" id="bar-users" style="width:0%"></div></div>
   </div>
   <div class="stat-card s-detections">
-    <div class="stat-card-top">
-      <div class="stat-card-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </div>
-      <span class="stat-trend up">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-        Live
-      </span>
+    <span class="stat-trend up">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+      Live
+    </span>
+    <div class="stat-card-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
     </div>
     <div class="stat-val" id="s-detections">—</div>
     <div class="stat-lbl">Detections</div>
-    <div class="stat-bar"><div class="stat-bar-fill" id="bar-detections" style="width:0%"></div></div>
   </div>
   <div class="stat-card s-feedback">
-    <div class="stat-card-top">
-      <div class="stat-card-icon">
-        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </div>
-      <span class="stat-trend neutral">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Received
-      </span>
+    <span class="stat-trend neutral">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Received
+    </span>
+    <div class="stat-card-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     </div>
     <div class="stat-val" id="s-feedback">—</div>
     <div class="stat-lbl">Feedback</div>
-    <div class="stat-bar"><div class="stat-bar-fill" id="bar-feedback" style="width:0%"></div></div>
   </div>
   <div class="stat-card s-engagement">
-    <div class="stat-card-top">
-      <div class="stat-card-icon">
-        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      </div>
-      <span class="stat-trend up">
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-        Avg
-      </span>
+    <span class="stat-trend up">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+      Avg
+    </span>
+    <div class="stat-card-icon">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     </div>
     <div class="stat-val" id="s-engagement">—</div>
     <div class="stat-lbl">Avg Engagement</div>
-    <div class="stat-bar"><div class="stat-bar-fill" id="bar-engagement" style="width:0%"></div></div>
   </div>
 </div>
 
