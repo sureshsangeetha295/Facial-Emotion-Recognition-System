@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;max-width:100%;overflow-x:hidden}
 :root{
   --bg:#faf9f7;--surface:#fff;--elevated:#f4f2ef;
   --accent:#e8440a;--accent2:#f06940;--accent-dim:rgba(232,68,10,0.08);--accent-glow:rgba(232,68,10,0.2);
@@ -18,14 +19,19 @@
   --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
 }
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
-.nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:8px;margin-right:auto;text-decoration:none;color:var(--text)}
-.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center}
+
+/* ── NAV ── */
+nav{height:64px;display:flex;align-items:center;padding:0 48px;gap:24px;background:rgba(250,249,247,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;left:0;right:0;width:100%;z-index:100}
+.nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);flex:1 1 auto;min-width:0}
+.nav-logo-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo-box{width:38px;height:38px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px var(--accent-glow)}
 .nav-links{display:flex;gap:28px;list-style:none}
 .nav-links a{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500}
 .nav-links a:hover,.nav-links a.active{color:var(--accent)}
 .btn-sm{font-size:13px;font-weight:600;padding:7px 18px;border-radius:99px;background:var(--accent);color:#fff;border:none;cursor:pointer;text-decoration:none;box-shadow:0 3px 10px var(--accent-glow)}
-.faq-hero{background:linear-gradient(135deg,rgba(232,68,10,0.04),rgba(245,158,74,0.06));border-bottom:1px solid var(--border);padding:56px 48px;text-align:center}
+
+/* ── HERO ── */
+.faq-hero{background:linear-gradient(135deg,rgba(232,68,10,0.04),rgba(245,158,74,0.06));border-bottom:1px solid var(--border);padding:56px clamp(16px,4vw,48px);text-align:center;width:100%}
 .faq-hero h1{font-family:var(--font-display);font-size:clamp(2rem,4vw,3.2rem);font-weight:600;letter-spacing:-0.02em;margin-bottom:12px}
 .faq-hero h1 em{font-style:italic;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .faq-hero p{font-size:15px;color:var(--text2);margin-bottom:28px}
@@ -34,11 +40,13 @@ nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;backgrou
 .search-input{width:100%;padding:12px 14px 12px 42px;border:1.5px solid var(--border2);border-radius:99px;font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--surface);outline:none;transition:all 0.15s;box-shadow:var(--shadow-sm)}
 .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
 .search-input::placeholder{color:var(--text3)}
-.faq-main{max-width:1100px;margin:0 auto;padding:56px 48px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start}
+
+/* ── DESKTOP LAYOUT ── */
+.faq-main{width:100%;max-width:1100px;margin:0 auto;padding:56px clamp(16px,4vw,48px);display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:start}
 .faq-sidebar{position:sticky;top:80px}
 .faq-sidebar h3{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
 .cat-list{display:flex;flex-direction:column;gap:4px}
-.cat-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border:none;background:none;font-family:var(--font-body);text-align:left}
+.cat-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border:none;background:none;font-family:var(--font-body);text-align:left;width:100%}
 .cat-item svg{width:14px;height:14px;stroke-width:1.75;flex-shrink:0}
 .cat-item:hover{background:var(--elevated);color:var(--text)}
 .cat-item.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
@@ -49,6 +57,8 @@ nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;backgrou
 .hstat+.hstat{border-left:1px solid var(--border)}
 .hstat-n{display:block;font-family:var(--font-display);font-size:18px;font-weight:600;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hstat-l{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-top:2px}
+
+/* ── FAQ CONTENT ── */
 .faq-content h2{font-family:var(--font-display);font-size:1.3rem;font-weight:600;margin-bottom:16px;letter-spacing:-0.01em}
 .faq-list{display:flex;flex-direction:column;gap:8px}
 .faq-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s}
@@ -58,139 +68,282 @@ nav{height:60px;display:flex;align-items:center;padding:0 48px;gap:24px;backgrou
 .faq-item.open .faq-q{color:var(--accent)}
 .faq-chevron{width:16px;height:16px;stroke:var(--text3);stroke-width:2;flex-shrink:0;transition:transform 0.2s}
 .faq-item.open .faq-chevron{transform:rotate(180deg);stroke:var(--accent)}
-.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.2s}
-.faq-item.open .faq-a{padding:0 20px 16px;max-height:200px}
+.faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.35s ease,padding 0.2s}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:400px}
 .faq-a p{font-size:13px;color:var(--text2);line-height:1.7}
 .faq-a-footer{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .helpful-txt{font-size:11px;color:var(--text3)}
 .helpful-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border2);background:none;cursor:pointer;color:var(--text2);transition:all 0.15s;font-family:var(--font-body)}
 .helpful-btn:hover{border-color:var(--accent);color:var(--accent)}
-.helpful-btn svg{width:11px;height:11px;stroke-width:2.5}
+.helpful-btn.voted-yes{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.3);color:#16a34a;cursor:default}
+.helpful-btn.voted-no{background:rgba(220,38,38,0.08);border-color:rgba(220,38,38,0.2);color:#dc2626;cursor:default}
 .contact-card{background:linear-gradient(135deg,rgba(232,68,10,0.04),rgba(245,158,74,0.06));border:1px solid rgba(232,68,10,0.12);border-radius:14px;padding:24px;margin-top:24px;text-align:center}
 .contact-card h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:8px}
 .contact-card p{font-size:13px;color:var(--text2);margin-bottom:16px}
 .btn-accent{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:99px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 3px 10px var(--accent-glow);transition:all 0.15s;font-family:var(--font-body)}
 .btn-accent:hover{background:var(--accent2);transform:translateY(-1px)}
-footer{border-top:1px solid var(--border);padding:24px 48px}
-.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:24px}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:24px clamp(16px,4vw,48px);width:100%}
+.foot-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
 .foot-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:600;font-size:14px;margin-right:auto}
 .foot-links{display:flex;gap:20px}
 .foot-links a{font-size:12px;color:var(--text3);text-decoration:none}
 .foot-links a:hover{color:var(--accent)}
 .foot-copy{font-size:12px;color:var(--text3)}
 
-/* ══ HAMBURGER ══ */
-.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0;touch-action:manipulation}
-.hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:13px;font-weight:600;padding:11px 22px;border-radius:99px;box-shadow:0 6px 24px rgba(0,0,0,0.18);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;z-index:999;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── HAMBURGER ── */
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:40px;height:40px;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;cursor:pointer;padding:0;flex-shrink:0;touch-action:manipulation;box-shadow:var(--shadow-sm)}
+.hamburger-btn span{display:block;width:18px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
 .hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
 .hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.mobile-drawer{position:fixed;top:60px;left:0;right:0;background:rgba(250,249,247,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.1)}
+.mobile-drawer{position:fixed;top:60px;left:0;right:0;width:100%;background:rgba(250,249,247,0.99);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:8px 0 16px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.1)}
 .mobile-drawer.open{transform:translateY(0)}
-.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s;touch-action:manipulation}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:12px;width:100%;padding:14px 24px;font-size:15px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s}
 .mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
-.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:8px 20px}
 .mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)}
 .mobile-overlay.open{display:block}
-@media(min-width:769px){.hamburger-btn{display:none!important}.mobile-drawer,.mobile-overlay{display:none!important}}
-@media(max-width:768px){
-  nav{padding:0 18px;height:54px}
-  .nav-links{display:none!important}
-  .btn-sm{display:none}
-  .hamburger-btn{display:flex!important}
-  .faq-hero{padding:36px 20px}
-  .faq-main{grid-template-columns:1fr;padding:32px 20px;gap:24px}
-  .faq-sidebar{position:static;top:auto}
-  footer{padding:20px 20px}
-  .foot-inner{flex-wrap:wrap;gap:12px}
+
+/* ── DRAWER HEADER ── */
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px}
+.drawer-brand{display:flex;align-items:center;gap:10px}
+.drawer-brand-name{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--text)}
+.drawer-close-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.drawer-close-btn:hover{background:var(--elevated);color:var(--text)}
+
+/* ── DESKTOP: hide hamburger ── */
+@media(min-width:769px){
+  .hamburger-btn{display:none!important}
+  .mobile-drawer,.mobile-overlay{display:none!important}
 }
-@media(max-width:480px){
-  nav{padding:0 12px;height:50px}
-  .mobile-drawer{top:50px}
-  .faq-hero{padding:28px 16px}
-  .faq-main{padding:24px 16px}
-  footer{padding:16px}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  nav{padding:0 16px;height:60px;gap:0;justify-content:space-between;width:100%}
+  /* hamburger left, logo right */
+  .hamburger-btn{display:flex!important;flex-shrink:0;order:1}
+  .nav-logo{order:0;flex:1 1 auto;min-width:0;font-size:0.95rem;gap:8px}
+  .logo-box{width:32px;height:32px;border-radius:8px}
+  .logo-box svg{width:15px;height:15px}
+  .nav-links{display:none!important}
+  .btn-sm{display:none!important}
+
+  /* full-height side drawer from left */
+  .mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:min(320px,85vw);height:100%;border-bottom:none;border-right:1px solid var(--border);transform:translateX(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);padding:0;box-shadow:4px 0 24px rgba(0,0,0,.12)}
+  .mobile-drawer.open{transform:translateX(0)}
+
+  .faq-hero{padding:36px 20px 32px;width:100%}
+  .faq-hero h1{font-size:2rem;line-height:1.2}
+  .faq-hero p{font-size:14px;margin-bottom:24px}
+  .search-wrap{max-width:100%}
+
+  /* KEY FIX: remove all centering/max-width from main on mobile */
+  .faq-main{
+    display:block;
+    width:100%;
+    max-width:100%;
+    margin-left:0;
+    margin-right:0;
+    padding:0;
+  }
+
+  .faq-sidebar{position:static;top:auto;width:100%;padding:20px 20px 0}
+  .faq-sidebar h3{font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--text3);margin-bottom:12px}
+
+  .cat-list{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
+  .cat-item{
+    display:inline-flex;width:auto;
+    align-items:center;gap:6px;
+    padding:8px 14px;font-size:13px;font-weight:500;
+    border:1.5px solid var(--border2);border-radius:99px;
+    background:var(--surface);color:var(--text2);white-space:nowrap;
+  }
+  .cat-item svg{display:none}
+  .cat-item.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);font-weight:600}
+  .cat-count{margin-left:2px;font-size:12px;font-weight:600;background:none;padding:0;border-radius:0;color:inherit;opacity:0.8}
+  .cat-item.active .cat-count{opacity:1}
+
+  .help-stats{margin:20px 0 0;padding:16px 0 20px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .hstat-n{font-size:22px}
+  .hstat-l{font-size:10px}
+
+  .faq-content{width:100%;padding:20px 20px 40px}
+  .faq-content h2{font-family:var(--font-body);font-size:1.15rem;font-weight:700;margin-bottom:14px;letter-spacing:0}
+  .faq-q{font-size:13px;padding:14px 16px}
+  .faq-item.open .faq-a{padding:0 16px 14px}
+
+  footer{padding:20px;width:100%}
+  .foot-inner{max-width:100%;flex-wrap:wrap;gap:10px}
+  .foot-links{flex-wrap:wrap;gap:12px}
+  .foot-copy{width:100%;text-align:center;margin-top:4px}
 }
 </style>
 <script src="script/auth.js"></script>
 </head>
 <body>
+
+<div class="toast" id="toast"><span>🙏</span><span id="toastMsg">Thank you for your feedback!</span></div>
+
 <nav>
-  <a href="/home" class="nav-logo"><div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>Emotion Analysis</a>
-  <ul class="nav-links"><li><a href="/home">Home</a></li><li><a href="/faq" class="active">FAQ</a></li><li><a href="/feedback">Feedback</a></li></ul>
-  <a href="/livecam" class="btn-sm">Launch App</a>
+  <a href="/home" class="nav-logo">
+    <div class="logo-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+    <span class="nav-logo-text">Emotion Analysis</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/home">Home</a></li>
+    <li><a href="/faq" class="active">FAQ</a></li>
+    <li><a href="/feedback">Feedback</a></li>
+  </ul>
   <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
+
 <div class="mobile-overlay" id="mobileOverlay"></div>
 <div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-header">
+    <div class="drawer-brand">
+      <div class="logo-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+      <span class="drawer-brand-name">Emotion Analysis</span>
+    </div>
+    <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close menu">✕</button>
+  </div>
+  <div class="mobile-drawer-divider"></div>
   <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
   <a href="/faq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a>
   <a href="/feedback"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Feedback</a>
-  <div class="mobile-drawer-divider"></div>
-  <a href="/livecam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>Launch App</a>
 </div>
+
 <div class="faq-hero">
   <h1>How can we<br/><em>help you?</em></h1>
-  <p>Find answers to common questions about EmotionAI</p>
+  <p>Find answers to common questions about Emotion Analysis</p>
   <div class="search-wrap">
     <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input class="search-input" type="text" placeholder="Search questions..." oninput="filterFAQ(this.value)"/>
   </div>
 </div>
+
 <div class="faq-main">
   <div class="faq-sidebar">
     <h3>Categories</h3>
     <div class="cat-list">
-      <button class="cat-item active" onclick="filterCat(this,'all')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>All questions<span class="cat-count">6</span></button>
-      <button class="cat-item" onclick="filterCat(this,'general')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>General<span class="cat-count">2</span></button>
-      <button class="cat-item" onclick="filterCat(this,'privacy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Privacy &amp; Security<span class="cat-count">2</span></button>
-      <button class="cat-item" onclick="filterCat(this,'technical')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Technical<span class="cat-count">2</span></button>
+      <button class="cat-item active" onclick="filterCat(this,'all')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>All questions<span class="cat-count">12</span></button>
+      <button class="cat-item" onclick="filterCat(this,'general')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>General<span class="cat-count">3</span></button>
+      <button class="cat-item" onclick="filterCat(this,'detection')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>Detection<span class="cat-count">3</span></button>
+      <button class="cat-item" onclick="filterCat(this,'analysis')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>Analysis &amp; Insights<span class="cat-count">3</span></button>
+      <button class="cat-item" onclick="filterCat(this,'privacy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Privacy &amp; Security<span class="cat-count">3</span></button>
     </div>
     <div class="help-stats">
-      <div class="hstat"><span class="hstat-n">6</span><span class="hstat-l">Questions</span></div>
+      <div class="hstat"><span class="hstat-n">12</span><span class="hstat-l">Questions</span></div>
       <div class="hstat"><span class="hstat-n">98%</span><span class="hstat-l">Helpful</span></div>
     </div>
   </div>
+
   <div class="faq-content">
-    <h2>All questions</h2>
+    <h2 id="faqHeading">All questions</h2>
     <div class="faq-list" id="faqList">
-      <div class="faq-item open" data-cat="privacy"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Is my camera feed stored or shared?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>No. Your camera feed is processed entirely within your browser session. Frames are sent to the backend only for analysis and immediately discarded after the result is returned. Nothing is stored, logged, or shared.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
-      <div class="faq-item" data-cat="general"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Which browsers are supported?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>EmotionAI works on Chrome, Firefox, Safari, and Edge. Any modern browser with WebRTC camera support will work. No plugins, extensions, or downloads required.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
-      <div class="faq-item" data-cat="technical"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">How accurate is the emotion detection?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>The model is trained on the RAF-DB dataset. Accuracy varies by lighting conditions, face angle, and expression intensity. The confidence score displayed reflects the model's certainty for each prediction.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
-      <div class="faq-item" data-cat="general"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Do I need an account to use EmotionAI?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>No account is needed to try the detection. Creating an account gives you access to session history, saved results, and feedback features.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
-      <div class="faq-item" data-cat="technical"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">Why is the detection not working?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>Make sure the backend server is running with <code>python main.py</code>. Check that camera permission is granted in your browser. Ensure your face is well-lit and fully visible. If the issue persists, refresh the page.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
-      <div class="faq-item" data-cat="privacy"><div class="faq-q" onclick="toggleFAQ(this.parentElement)">What data does EmotionAI collect?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a"><p>EmotionAI does not collect biometric data. No images or video frames are ever stored. The app runs locally on your machine — data never leaves your device.</p><div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn">👍 Yes</button><button class="helpful-btn">👎 No</button></div></div></div>
+
+      <div class="faq-item open" data-cat="general">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">What is Emotion Analysis and what does it do?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>Emotion Analysis is a real-time AI-powered tool that detects and tracks facial emotions during live sessions. It identifies 7 emotions — Happy, Sad, Angry, Surprised, Fearful, Disgusted, and Neutral — through your webcam and provides an engagement score, session timeline, emotion breakdown, and AI-generated insights to help educators and learners understand engagement patterns.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="general">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">Do I need an account to use Emotion Analysis?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>Yes, an account is required to use the live session features. Sign up with your email and set up two security questions for account recovery. Once logged in, you get access to live detection, session history, analysis reports, and personalized insights. Admin accounts have an additional dashboard for managing all user sessions.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="general">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">Which browsers are supported?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>Emotion Analysis works on Chrome, Edge, Firefox, and Safari — any modern browser with WebRTC webcam support. No plugins or downloads needed. For the best performance and most accurate detection, Chrome or Edge on a desktop or laptop is recommended.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="detection">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">How accurate is the emotion detection?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>The model is trained on the RAF-DB dataset and detects 7 emotion classes. Accuracy is highest when your face is well-lit, centered, and at a natural angle. The confidence score shown on screen reflects how certain the model is for each frame.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="detection">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">Why is the live detection not working or showing errors?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>First, ensure the backend server is running. Then check that camera permission is granted. Make sure your face is well-lit and fully visible in the frame. A "Weak Signal" warning means the server isn't responding; check your connection.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="detection">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">What is the difference between Live Cam and Detect mode?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>Live Cam is a continuous session mode that tracks emotion trends over time and produces a full engagement report. Detect mode is a single-snapshot mode — you upload or capture one image and instantly get that frame's emotion probabilities.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="analysis">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">How does the engagement score work?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>The engagement score (0–100) is a weighted average calculated across all detected emotions during the session. Positive emotions contribute most. A score above 75 indicates strong engagement, 50–74 is moderate, and below 50 suggests the learner may be disengaged.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="analysis">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">What does "Generate Analysis" do and when should I use it?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>After stopping a session, click "Generate Analysis" to get a complete breakdown including Emotion Breakdown panel, Engagement Score, Key Insights with timestamps, and personalised Tips with actionable advice.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="analysis">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">Can I scroll back through the live emotion trend graph?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>Yes. The Live Emotion Trend graph retains all data points from the entire session. You can scroll left at any time to review older emotion patterns. Hovering over any point shows a tooltip with the dominant emotion and confidence percentage.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="privacy">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">Is my camera feed stored or shared?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>No. Your camera feed is never stored or shared. Frames are captured locally, sent to the backend only for analysis, and immediately discarded once the prediction is returned. No images, video, or biometric data are saved to any server or database.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="privacy">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">What data does Emotion Analysis collect about me?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>Only your account information (email, username, hashed password, and security question answers) is stored for login and recovery. During sessions, only the emotion prediction results and engagement scores are saved — not the raw video or images.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
+      <div class="faq-item" data-cat="privacy">
+        <div class="faq-q" onclick="toggleFAQ(this.parentElement)">How do I reset my password if I forget it?<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="faq-a"><p>On the login page, click the "Reset" tab. Enter your registered email and answer the two security questions you set during sign-up. If both answers are correct, you can set a new password immediately. No email link is required.</p>
+        <div class="faq-a-footer"><span class="helpful-txt">Was this helpful?</span><button class="helpful-btn" onclick="vote(this,'yes')">👍 Yes</button><button class="helpful-btn" onclick="vote(this,'no')">👎 No</button></div></div>
+      </div>
+
     </div>
     <div class="contact-card">
       <h3>Still have questions?</h3>
-      <p>Can't find what you're looking for? Send us a message.</p>
-      <a href="feedback.html" class="btn-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Contact Support</a>
+      <p>Can't find what you're looking for? Send us a message and we'll get back to you.</p>
+      <a href="/feedback" class="btn-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Contact Support</a>
     </div>
   </div>
 </div>
+
 <footer>
   <div class="foot-inner">
-    <div class="foot-logo"><div class="logo-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>EmotionAI</div>
-    <div class="foot-links"><a href="index.html">Home</a><a href="faq.html">FAQ</a><a href="feedback.html">Feedback</a><a href="#">Privacy</a></div>
-    <span class="foot-copy">© 2025 EmotionAI</span>
+    <div class="foot-logo"><div class="logo-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>Emotion Analysis</div>
+    <div class="foot-links"><a href="/home">Home</a><a href="/faq">FAQ</a><a href="/feedback">Feedback</a><a href="#">Privacy</a></div>
+    <span class="foot-copy">© 2025 Emotion Analysis</span>
   </div>
 </footer>
+
 <script>
 function toggleFAQ(item){item.classList.toggle('open');}
-function filterFAQ(q){document.querySelectorAll('.faq-item').forEach(item=>{const text=item.querySelector('.faq-q').textContent.toLowerCase();item.style.display=text.includes(q.toLowerCase())?'':'none';});}
-function filterCat(btn,cat){document.querySelectorAll('.cat-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.faq-item').forEach(item=>{item.style.display=(cat==='all'||item.dataset.cat===cat)?'':'none';});}
-</script>
-<script>
-(function(){
-  var btn=document.getElementById('hamburgerBtn'),drawer=document.getElementById('mobileDrawer'),overlay=document.getElementById('mobileOverlay');
-  if(!btn)return;
-  function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
-  function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
-  btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});
-  overlay.addEventListener('click',closeD);
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});
-  drawer.querySelectorAll('a,button').forEach(function(el){el.addEventListener('click',closeD);});
-})();
+function filterFAQ(q){const lower=q.toLowerCase();document.querySelectorAll('.faq-item').forEach(item=>{const text=item.querySelector('.faq-q').textContent.toLowerCase();item.style.display=text.includes(lower)?'':'none';});}
+function filterCat(btn,cat){document.querySelectorAll('.cat-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const labels={all:'All questions',general:'General',detection:'Detection',analysis:'Analysis & Insights',privacy:'Privacy & Security'};document.getElementById('faqHeading').textContent=labels[cat]||'All questions';document.querySelectorAll('.faq-item').forEach(item=>{item.style.display=(cat==='all'||item.dataset.cat===cat)?'':'none';});}
+let toastTimer=null;
+function vote(btn,type){const footer=btn.closest('.faq-a-footer');if(footer.dataset.voted)return;footer.dataset.voted='true';btn.classList.add(type==='yes'?'voted-yes':'voted-no');btn.textContent=type==='yes'?'👍 Helpful':'👎 Not helpful';footer.querySelectorAll('.helpful-btn').forEach(b=>{b.onclick=null;b.style.pointerEvents='none';if(!b.classList.contains('voted-yes')&&!b.classList.contains('voted-no')){b.style.opacity='0.35';}});showToast(type==='yes'?'Thank you! Glad this was helpful 🎉':'Thanks for the feedback — we\'ll improve this answer.');}
+function showToast(msg){const toast=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;toast.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3000);}
+(function(){var btn=document.getElementById('hamburgerBtn'),closeBtn=document.getElementById('drawerCloseBtn'),drawer=document.getElementById('mobileDrawer'),overlay=document.getElementById('mobileOverlay');if(!btn)return;function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});if(closeBtn)closeBtn.addEventListener('click',closeD);overlay.addEventListener('click',closeD);document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});drawer.querySelectorAll('a').forEach(function(el){el.addEventListener('click',closeD);});})();
 </script>
 </body>
 </html>

@@ -33,13 +33,10 @@ from pydantic import BaseModel
 
 
 
-# ── ENV ───────────────────────────────────────────────────────────────────────
+# ENV 
 
-# Always load .env from the same directory as this script,
-# regardless of where Python is launched from.
 _ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 
-# ── .env diagnostics (printed once at startup) ────────────────────────────────
 print(f"[EmotionAI] Looking for .env at: {_ENV_PATH}")
 if not os.path.exists(_ENV_PATH):
     print("[EmotionAI] ERROR: .env file NOT FOUND at that path.")
@@ -61,7 +58,6 @@ else:
                 val = stripped.split("=", 1)[1].strip() if "=" in stripped else ""
                 masked = val[:6] + "..." if len(val) > 6 else ("(empty)" if not val else val)
                 print(f"[EmotionAI]   Line {i}: {key} = {masked}")
-# ──────────────────────────────────────────────────────────────────────────────
 
 load_dotenv(dotenv_path=_ENV_PATH, override=True)
 
@@ -147,7 +143,7 @@ Give:
         print("ERROR:", e)
         return "Error generating summary"
 
-# ── PASSWORD ──────────────────────────────────────────────────────────────────
+# PASSWORD
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -187,7 +183,7 @@ def validate_username(username: str) -> Optional[str]:
     return None
 
 
-# ── JWT ───────────────────────────────────────────────────────────────────────
+# JWT
 
 def create_token(data: dict, expires_delta: timedelta) -> str:
     payload = data.copy()
@@ -206,7 +202,7 @@ def decode_token(token: str) -> dict:
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
 
-# ── DB ────────────────────────────────────────────────────────────────────────
+# DB 
 
 def db_conn():
     con = psycopg2.connect(**DB_DSN)
@@ -369,7 +365,7 @@ def init_db():
     print("[Emotional Analysis] Database initialised")
 
 
-# ── LIFESPAN ──────────────────────────────────────────────────────────────────
+# LIFESPAN 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -385,13 +381,13 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# ── APP ───────────────────────────────────────────────────────────────────────
+# APP 
 
 app = FastAPI(title="Emotional Analysis", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
-# ── AUTH DEPENDENCIES ─────────────────────────────────────────────────────────
+# AUTH DEPENDENCIES 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -418,7 +414,7 @@ async def get_admin_user(current: dict = Depends(get_current_user)):
     return current
 
 
-# ── SCHEMAS ───────────────────────────────────────────────────────────────────
+# SCHEMAS 
 
 class RegisterRequest(BaseModel):
     email:       str
@@ -470,7 +466,7 @@ class AdminCreateUserRequest(BaseModel):
     is_admin: bool = False
 
 
-# ── ML ────────────────────────────────────────────────────────────────────────
+# ML 
 
 EMOTION_LABELS = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
 
@@ -501,16 +497,14 @@ def run_pipeline(img_rgb: np.ndarray, use_mtcnn: bool = False):
     }, None
 
 
-# ── HEALTH ────────────────────────────────────────────────────────────────────
+# HEALTH 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  AUTH
-# ══════════════════════════════════════════════════════════════════════════════
 
 @app.post("/auth/register")
 async def register(body: RegisterRequest):
@@ -738,9 +732,8 @@ async def reset_password(body: dict):
         cur.close(); con.close()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  EMOTION DETECTION
-# ══════════════════════════════════════════════════════════════════════════════
 
 _active_sessions: dict[int, str] = {}
 
@@ -1010,8 +1003,8 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
             {"role": "system", "content": system_msg},
             {"role": "user",   "content": user_msg},
         ],
-        "max_tokens": 300,   # 3 insights × ~100 tokens is plenty; low limit = less truncation risk
-        "temperature": 0.3,  # lower = more deterministic / less creative = more reliable JSON
+        "max_tokens": 300,   
+        "temperature": 0.3,  
     }
 
     def _extract_insights(raw: str) -> dict:
@@ -1122,9 +1115,7 @@ async def session_end(body: SessionEndRequest, current: dict = Depends(get_curre
         cur.close(); con.close()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  FEEDBACK
-# ══════════════════════════════════════════════════════════════════════════════
 
 async def _do_save_feedback(body: FeedbackRequest, request: Request):
     if not body.username or not body.username.strip():
@@ -1204,9 +1195,9 @@ async def get_summary(body: SummaryRequest):
     summary = generate_summary(body.dict())
     return {"summary": summary}
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  ADMIN
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 @app.get("/admin/stats")
 async def admin_stats(admin: dict = Depends(get_admin_user)):
@@ -1412,9 +1403,8 @@ async def delete_session_row(session_row_id: int, admin: dict = Depends(get_admi
         cur.close(); con.close()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 #  DB HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 def _save_detection(user_id: int, session_id: Optional[str], result: dict, source: str = "webcam"):
     try:
@@ -1450,9 +1440,8 @@ def _save_session_timeline(session_id, user_id, source, timeline_data, avg_engag
         print(f"[EmotionAI] _save_session_timeline error: {e}")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  FRONTEND ROUTES
-# ══════════════════════════════════════════════════════════════════════════════
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -1528,7 +1517,7 @@ async def logout():
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 
-# ── ENTRY ─────────────────────────────────────────────────────────────────────
+#  ENTRY 
 
 if __name__ == "__main__":
     uvicorn.run(app, host=APP_HOST, port=APP_PORT)

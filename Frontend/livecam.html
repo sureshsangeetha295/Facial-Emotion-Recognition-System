@@ -103,25 +103,28 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .engage-section-title-left{display:flex;align-items:center;gap:6px}
 .engage-section-title svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .engage-last5{font-size:10px;color:var(--text3);font-weight:500}
-.engage-pie-wrap{padding:16px 16px 12px;display:flex;flex-direction:column;align-items:center;gap:14px;flex:1;justify-content:center}
-.engage-pie-container{position:relative;flex-shrink:0;width:130px;height:130px}
-#engagePieCanvas{width:130px;height:130px;display:block}
+.engage-pie-wrap{padding:8px 16px 8px;display:flex;flex-direction:row;align-items:center;gap:16px;flex:1;justify-content:center;overflow:hidden}
+.engage-pie-container{position:relative;flex-shrink:0;width:160px;height:160px;cursor:crosshair}
+#engagePieCanvas{width:160px;height:160px;display:block}
 .engage-pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
 .engage-pie-score{font-size:20px;font-weight:700;color:var(--accent);font-family:var(--font-display);line-height:1}
 .engage-pie-lbl{font-size:8px;color:var(--text3);font-weight:600;letter-spacing:0.04em}
-.engage-pie-dominant{font-size:11px;font-weight:700;color:var(--text);line-height:1.2;text-align:center}
-.engage-pie-legend{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 10px;width:100%}
-.engage-leg-item{display:flex;flex-direction:column;align-items:center;gap:2px}
-.engage-leg-left{display:flex;align-items:center;gap:4px}
-.engage-leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.engage-leg-name{font-weight:600;font-size:10px;color:var(--text2)}
-.engage-leg-pct{font-size:10px;font-weight:700;color:var(--text3)}
+.engage-pie-dominant{font-size:9px;font-weight:700;color:var(--text);line-height:1.2;text-align:center}
+.engage-pie-legend{display:flex;flex-direction:column;gap:10px;flex-shrink:0;min-width:90px}
+.engage-leg-item{display:flex;align-items:center;gap:8px;cursor:default}
+.engage-leg-item.is-dominant .engage-leg-name{color:var(--text);font-weight:700;font-size:12px}
+.engage-leg-item.is-dominant .engage-leg-dot{width:10px;height:10px;box-shadow:0 0 0 2px rgba(0,0,0,0.12)}
+.engage-leg-left{display:flex;align-items:center;gap:8px}
+.engage-leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all 0.2s}
+.engage-leg-name{font-weight:500;font-size:11px;color:var(--text2);transition:all 0.2s}
+.engage-pie-hover-tip{position:absolute;background:rgba(26,22,18,0.88);backdrop-filter:blur(8px);border:1px solid var(--border2);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;pointer-events:none;opacity:0;transition:opacity 0.15s;white-space:nowrap;z-index:20;transform:translate(-50%,-120%)}
+.engage-pie-hover-tip.show{opacity:1}
 .timeline-card{display:flex;flex-direction:column;height:100%}
 .timeline-card .card-body{padding:0;display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
 .timeline-section-title{padding:14px 16px 11px;font-size:12.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .timeline-section-title-left{display:flex;align-items:center;gap:6px}
 .timeline-section-title svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.timeline-scroll-wrap{overflow-x:auto;overflow-y:hidden;padding:0 20px;flex:1;min-height:0;display:flex;align-items:center;scrollbar-width:none;-ms-overflow-style:none;min-height:100px}
+.timeline-scroll-wrap{overflow-x:auto;overflow-y:hidden;padding:0 20px;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;scrollbar-width:none;-ms-overflow-style:none;min-height:100px}
 .timeline-scroll-wrap::-webkit-scrollbar{display:none}
 .timeline-track{display:flex;align-items:center;gap:0;position:relative;min-width:max-content}
 .timeline-connector{width:40px;flex-shrink:0;display:flex;align-items:center;margin-top:0}
@@ -131,12 +134,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .timeline-event-dot.start{background:#22c55e;box-shadow:0 0 0 2px #22c55e}
 .timeline-event-dot.end{background:#dc2626;box-shadow:0 0 0 2px #dc2626}
 .timeline-event-dot.neutral{background:#6b7280;box-shadow:0 0 0 2px #6b7280}
-.timeline-event-dot.happy{background:#e8440a;box-shadow:0 0 0 2px #e8440a}
+.timeline-event-dot.happy{background:#f59e0b;box-shadow:0 0 0 2px #f59e0b}
 .timeline-event-dot.sad{background:#3b82f6;box-shadow:0 0 0 2px #3b82f6}
-.timeline-event-dot.angry{background:#dc2626;box-shadow:0 0 0 2px #dc2626}
-.timeline-event-dot.surprised{background:#f59e0b;box-shadow:0 0 0 2px #f59e0b}
-.timeline-event-dot.fearful{background:#f97316;box-shadow:0 0 0 2px #f97316}
-.timeline-event-dot.disgusted{background:#7c3aed;box-shadow:0 0 0 2px #7c3aed}
+.timeline-event-dot.angry{background:#ef4444;box-shadow:0 0 0 2px #ef4444}
+.timeline-event-dot.surprised{background:#ec4899;box-shadow:0 0 0 2px #ec4899}
+.timeline-event-dot.fearful{background:#a855f7;box-shadow:0 0 0 2px #a855f7}
+.timeline-event-dot.disgusted{background:#10b981;box-shadow:0 0 0 2px #10b981}
 .timeline-event-inner{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%}
 .timeline-event-time{font-size:10px;font-weight:700;color:var(--accent);font-family:var(--font-display)}
 .timeline-event-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin:2px 0}
@@ -156,9 +159,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .dist-empty svg{width:28px;height:28px;stroke:var(--text3);fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
 .dist-empty-text{font-size:11.5px;font-weight:500;text-align:center}
 .dist-graph-wrap{padding:10px 14px 8px;display:flex;flex-direction:column;gap:6px;flex:1}
-.dist-graph-canvas-wrap{position:relative;width:100%;height:160px}
-#distTrendCanvas{width:100%;height:100%;display:block;cursor:crosshair}
-.dist-hover-tip{position:absolute;background:rgba(26,22,18,0.88);backdrop-filter:blur(8px);border:1px solid var(--border2);color:#fff;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;pointer-events:none;opacity:0;transition:opacity 0.15s;white-space:nowrap;z-index:10;transform:translate(-50%,-110%)}
+.dist-graph-canvas-wrap{position:relative;width:100%;height:160px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:rgba(232,68,10,0.15) transparent}
+.dist-graph-canvas-wrap::-webkit-scrollbar{height:3px}
+.dist-graph-canvas-wrap::-webkit-scrollbar-track{background:transparent}
+.dist-graph-canvas-wrap::-webkit-scrollbar-thumb{background:rgba(232,68,10,0.18);border-radius:99px}
+#distTrendCanvas{height:100%;display:block;cursor:crosshair;min-width:100%}
+.dist-hover-tip{position:absolute;background:rgba(26,22,18,0.88);backdrop-filter:blur(8px);border:1px solid var(--border2);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;pointer-events:none;opacity:0;transition:opacity 0.15s;white-space:nowrap;z-index:10;top:8px;left:50%;transform:translateX(-50%)}
 .dist-hover-tip.show{opacity:1}
 .dist-graph-legend{display:flex;flex-wrap:wrap;gap:4px 10px;padding:8px 14px 12px;border-top:1px solid var(--border)}
 .dist-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text2)}
@@ -198,12 +204,17 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .btn-analyse:hover:not(:disabled){background:var(--accent2);box-shadow:0 3px 10px var(--accent-glow)}
 .btn-analyse:disabled{opacity:0.45;cursor:not-allowed}
 .btn-analyse svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.analysis-inner{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:240px;align-items:start}
-.analysis-left{padding:16px 18px;border-right:1px solid var(--border)}
+.analysis-inner{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch}
+.analysis-left{padding:16px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column}
 .analysis-right{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
 .analysis-section-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px}
-/* How-to-use style cards for emotion breakdown */
-.emo-cat-card{border-radius:10px;padding:10px 12px;border:1.5px solid transparent;cursor:default;transition:all 0.2s}
+/* Emotion breakdown — vertical equal-height cards */
+.emo-category-cards{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;flex:1}
+/* Analysis body hidden until generated */
+#analysisInner{display:none}
+#analysisInner.revealed{display:grid}
+/* Square-style equal-height emotion cards */
+.emo-cat-card{border-radius:10px;padding:10px 12px;border:1.5px solid transparent;cursor:default;transition:all 0.2s;flex:1;display:flex;flex-direction:column;justify-content:space-between}
 .emo-cat-positive{background:rgba(22,163,74,0.05);border-color:rgba(22,163,74,0.18)}
 .emo-cat-positive:hover{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.35);box-shadow:0 2px 12px rgba(22,163,74,0.12)}
 .emo-cat-negative{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.15)}
@@ -219,16 +230,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .emo-bar-delta.pos{color:#16a34a}
 .emo-bar-delta.neg{color:#dc2626}
 .emo-bar-delta.zero{color:var(--text3)}
-.engage-score-chip{margin-top:14px;background:var(--elevated);border:1.5px solid var(--border2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.engage-score-chip{background:var(--elevated);border:1.5px solid var(--border2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .engage-score-chip-num{font-size:22px;font-weight:700;color:var(--accent);font-family:var(--font-display)}
 .engage-score-chip-info{flex:1}
 .engage-score-chip-title{font-size:12px;font-weight:700;color:var(--text)}
 .engage-score-chip-sub{font-size:10px;color:var(--text3);font-weight:500}
-.insights-list{display:flex;flex-direction:column;gap:10px}
-.insight-item{padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg)}
+.insights-list{display:flex;flex-direction:column;gap:8px;flex:1}
+.insight-item{padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);flex:1}
 .insight-item-title{font-size:11.5px;font-weight:700;color:var(--text);margin-bottom:3px}
 .insight-item-desc{font-size:10.5px;color:var(--text2);line-height:1.55}
-.analysis-body{font-size:12.5px;line-height:1.7;color:var(--text2)}
+.analysis-body{font-size:12.5px;line-height:1.7;color:var(--text2);flex:1;display:flex;flex-direction:column}
 .analysis-body p{margin-bottom:8px}
 .analysis-body p:last-child{margin-bottom:0}
 .analysis-empty{font-size:12px;color:var(--text3);font-style:italic}
@@ -242,16 +253,19 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
 .hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.mobile-drawer{position:fixed;top:54px;left:0;right:0;background:rgba(253,248,244,0.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:6px 0 14px;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.08);visibility:hidden}
-.mobile-drawer.open{transform:translateY(0);visibility:visible}
-.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 20px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s}
+.mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:rgba(253,248,244,0.99);backdrop-filter:blur(24px);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 32px rgba(0,0,0,.10);visibility:hidden}
+.mobile-drawer.open{transform:translateX(0);visibility:visible}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 24px;font-size:15px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s}
 .mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
-.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 16px}
-.mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.1)}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:8px 20px}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.drawer-brand{display:flex;align-items:center;gap:10px}
+.drawer-brand-name{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--text)}
+.drawer-close-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.drawer-close-btn:hover{background:var(--elevated);color:var(--text)}
+.mobile-overlay{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.25);backdrop-filter:blur(2px)}
 .mobile-overlay.open{display:block}
 /* ── Emotion category cards ─────────────────────────────────────── */
-.emo-category-cards{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.emo-cat-card{border-radius:10px;padding:8px 12px;border:1.5px solid transparent;cursor:default;transition:all 0.2s}
 .emo-cat-positive{background:rgba(22,163,74,0.05);border-color:rgba(22,163,74,0.18)}
 .emo-cat-positive:hover{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.35);box-shadow:0 2px 12px rgba(22,163,74,0.12)}
 .emo-cat-negative{background:rgba(220,38,38,0.05);border-color:rgba(220,38,38,0.15)}
@@ -293,7 +307,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .tip-item{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;color:var(--text2);line-height:1.5}
 .tip-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
 @media(max-width:1024px){.row1{grid-template-columns:1fr}.row2{grid-template-columns:1fr}.analysis-inner{grid-template-columns:1fr}.analysis-left{border-right:none;border-bottom:1px solid var(--border)}}
-@media(max-width:768px){.hamburger-btn{display:flex!important}.back-btn{display:none}.nav-mode-btn span{display:none}.how-steps-row{grid-template-columns:1fr}.page{padding:16px 14px 40px}nav{z-index:300}}
+@media(max-width:768px){.hamburger-btn{display:flex!important;order:1;flex-shrink:0}.nav-logo{order:0;flex:1 1 auto;min-width:0}.back-btn{display:none}.nav-mode-btn span{display:none}.how-steps-row{grid-template-columns:1fr}.page{padding:16px 14px 40px}nav{z-index:300;justify-content:space-between}}
 </style>
 </head>
 <body>
@@ -337,6 +351,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 
 <div class="mobile-overlay" id="mobileOverlay"></div>
 <div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-header">
+    <div class="drawer-brand">
+      <div class="logo-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+      <span class="drawer-brand-name">Emotion Analysis</span>
+    </div>
+    <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close menu">✕</button>
+  </div>
+  <div class="mobile-drawer-divider"></div>
   <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
   <a href="/detect"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect Mode</a>
   <div class="mobile-drawer-divider"></div>
@@ -417,21 +439,23 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
         </div>
         <div class="card-body">
           <div class="engage-pie-wrap">
-            <div class="engage-pie-container">
-              <canvas id="engagePieCanvas" width="130" height="130"></canvas>
+            <div class="engage-pie-container" id="engagePieOuter">
+              <canvas id="engagePieCanvas" width="160" height="160"></canvas>
               <div class="engage-pie-center">
                 <div class="engage-pie-score" id="engageScoreNum">—</div>
                 <div class="engage-pie-lbl">score</div>
-                <div class="engage-pie-dominant" id="engageDominantCenter" style="margin-top:2px;font-size:9px;color:var(--text3)"></div>
+                <div class="engage-pie-dominant" id="engageDominantCenter" style="margin-top:3px;font-size:10px;color:var(--text3)"></div>
               </div>
+              <div class="engage-pie-hover-tip" id="engagePieTip"></div>
             </div>
             <div class="engage-pie-legend" id="engagePieLegend">
-              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#e8440a"></div><span class="engage-leg-name">Happy</span></div></div>
-              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#6b7280"></div><span class="engage-leg-name">Neutral</span></div></div>
-              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#f59e0b"></div><span class="engage-leg-name">Surprised</span></div></div>
-              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#3b82f6"></div><span class="engage-leg-name">Sad</span></div></div>
-              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#dc2626"></div><span class="engage-leg-name">Angry</span></div></div>
-              <div class="engage-leg-item"><div class="engage-leg-left"><div class="engage-leg-dot" style="background:#f97316"></div><span class="engage-leg-name">Fear</span></div></div>
+              <div class="engage-leg-item" id="engLegHappy"><div class="engage-leg-dot" style="background:#f59e0b"></div><span class="engage-leg-name">Happy</span></div>
+              <div class="engage-leg-item" id="engLegNeutral"><div class="engage-leg-dot" style="background:#6b7280"></div><span class="engage-leg-name">Neutral</span></div>
+              <div class="engage-leg-item" id="engLegSurprised"><div class="engage-leg-dot" style="background:#ec4899"></div><span class="engage-leg-name">Surprised</span></div>
+              <div class="engage-leg-item" id="engLegSad"><div class="engage-leg-dot" style="background:#3b82f6"></div><span class="engage-leg-name">Sad</span></div>
+              <div class="engage-leg-item" id="engLegAngry"><div class="engage-leg-dot" style="background:#ef4444"></div><span class="engage-leg-name">Angry</span></div>
+              <div class="engage-leg-item" id="engLegFear"><div class="engage-leg-dot" style="background:#a855f7"></div><span class="engage-leg-name">Fear</span></div>
+              <div class="engage-leg-item" id="engLegDisgust"><div class="engage-leg-dot" style="background:#10b981"></div><span class="engage-leg-name">Disgust</span></div>
             </div>
           </div>
         </div>
@@ -471,22 +495,22 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
           <div class="dist-empty-text">Start the camera to see emotion trend.</div>
         </div>
         <div id="distGraphArea" style="display:none;flex-direction:column">
-          <div class="dist-graph-wrap">
+          <div class="dist-graph-wrap" style="position:relative">
+            <div class="dist-hover-tip" id="distHoverTip"></div>
             <div class="dist-graph-canvas-wrap">
               <canvas id="distTrendCanvas"></canvas>
-              <div class="dist-hover-tip" id="distHoverTip"></div>
             </div>
           </div>
         </div>
       </div>
       <div class="dist-graph-legend" id="distLegend" style="display:none">
-        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#22c55e"></div>Happy</div>
-        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f59e0b"></div>Surprised</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f59e0b"></div>Happy</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#ec4899"></div>Surprised</div>
         <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#6b7280"></div>Neutral</div>
         <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#3b82f6"></div>Sad</div>
         <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#ef4444"></div>Angry</div>
-        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#f97316"></div>Fear</div>
-        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#7c3aed"></div>Disgust</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#a855f7"></div>Fear</div>
+        <div class="dist-leg-item"><div class="dist-leg-dot" style="background:#10b981"></div>Disgust</div>
       </div>
     </div>
 
@@ -571,10 +595,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
           </div>
         </div>
       </div>
-      <div class="analysis-right" style="display:flex;flex-direction:column;gap:14px;padding:18px 20px">
-        <div style="flex:2;min-height:0;display:flex;flex-direction:column">
-          <div class="analysis-section-title" style="margin-bottom:10px">Key insights</div>
-          <div class="analysis-body" id="analysisBody" style="flex:1">
+      <div class="analysis-right">
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+          <div class="analysis-section-title">Key insights</div>
+          <div class="analysis-body" id="analysisBody">
             <span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary of the session.</span>
           </div>
         </div>
@@ -599,12 +623,12 @@ const PROB_KEYS=['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surpr
 const ENGAGEMENT_MAP={Happiness:1.0,Surprise:1.0,Neutral:0.6,Sadness:0.3,Fear:0.3,Anger:0.1,Disgust:0.1};
 const API_URL='/predict/';
 const BACKEND_TO_DRAFT={happiness:'happy',neutral:'neutral',sadness:'sad',anger:'angry',fear:'fearful',disgust:'disgusted',surprise:'surprised'};
-const EMOTION_COLORS={happy:'#e8440a',neutral:'#6b7280',sad:'#3b82f6',angry:'#dc2626',fearful:'#f97316',disgusted:'#7c3aed',surprised:'#f59e0b'};
+const EMOTION_COLORS={happy:'#f59e0b',neutral:'#6b7280',sad:'#3b82f6',angry:'#ef4444',fearful:'#a855f7',disgusted:'#10b981',surprised:'#ec4899'};
 const EMOTION_LABELS={happy:'Happy',neutral:'Neutral',sad:'Sad',angry:'Angry',fearful:'Fear',disgusted:'Disgust',surprised:'Surprised'};
 const EMOTION_EMOJIS={happy:'😊',neutral:'😐',sad:'😞',angry:'😠',fearful:'😨',disgusted:'🤢',surprised:'😲'};
 const SCORE_MAP={happy:90,surprised:68,neutral:52,fearful:28,sad:18,angry:14,disgusted:10};
-const TREND_COLORS={Anger:'#ef4444',Disgust:'#7c3aed',Fear:'#f97316',Happiness:'#22c55e',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#f59e0b'};
-const PIE_COLORS={happy:'#e8440a',neutral:'#6b7280',surprised:'#f59e0b',sad:'#3b82f6',angry:'#dc2626',fearful:'#f97316',disgusted:'#7c3aed'};
+const TREND_COLORS={Anger:'#ef4444',Disgust:'#10b981',Fear:'#a855f7',Happiness:'#f59e0b',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#ec4899'};
+const PIE_COLORS={happy:'#f59e0b',neutral:'#6b7280',surprised:'#ec4899',sad:'#3b82f6',angry:'#ef4444',fearful:'#a855f7',disgusted:'#10b981'};
 
 let isLive=false,liveInterval=null,abortCtrl=null,detectionInProgress=false;
 let _sessionId=null,_frameCount=0,_engagementScores=[];
@@ -646,12 +670,16 @@ function tickTimer(){
 
 function updateTrendGraph(probs){
   TREND_HISTORY.push({t:Date.now(),probs:{...probs}});
-  if(TREND_HISTORY.length>TREND_MAX)TREND_HISTORY.shift();
+  // No cap — keep full history so user can scroll back
   const canvas=document.getElementById('distTrendCanvas');
   if(!canvas)return;
   const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.offsetWidth||400;
-  const H=canvas.parentElement.offsetHeight||90;
+  const container=canvas.parentElement;
+  const containerW=container.offsetWidth||400;
+  const H=container.offsetHeight||160;
+  // Each data point gets a fixed pixel width so older data is scrollable
+  const PX_PER_POINT=Math.max(8, Math.floor(containerW / TREND_MAX));
+  const W=Math.max(containerW, TREND_HISTORY.length * PX_PER_POINT);
   canvas.width=W*dpr;canvas.height=H*dpr;
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   const ctx=canvas.getContext('2d');
@@ -659,40 +687,57 @@ function updateTrendGraph(probs){
   if(TREND_HISTORY.length<2)return;
   const pad={l:6,r:6,t:6,b:6};
   const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  const total=TREND_HISTORY.length;
   PROB_KEYS.forEach(key=>{
     const col=TREND_COLORS[key]||'#999';
     ctx.beginPath();ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.lineCap='round';
     TREND_HISTORY.forEach((d,i)=>{
-      const x=pad.l+(i/(TREND_MAX-1))*gW;
+      const x=pad.l+(i/(Math.max(total-1,1)))*gW;
       const y=pad.t+gH-(((d.probs[key]||0)/100)*gH);
       i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
     ctx.stroke();
     const last=TREND_HISTORY[TREND_HISTORY.length-1];
-    const lx=pad.l+((TREND_HISTORY.length-1)/(TREND_MAX-1))*gW;
+    const lx=pad.l+((total-1)/(Math.max(total-1,1)))*gW;
     const ly=pad.t+gH-(((last.probs[key]||0)/100)*gH);
     ctx.beginPath();ctx.arc(lx,ly,2.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
   });
-  canvas._trendW=W;canvas._trendH=H;canvas._pad=pad;
+  canvas._trendW=W;canvas._trendH=H;canvas._pad=pad;canvas._total=total;
+  // Auto-scroll to the right (latest data) unless user has scrolled back
+  const isAtEnd=container.scrollLeft>=container.scrollWidth-container.clientWidth-20;
+  if(isAtEnd||container.scrollLeft===0) container.scrollLeft=container.scrollWidth;
 }
 
 function initTrendHover(){
   const canvas=document.getElementById('distTrendCanvas');
   const tip=document.getElementById('distHoverTip');
   if(!canvas||!tip)return;
+  const wrap=canvas.closest('.dist-graph-wrap');
   canvas.addEventListener('mousemove',e=>{
     if(!TREND_HISTORY.length){tip.classList.remove('show');return;}
     const rect=canvas.getBoundingClientRect();
+    const wrapRect=wrap?wrap.getBoundingClientRect():rect;
     const mx=e.clientX-rect.left;
+    const my=e.clientY-wrapRect.top;
     const pad=canvas._pad||{l:6,r:6,t:6,b:6};
     const W=canvas._trendW||rect.width;
-    const idx=Math.round(((mx-pad.l)/(W-pad.l-pad.r))*(TREND_HISTORY.length-1));
-    const cIdx=Math.max(0,Math.min(TREND_HISTORY.length-1,idx));
+    const total=canvas._total||TREND_HISTORY.length;
+    const idx=Math.round(((mx-pad.l)/(W-pad.l-pad.r))*(total-1));
+    const cIdx=Math.max(0,Math.min(total-1,idx));
     const d=TREND_HISTORY[cIdx];
     if(!d){tip.classList.remove('show');return;}
-    const top=Object.entries(d.probs).sort((a,b)=>b[1]-a[1])[0];
-    tip.textContent=`${top[0]}: ${top[1]}%`;
-    tip.style.left=mx+'px';tip.style.top='10px';
+    const top=Object.entries(d.probs).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
+    if(!top){tip.classList.remove('show');return;}
+    const colorMap={Anger:'#ef4444',Disgust:'#10b981',Fear:'#a855f7',Happiness:'#f59e0b',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#ec4899'};
+    const col=colorMap[top[0]]||'#fff';
+    tip.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${col};margin-right:5px;vertical-align:middle"></span>${top[0]}: ${top[1]}%`;
+    // Position tip inside wrap, clamped so it never goes outside
+    const tipW=tip.offsetWidth||90;
+    const wrapW=wrapRect.width;
+    const tipX=e.clientX-wrapRect.left;
+    const clampedLeft=Math.max(tipW/2+6, Math.min(wrapW-tipW/2-6, tipX));
+    tip.style.left=clampedLeft+'px';
+    tip.style.top='8px';
     tip.classList.add('show');
   });
   canvas.addEventListener('mouseleave',()=>tip.classList.remove('show'));
@@ -709,7 +754,7 @@ function updateEngagePieChart(){
   const canvas=document.getElementById('engagePieCanvas');
   if(!canvas)return;
   const dpr=window.devicePixelRatio||1;
-  const size=130;
+  const size=160;
   canvas.width=size*dpr;canvas.height=size*dpr;
   canvas.style.width=size+'px';canvas.style.height=size+'px';
   const ctx=canvas.getContext('2d');
@@ -717,22 +762,53 @@ function updateEngagePieChart(){
   const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
   const keys=['happy','neutral','surprised','sad','angry','fearful','disgusted'];
   const data=keys.map(k=>({key:k,val:(emotionCounts[k]||0)/total,color:PIE_COLORS[k]}));
-  const cx=size/2,cy=size/2,r=56,inner=36;
+  const cx=size/2,cy=size/2,r=68,inner=44;
   let startAngle=-Math.PI/2,dominantKey=null,dominantVal=0;
+  // store arc angles for hover
+  canvas._arcs=[];
   data.forEach(d=>{
     if(d.val<=0)return;
     const sweep=d.val*2*Math.PI;
     ctx.beginPath();ctx.arc(cx,cy,r,startAngle,startAngle+sweep);
     ctx.arc(cx,cy,inner,startAngle+sweep,startAngle,true);
     ctx.closePath();ctx.fillStyle=d.color;ctx.fill();
+    canvas._arcs.push({key:d.key,color:d.color,val:d.val,start:startAngle,end:startAngle+sweep});
     if(d.val>dominantVal){dominantVal=d.val;dominantKey=d.key;}
     startAngle+=sweep;
   });
   ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);
   ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#fff';
   ctx.fill();
+  canvas._cx=cx;canvas._cy=cy;canvas._r=r;canvas._inner=inner;canvas._dpr=dpr;
   const dc=document.getElementById('engageDominantCenter');
   if(dc&&dominantKey)dc.textContent=dominantKey.charAt(0).toUpperCase()+dominantKey.slice(1);
+  // update legend dominant highlight
+  const LEG_MAP={happy:'engLegHappy',neutral:'engLegNeutral',surprised:'engLegSurprised',sad:'engLegSad',angry:'engLegAngry',fearful:'engLegFear',disgusted:'engLegDisgust'};
+  Object.values(LEG_MAP).forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('is-dominant');});
+  if(dominantKey&&LEG_MAP[dominantKey]){const el=document.getElementById(LEG_MAP[dominantKey]);if(el)el.classList.add('is-dominant');}
+  // init hover if not already
+  if(!canvas._hoverInited){
+    canvas._hoverInited=true;
+    const tip=document.getElementById('engagePieTip');
+    canvas.addEventListener('mousemove',e=>{
+      if(!canvas._arcs||!canvas._arcs.length){tip.classList.remove('show');return;}
+      const rect=canvas.getBoundingClientRect();
+      const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+      const dx=mx-canvas._cx,dy=my-canvas._cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<canvas._inner||dist>canvas._r){tip.classList.remove('show');return;}
+      let angle=Math.atan2(dy,dx);
+      if(angle<-Math.PI/2)angle+=2*Math.PI;
+      const hit=canvas._arcs.find(a=>angle>=a.start&&angle<a.end);
+      if(!hit){tip.classList.remove('show');return;}
+      const label=EMOTION_LABELS[hit.key]||hit.key;
+      const pctVal=Math.round(hit.val*100);
+      tip.textContent=`${label}: ${pctVal}%`;
+      tip.style.left=mx+'px';tip.style.top=my+'px';
+      tip.classList.add('show');
+    });
+    canvas.addEventListener('mouseleave',()=>{if(tip)tip.classList.remove('show');});
+  }
 }
 
 function addTimelineEvent(label,emoji,dotClass){
@@ -746,7 +822,7 @@ function renderTimeline(){
   const track=document.getElementById('timelineTrack');
   const countLbl=document.getElementById('timelineCountLabel');
   if(!timelineEvents.length){wrap.style.display='none';empty.style.display='flex';if(countLbl)countLbl.textContent='0 events';return;}
-  wrap.style.display='block';empty.style.display='none';
+  wrap.style.display='flex';empty.style.display='none';
   if(countLbl)countLbl.textContent=`${timelineEvents.length} event${timelineEvents.length===1?'':'s'}`;
   track.innerHTML='';
   const TIMELINE_ICONS={
@@ -775,7 +851,6 @@ function renderTimeline(){
     evEl.innerHTML=`<div class="timeline-event-inner"><div class="timeline-event-time">${ev.timeLabel}</div><div class="timeline-event-icon" style="background:${bgColor}">${iconSvg}</div><div class="timeline-event-label">${ev.label}</div></div><div class="timeline-event-dot ${ev.dotClass}"></div>`;
     track.appendChild(evEl);
   });
-  setTimeout(()=>{wrap.scrollLeft=wrap.scrollWidth;},50);
 }
 
 function updateEngageLegend(){
@@ -803,9 +878,7 @@ function updateEmotionBars(){
   setText('tagFearPct',p('fearful')+'%');
   setText('tagDisgustPct',p('disgusted')+'%');
   setText('tagNeutralPct',neuTotal+'%');
-  const chip=document.getElementById('engScoreChip');
-  const chipNum=document.getElementById('engScoreChipNum');
-  if(chip&&chipNum){chip.style.display='flex';chipNum.textContent=Math.round(engagementScore);}
+  // Note: engScoreChip is only revealed on Generate Analysis click
 }
 
 function updateDominantChips(){
@@ -822,6 +895,14 @@ async function runOverallAnalysis(){
   const btn=document.getElementById('btnAnalyse');
   const body=document.getElementById('analysisBody');
   if(!body)return;
+  // Reveal the analysis section
+  const inner=document.getElementById('analysisInner');
+  if(inner)inner.classList.add('revealed');
+  // Populate emotion breakdown first
+  updateEmotionBars();
+  const chip=document.getElementById('engScoreChip');
+  const chipNum=document.getElementById('engScoreChipNum');
+  if(chip&&chipNum){chip.style.display='flex';chipNum.textContent=Math.round(engagementScore);}
   btn.disabled=true;
   body.innerHTML='<div class="analysis-typing"><span></span><span></span><span></span></div> Generating analysis…';
   const total=Object.values(emotionCounts).reduce((a,b)=>a+b,0)||1;
@@ -855,13 +936,28 @@ async function runOverallAnalysis(){
     const negPct=Math.round(((emotionCounts.angry||0)+(emotionCounts.sad||0)+(emotionCounts.fearful||0)+(emotionCounts.disgusted||0))/total2*100);
     const neuPct=Math.round((emotionCounts.neutral||0)/total2*100);
     const eng=Math.round(engagementScore);
-    // Session timeline context for time-aware insights
-    const recentEvents=timelineEvents.slice(-5).map(e=>`${e.timeLabel}: ${e.label}`).join('; ');
-    const timelineContext=recentEvents?`Recent events — ${recentEvents}`:'No timeline events yet.';
+    // Build rich timeline context — give every detail so AI doesn't need to say "see session data"
+    const allEvents=timelineEvents.map(e=>`${e.timeLabel}: ${e.label}`).join('; ');
+    const negEventsList=timelineEvents.filter(e=>['angry','sad','fearful','disgusted'].includes(e.dotClass))
+      .map(e=>`${e.timeLabel} (${EMOTION_LABELS[e.dotClass]||e.dotClass})`).join(', ');
+    const timelineContext=[
+      allEvents?`Full timeline — ${allEvents}`:'No events recorded.',
+      negEventsList?`Negative moments at: ${negEventsList}`:'No negative moments.',
+      `Emotion breakdown — Positive: ${posPct}%, Negative: ${negPct}%, Neutral: ${neuPct}%`,
+      `Engagement score: ${Math.round(engagementScore)}/100`,
+      `Session duration: ${_durLabel}`
+    ].join(' | ');
     const res=await Auth.apiFetch('/generate-insights',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({...payload, timeline_context: timelineContext, positive_pct: posPct, negative_pct: negPct, neutral_pct: neuPct})
+      body:JSON.stringify({
+        ...payload,
+        timeline_context: timelineContext,
+        positive_pct: posPct,
+        negative_pct: negPct,
+        neutral_pct: neuPct,
+        instructions: 'Give specific, direct advice using the exact timestamps and emotions provided. Never say "see session data", "check the timeline", or "refer to details" — all data is already here, embed it directly in your response.'
+      })
     });
     if(!res.ok){
       const err=await res.json().catch(()=>({}));
@@ -869,63 +965,90 @@ async function runOverallAnalysis(){
     }
     const parsed=await res.json();
     if(parsed.insights&&Array.isArray(parsed.insights)){
-      // Build a time-aware insight from timeline events
+      // Local helper to get % for any emotion key (uses total2 already computed above)
+      const p=k=>Math.round(((emotionCounts[k]||0)/total2)*100);
+      // Build timeline-based negative emotion insights
+      const negEmoEvents=timelineEvents.filter(e=>['angry','sad','fearful','disgusted'].includes(e.dotClass));
       const lastEmoEvents=timelineEvents.filter(e=>['happy','neutral','sad','angry','surprised','fearful','disgusted'].includes(e.dotClass));
       let timeNote='';
-      if(lastEmoEvents.length>=2){
+      // Priority: show negative emotion moments from timeline
+      if(negEmoEvents.length>0){
+        const firstNeg=negEmoEvents[0];
+        const negBreakdown=[
+          emotionCounts.angry?`Angry: ${p('angry')}%`:'',
+          emotionCounts.sad?`Sad: ${p('sad')}%`:'',
+          emotionCounts.fearful?`Fear: ${p('fearful')}%`:'',
+          emotionCounts.disgusted?`Disgust: ${p('disgusted')}%`:''
+        ].filter(Boolean).join(' · ');
+        timeNote=`<div class="insight-item" style="border-color:rgba(220,38,38,0.3);background:rgba(220,38,38,0.04)"><div class="insight-item-title" style="color:#dc2626">⚠ Negative emotions detected at ${firstNeg.timeLabel}</div><div class="insight-item-desc">Learner showed <strong>${EMOTION_LABELS[firstNeg.dotClass]||firstNeg.dotClass}</strong> at ${firstNeg.timeLabel}${negBreakdown?` (${negBreakdown})`:''}. Review what content was presented at this timestamp — consider slowing pace, rephrasing, or adding a check-in question.</div></div>`;
+      } else if(lastEmoEvents.length>=2){
         const last=lastEmoEvents[lastEmoEvents.length-1];
         const prev=lastEmoEvents[lastEmoEvents.length-2];
         if(last.dotClass!==prev.dotClass){
-          timeNote=`<div class="insight-item" style="border-color:rgba(232,68,10,0.25);background:rgba(232,68,10,0.04)"><div class="insight-item-title">Recent shift at ${last.timeLabel}</div><div class="insight-item-desc">Emotion changed from <strong>${EMOTION_LABELS[prev.dotClass]||prev.dotClass}</strong> → <strong>${EMOTION_LABELS[last.dotClass]||last.dotClass}</strong>. Check what content was shown at this moment to understand the trigger.</div></div>`;
+          timeNote=`<div class="insight-item" style="border-color:rgba(232,68,10,0.25);background:rgba(232,68,10,0.04)"><div class="insight-item-title">Emotion shift at ${last.timeLabel}</div><div class="insight-item-desc">Changed from <strong>${EMOTION_LABELS[prev.dotClass]||prev.dotClass}</strong> → <strong>${EMOTION_LABELS[last.dotClass]||last.dotClass}</strong>. Review the content shown at this moment to identify what triggered the change.</div></div>`;
         }
       }
-      // Split: first 2 insights → AI panel, last 1 → tips
+      // Split: first 2 insights → AI panel, rest → tips
       const aiInsights=parsed.insights.slice(0,2);
-      const tipInsights=parsed.insights.slice(2);
+      // Filter out any LLM tips that are vague redirects
+      const VAGUE_PHRASES=['see session','check the timeline','refer to','session data','for details','look at the','review the data','consult the'];
+      const tipInsights=parsed.insights.slice(2).filter(t=>{
+        const combined=(t.title+' '+t.desc).toLowerCase();
+        return !VAGUE_PHRASES.some(phrase=>combined.includes(phrase));
+      });
       body.innerHTML='<div class="insights-list">'+timeNote+
-        aiInsights.map(ins=>
-          `<div class="insight-item"><div class="insight-item-title">${ins.title}</div><div class="insight-item-desc">${ins.desc}</div></div>`
-        ).join('')+
+        aiInsights.map(ins=>{
+          // Replace any vague redirect phrases inline
+          let desc=ins.desc
+            .replace(/see session data for details\.?/gi,'')
+            .replace(/check the (session )?timeline for (more )?details\.?/gi,'')
+            .replace(/refer to (the )?session data\.?/gi,'')
+            .replace(/\s{2,}/g,' ').trim();
+          return `<div class="insight-item"><div class="insight-item-title">${ins.title}</div><div class="insight-item-desc">${desc}</div></div>`;
+        }).join('')+
       '</div>';
       const tipsBody=document.getElementById('tipsBody');
       if(tipsBody){
-        if(tipInsights.length>0){
-          // Prepend a threshold-based tip to LLM tips
-          let thresholdTip='';
-          if(posPct>=60) thresholdTip=`<div class="tip-item"><div class="tip-dot" style="background:#16a34a"></div><div><strong style="font-size:10.5px;color:var(--text)">Positive session (${posPct}%):</strong> Above 60% positive threshold — good learning state. Keep the same structure.</div></div>`;
-          else if(negPct>=20) thresholdTip=`<div class="tip-item"><div class="tip-dot" style="background:#dc2626"></div><div><strong style="font-size:10.5px;color:var(--text)">Attention needed (${negPct}% negative):</strong> Revisit unclear concepts, ask comprehension questions, and slow delivery pace.</div></div>`;
-          else if(neuPct>=50) thresholdTip=`<div class="tip-item"><div class="tip-dot" style="background:#6b7280"></div><div><strong style="font-size:10.5px;color:var(--text)">High neutral (${neuPct}%):</strong> Learner may be passive. Add interactive questions or change delivery style to spark engagement.</div></div>`;
-          tipsBody.innerHTML=thresholdTip+tipInsights.map(t=>
-            `<div class="tip-item"><div class="tip-dot"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`
-          ).join('');
+        // Always build rich tips with extra focus on negative category
+        let tips=[];
+        // Helper: get all negative events from timeline with timestamps
+        const negEvents=timelineEvents.filter(e=>['angry','sad','fearful','disgusted'].includes(e.dotClass));
+        const firstNegAt=negEvents.length>0?negEvents[0].timeLabel:null;
+        const firstNegEmo=negEvents.length>0?(EMOTION_LABELS[negEvents[0].dotClass]||negEvents[0].dotClass):null;
+        const allNegTimes=negEvents.map(e=>`${e.timeLabel} (${EMOTION_LABELS[e.dotClass]||e.dotClass})`).join(', ');
+        // Negative-first priority tips
+        if(negPct>=30){
+          const worstNeg=Object.entries({angry:p('angry'),sad:p('sad'),fearful:p('fearful'),disgusted:p('disgusted')}).sort((a,b)=>b[1]-a[1])[0];
+          const atTime=firstNegAt?` starting at <strong>${firstNegAt}</strong>`:'';
+          tips.push({color:'#dc2626',title:`High negative (${negPct}%)`,desc:`Significant frustration detected${atTime}${allNegTimes?` — spikes at: ${allNegTimes}`:''}. Break down complex ideas, slow delivery, and directly ask "Is this clear?" at those moments.`});
+          if(worstNeg&&worstNeg[1]>0){
+            const worstLabel=EMOTION_LABELS[worstNeg[0]]||worstNeg[0];
+            const worstEvents=timelineEvents.filter(e=>e.dotClass===worstNeg[0]);
+            const worstTime=worstEvents.length>0?` first seen at <strong>${worstEvents[0].timeLabel}</strong>`:'';
+            tips.push({color:'#dc2626',title:`Dominant: ${worstLabel} (${worstNeg[1]}%)`,desc:`<strong>${worstLabel}</strong>${worstTime}. Revisit the content shown at that moment — use simpler language, relatable analogies, or pause for a quick Q&A to resolve confusion.`});
+          }
+        } else if(negPct>=10){
+          const atTime=firstNegAt?` — first appeared at <strong>${firstNegAt}</strong> (${firstNegEmo})${negEvents.length>1?`, again at ${negEvents.slice(1).map(e=>`<strong>${e.timeLabel}</strong>`).join(', ')}`:''}`:' — no specific timestamp recorded';
+          tips.push({color:'#f97316',title:`Some discomfort (${negPct}% negative)`,desc:`Negativity${atTime}. Revisit what you were explaining at that point — offer a brief recap, slow down, or ask the learner if they need clarification before moving on.`});
         } else {
-          // Threshold-based actionable tips from session data
-          const eng2=Math.round(engagementScore);
-          let tips=[];
-          // Tip 1: based on positive % threshold
-          if(posPct>=60){
-            tips.push({title:'Strong positive session',desc:`${posPct}% positive emotions detected — great engagement. Maintain this content pace and structure for future sessions.`});
-          } else if(posPct>=40){
-            tips.push({title:'Moderate positivity',desc:`Only ${posPct}% positive emotions. Try adding relatable examples or light interactive questions to boost mood and interest.`});
-          } else {
-            tips.push({title:'Low positive emotions',desc:`Positive emotions at ${posPct}%. Consider revisiting unclear concepts and use real-world analogies to rebuild engagement.`});
-          }
-          // Tip 2: based on negative % threshold
-          if(negPct>=30){
-            tips.push({title:'High frustration detected',desc:`${negPct}% negative emotions observed. Pause and revisit the last topic — ask direct questions like "Is this clear?" and slow down delivery.`});
-          } else if(negPct>=10){
-            tips.push({title:'Some discomfort noted',desc:`${negPct}% negative emotions. Identify the moment frustration spiked (check timeline) and simplify that segment next time.`});
-          } else {
-            tips.push({title:'Minimal negative emotions',desc:'Content was well-received with little frustration. Keep the same clarity and pacing in future sessions.'});
-          }
-          // Tip 3: engagement score
-          if(eng2<50){
-            tips.push({title:'Boost engagement',desc:`Score of ${eng2}/100 is low. Try 10–15 min focused bursts with short breaks, and add interactive polls or Q&A moments.`});
-          } else if(eng2<75){
-            tips.push({title:'Improve focus',desc:`Score of ${eng2}/100 is moderate. Use active recall every 5 min — pause and ask the learner to summarize what was covered.`});
-          }
-          tipsBody.innerHTML=tips.map(t=>`<div class="tip-item"><div class="tip-dot"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`).join('');
+          tips.push({color:'#16a34a',title:'Low negative emotions',desc:'Content was well-received with little frustration. Keep the same clarity and pacing in future sessions.'});
         }
+        // Positive/engagement tips
+        if(posPct>=60){
+          tips.push({color:'#16a34a',title:`Strong positive session (${posPct}%)`,desc:'Above 60% positive threshold — great engagement. Maintain this content pace and structure for future sessions.'});
+        } else if(neuPct>=50){
+          tips.push({color:'#6b7280',title:`High neutral (${neuPct}%)`,desc:'Learner may be passive. Add interactive questions, change delivery style, or introduce a short activity to spark engagement.'});
+        }
+        // Engagement score tip
+        const eng2=Math.round(engagementScore);
+        if(eng2<50) tips.push({color:'#e8440a',title:`Boost engagement (score: ${eng2}/100)`,desc:'Try 10–15 min focused bursts with 5 min breaks. Add interactive polls or Q&A moments to re-activate attention.'});
+        else if(eng2<75) tips.push({color:'#ca8a04',title:`Moderate engagement (score: ${eng2}/100)`,desc:'Use active recall every 5 min — pause and ask the learner to summarize what was just covered.'});
+        // Merge with LLM tips
+        const allTips=tipInsights.length>0
+          ? tips.map(t=>`<div class="tip-item"><div class="tip-dot" style="background:${t.color}"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`).join('')
+            + tipInsights.map(t=>`<div class="tip-item"><div class="tip-dot"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`).join('')
+          : tips.map(t=>`<div class="tip-item"><div class="tip-dot" style="background:${t.color}"></div><div><strong style="font-size:10.5px;color:var(--text)">${t.title}:</strong> ${t.desc}</div></div>`).join('');
+        tipsBody.innerHTML=allTips;
       }
     }else{
       body.innerHTML='<span class="analysis-empty">Could not parse analysis. Please try again.</span>';
@@ -1060,6 +1183,8 @@ async function doStart(){
     document.getElementById('sessionChipLabel').textContent=`Session #${_sessionNum}`;
     document.getElementById('analysisBody').innerHTML='<span class="analysis-empty">Stop the session and click "Generate Analysis" for an AI-powered summary.</span>';
     const _tipsReset=document.getElementById('tipsBody');if(_tipsReset)_tipsReset.innerHTML='<span style="font-size:10.5px;color:var(--text3);font-style:italic">Generate analysis to get personalized tips.</span>';
+    // Hide analysis section until Generate is clicked again
+    const _innerReset=document.getElementById('analysisInner');if(_innerReset)_innerReset.classList.remove('revealed');
     // Reset category pct labels and bars
     ['emoPosTotal','emoNegTotal','emoNeutralTotal','tagHappyPct','tagSurprisedPct','tagAngryPct','tagSadPct','tagFearPct','tagDisgustPct','tagNeutralPct'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—%';});
     ['emoPosBar','emoNegBar','emoNeuBar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.width='0%';});
@@ -1072,7 +1197,7 @@ async function doStart(){
     document.getElementById('distLegend').style.display='none';
     renderTimeline();
     const ec=document.getElementById('engagePieCanvas');
-    if(ec){const ctx=ec.getContext('2d');ctx.clearRect(0,0,ec.width,ec.height);}
+    if(ec){const ctx=ec.getContext('2d');ctx.clearRect(0,0,ec.width,ec.height);ec._arcs=[];ec._hoverInited=false;}
     initTrendHover();
     sessionStart=Date.now();
     sessionTimer=setInterval(tickTimer,1000);
@@ -1127,15 +1252,17 @@ window.addEventListener('load',()=>{
 <script>
 (function(){
   var btn=document.getElementById('hamburgerBtn');
+  var closeBtn=document.getElementById('drawerCloseBtn');
   var drawer=document.getElementById('mobileDrawer');
   var overlay=document.getElementById('mobileOverlay');
   if(!btn)return;
   function open(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');document.body.style.overflow='hidden';}
   function close(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');document.body.style.overflow='';}
   btn.addEventListener('click',function(){btn.classList.contains('open')?close():open();});
+  if(closeBtn)closeBtn.addEventListener('click',close);
   overlay.addEventListener('click',close);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
-  drawer.querySelectorAll('a,button').forEach(function(el){el.addEventListener('click',close);});
+  drawer.querySelectorAll('a').forEach(function(el){el.addEventListener('click',close);});
 })();
 </script>
 </body>
