@@ -124,6 +124,20 @@ CREATE TABLE IF NOT EXISTS password_reset_log (
 
 CREATE INDEX IF NOT EXISTS idx_prl_user   ON password_reset_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_prl_step1  ON password_reset_log(step1_at);
+
+-- 6. faq_feedback
+CREATE TABLE IF NOT EXISTS faq_feedback (
+    id            INTEGER  PRIMARY KEY AUTOINCREMENT,
+    user_id       INTEGER  REFERENCES users(id) ON DELETE SET NULL,
+    username      TEXT     NOT NULL DEFAULT 'Guest',
+    faq_question  TEXT     NOT NULL,
+    vote          TEXT     NOT NULL CHECK(vote IN ('liked','disliked')),
+    complaint     TEXT,
+    created_at    TEXT     NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_faqfb_vote    ON faq_feedback(vote);
+CREATE INDEX IF NOT EXISTS idx_faqfb_created ON faq_feedback(created_at);
     """)
     # ── Migrate existing tables (add columns introduced after initial deploy) ──
     sqlite_migrations = [
@@ -137,6 +151,8 @@ CREATE INDEX IF NOT EXISTS idx_prl_step1  ON password_reset_log(step1_at);
         "ALTER TABLE users ADD COLUMN security_q2       TEXT",
         "ALTER TABLE users ADD COLUMN security_a2       TEXT",
         "ALTER TABLE users ADD COLUMN password_reset_hash TEXT",
+        # Username column on faq_feedback (for guest/logged-in display)
+        "ALTER TABLE faq_feedback ADD COLUMN username TEXT NOT NULL DEFAULT 'Guest'",
     ]
     for _sql in sqlite_migrations:
         try:
@@ -264,6 +280,20 @@ CREATE TABLE IF NOT EXISTS password_reset_log (
 
 CREATE INDEX IF NOT EXISTS idx_prl_user  ON password_reset_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_prl_step1 ON password_reset_log(step1_at);
+
+-- 6. faq_feedback
+CREATE TABLE IF NOT EXISTS faq_feedback (
+    id            BIGSERIAL    PRIMARY KEY,
+    user_id       BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+    username      VARCHAR(80)  NOT NULL DEFAULT 'Guest',
+    faq_question  TEXT         NOT NULL,
+    vote          VARCHAR(10)  NOT NULL CHECK(vote IN ('liked','disliked')),
+    complaint     TEXT,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_faqfb_vote    ON faq_feedback(vote);
+CREATE INDEX IF NOT EXISTS idx_faqfb_created ON faq_feedback(created_at);
     """
 
     cur.execute(ddl)
@@ -282,6 +312,8 @@ CREATE INDEX IF NOT EXISTS idx_prl_step1 ON password_reset_log(step1_at);
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a2 TEXT",
         # Tracks when password was last reset (NULL = never reset, only registered)
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_hash TEXT",
+        # Username column on faq_feedback (for guest/logged-in display)
+        "ALTER TABLE faq_feedback ADD COLUMN IF NOT EXISTS username VARCHAR(80) NOT NULL DEFAULT 'Guest'",
     ]
     for _sql in pg_migrations:
         try:
@@ -319,4 +351,4 @@ CREATE INDEX IF NOT EXISTS idx_prl_step1 ON password_reset_log(step1_at);
 else:
     raise ValueError(f"Unsupported DATABASE_URL scheme: {DATABASE_URL}")
 
-print("[init_db] Done — all 5 tables ready: users, detections, feedback, session_timeline, password_reset_log")
+print("[init_db] Done — all 6 tables ready: users, detections, feedback, session_timeline, password_reset_log, faq_feedback")

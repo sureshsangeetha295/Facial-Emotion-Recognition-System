@@ -280,6 +280,8 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
 .chip-emotion.disgust{background:#ecfdf5;color:#065f46}
 .chip-cat{background:#f0f9ff;color:#0369a1;border-color:#bae6fd}
 .chip-star{color:var(--yellow);font-size:13px;letter-spacing:1px}
+.chip-liked{background:var(--green-bg);color:var(--green);border-color:rgba(22,163,74,.25)}
+.chip-disliked{background:var(--red-bg);color:var(--red);border-color:rgba(220,38,38,.2)}
 
 /* ────────── BUTTONS ────────── */
 .del-btn,.toggle-btn{
@@ -537,6 +539,10 @@ html,body{font-family:var(--font-body);background:var(--bg);color:var(--text);-w
           <svg class="ttab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Feedback <span class="ttab-badge" id="badge-feedback">—</span>
         </button>
+        <button class="ttab" onclick="switchTable('faq-feedback')" id="ttab-faq-feedback">
+          <svg class="ttab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          FAQ Feedback <span class="ttab-badge" id="badge-faq-feedback">—</span>
+        </button>
       </div>
     </div>
 
@@ -624,14 +630,16 @@ async function apiFetch(url, opts={}) {
 
 /* ── FIX: Load all badge counts upfront so tabs show correct values immediately ── */
 async function loadAllBadges() {
-  const [users, detections, feedback] = await Promise.all([
+  const [users, detections, feedback, faqFeedback] = await Promise.all([
     apiFetch('/admin/users'),
     apiFetch('/admin/detections'),
     apiFetch('/admin/feedback'),
+    apiFetch('/admin/faq-feedback'),
   ]);
-  if (Array.isArray(users))      document.getElementById('badge-users').textContent      = users.length;
-  if (Array.isArray(detections)) document.getElementById('badge-detections').textContent = detections.length;
-  if (Array.isArray(feedback))   document.getElementById('badge-feedback').textContent   = feedback.length;
+  if (Array.isArray(users))        document.getElementById('badge-users').textContent           = users.length;
+  if (Array.isArray(detections))   document.getElementById('badge-detections').textContent       = detections.length;
+  if (Array.isArray(feedback))     document.getElementById('badge-feedback').textContent         = feedback.length;
+  if (Array.isArray(faqFeedback))  document.getElementById('badge-faq-feedback').textContent     = faqFeedback.length;
 }
 
 /* ── Stats ── */
@@ -698,7 +706,7 @@ function switchTable(name) {
 
 async function loadTable() {
   showLoading();
-  const endpoints = { users:'/admin/users', detections:'/admin/detections', feedback:'/admin/feedback' };
+  const endpoints = { users:'/admin/users', detections:'/admin/detections', feedback:'/admin/feedback', 'faq-feedback':'/admin/faq-feedback' };
   const data = await apiFetch(endpoints[currentTable]);
   allData = Array.isArray(data) ? data : [];
   allData.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
@@ -718,9 +726,10 @@ async function onRefresh() {
 function setupFilters() {
   const sel = document.getElementById('filter-select');
   let opts = [['','All']];
-  if (currentTable==='users')      opts = [['','All'],['admin','Admin'],['user','User']];
-  if (currentTable==='detections') opts = [['','All'],['Happiness','Happiness'],['Sadness','Sadness'],['Anger','Anger'],['Fear','Fear'],['Neutral','Neutral'],['Surprise','Surprise'],['Disgust','Disgust'],['webcam','Webcam'],['upload','Upload']];
-  if (currentTable==='feedback')   opts = [['','All'],['General','General'],['Bug report','Bug report'],['Feature request','Feature request'],['Accuracy','Accuracy'],['Performance','Performance'],['UI / Design','UI / Design']];
+  if (currentTable==='users')        opts = [['','All'],['admin','Admin'],['user','User']];
+  if (currentTable==='detections')   opts = [['','All'],['Happiness','Happiness'],['Sadness','Sadness'],['Anger','Anger'],['Fear','Fear'],['Neutral','Neutral'],['Surprise','Surprise'],['Disgust','Disgust'],['webcam','Webcam'],['upload','Upload']];
+  if (currentTable==='feedback')     opts = [['','All'],['General','General'],['Bug report','Bug report'],['Feature request','Feature request'],['Accuracy','Accuracy'],['Performance','Performance'],['UI / Design','UI / Design']];
+  if (currentTable==='faq-feedback') opts = [['','All'],['liked','👍 Liked'],['disliked','👎 Disliked'],['complaint','Has Complaint']];
   sel.innerHTML = opts.map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
 }
 
@@ -745,6 +754,7 @@ function applyFilters() {
     if (q && !str.includes(q)) return false;
     if (!f) return true;
     if (currentTable==='users') { if (f==='admin') return row.is_admin; if (f==='user') return !row.is_admin; }
+    if (currentTable==='faq-feedback' && f==='complaint') return !!(row.complaint && row.complaint.trim());
     return str.includes(f);
   });
   document.getElementById('count-badge').textContent = `${filteredData.length} record${filteredData.length!==1?'s':''}`;
@@ -872,6 +882,27 @@ function renderTable() {
           <td><button class="del-btn" title="Delete" onclick="askDelete('feedback',${r.id},'feedback #${r.id}')">${DEL_ICON}</button></td>
         </tr>`).join('');
   }
+  else if (currentTable === 'faq-feedback') {
+    head.innerHTML = `<tr>
+      <th>#</th><th>Question</th><th>Vote</th><th>Complaint</th><th>User</th><th>Date</th><th>Del</th>
+    </tr>`;
+    body.innerHTML = slice.length===0
+      ? `<tr class="empty-row"><td colspan="7"><span class="empty-icon">❓</span><span class="empty-label">No FAQ feedback yet</span></td></tr>`
+      : slice.map((r,i) => `<tr>
+          <td><span class="row-num">${base+i}</span></td>
+          <td class="wrap" style="max-width:220px;color:var(--text2)">${r.faq_question}</td>
+          <td><span class="chip ${r.vote==='liked'?'chip-liked':'chip-disliked'}">${r.vote==='liked'?'👍 Liked':'👎 Disliked'}</span></td>
+          <td class="wrap" style="max-width:180px;color:var(--text2)">${r.complaint||'<span style="color:var(--text3)">—</span>'}</td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar" style="font-size:10px">${initials(r.username??'Guest')}</div>
+              <b>${r.username??'Guest'}</b>
+            </div>
+          </td>
+          <td style="color:var(--text2)">${fmtDate(r.created_at)}</td>
+          <td><button class="del-btn" title="Delete" onclick="askDelete('faq-feedback',${r.id},'FAQ feedback #${r.id}')">${DEL_ICON}</button></td>
+        </tr>`).join('');
+  }
 }
 
 function renderPagination() {
@@ -903,7 +934,7 @@ function closeModal() { document.getElementById('modal-bg').classList.remove('op
 async function confirmDelete() {
   if (!pendingDelete) return;
   const {table, id} = pendingDelete; closeModal();
-  const urlMap = { users:`/admin/users/${id}`, detections:`/admin/detections/${id}`, feedback:`/admin/feedback/${id}` };
+  const urlMap = { users:`/admin/users/${id}`, detections:`/admin/detections/${id}`, feedback:`/admin/feedback/${id}`, 'faq-feedback':`/admin/faq-feedback/${id}` };
   const res = await fetch(urlMap[table], { method:'DELETE', headers:HEADERS.Authorization() });
   if (res&&res.ok) { showToast('✓  Deleted successfully','success'); loadStats(); loadAllBadges(); loadTable(); }
   else showToast('✕  Delete failed','error');

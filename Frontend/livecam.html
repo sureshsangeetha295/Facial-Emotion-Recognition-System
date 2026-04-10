@@ -444,6 +444,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
               <div class="engage-pie-center">
                 <div class="engage-pie-score" id="engageScoreNum">—</div>
                 <div class="engage-pie-lbl">score</div>
+                <div id="engageTierLabel" style="margin-top:4px;font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--text3)">—</div>
                 <div class="engage-pie-dominant" id="engageDominantCenter" style="margin-top:3px;font-size:10px;color:var(--text3)"></div>
               </div>
               <div class="engage-pie-hover-tip" id="engagePieTip"></div>
@@ -620,13 +621,23 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 <script src="script/auth.js"></script>
 <script>
 const PROB_KEYS=['Anger','Disgust','Fear','Happiness','Neutral','Sadness','Surprise'];
-const ENGAGEMENT_MAP={Happiness:1.0,Surprise:1.0,Neutral:0.6,Sadness:0.3,Fear:0.3,Anger:0.1,Disgust:0.1};
+// ── Single source of truth for engagement (mirrors backend ENGAGEMENT_SCORES exactly) ──
+// Happiness 0.90 — full enjoyment, learner actively receptive
+// Surprise  0.75 — curiosity / "aha" spike, high attention
+// Neutral   0.60 — passive focus, stable attention
+// Fear      0.30 — anxiety / stress, fragile attention
+// Sadness   0.25 — withdrawn / demotivated
+// Anger     0.20 — frustration, content NOT landing → needs intervention
+// Disgust   0.10 — strong aversion, lowest engagement signal
+const ENGAGEMENT_MAP={Happiness:0.90,Surprise:0.75,Neutral:0.60,Sadness:0.25,Fear:0.30,Anger:0.20,Disgust:0.10};
+// SCORE_MAP (×100) used when backend engagement field is absent — kept in sync with ENGAGEMENT_MAP
+const SCORE_MAP={happy:90,surprised:75,neutral:60,fearful:30,sad:25,angry:20,disgusted:10};
 const API_URL='/predict/';
 const BACKEND_TO_DRAFT={happiness:'happy',neutral:'neutral',sadness:'sad',anger:'angry',fear:'fearful',disgust:'disgusted',surprise:'surprised'};
 const EMOTION_COLORS={happy:'#f59e0b',neutral:'#6b7280',sad:'#3b82f6',angry:'#ef4444',fearful:'#a855f7',disgusted:'#10b981',surprised:'#ec4899'};
 const EMOTION_LABELS={happy:'Happy',neutral:'Neutral',sad:'Sad',angry:'Angry',fearful:'Fear',disgusted:'Disgust',surprised:'Surprised'};
 const EMOTION_EMOJIS={happy:'😊',neutral:'😐',sad:'😞',angry:'😠',fearful:'😨',disgusted:'🤢',surprised:'😲'};
-const SCORE_MAP={happy:90,surprised:68,neutral:52,fearful:28,sad:18,angry:14,disgusted:10};
+
 const TREND_COLORS={Anger:'#ef4444',Disgust:'#10b981',Fear:'#a855f7',Happiness:'#f59e0b',Neutral:'#6b7280',Sadness:'#3b82f6',Surprise:'#ec4899'};
 const PIE_COLORS={happy:'#f59e0b',neutral:'#6b7280',surprised:'#ec4899',sad:'#3b82f6',angry:'#ef4444',fearful:'#a855f7',disgusted:'#10b981'};
 
@@ -1064,7 +1075,9 @@ let lastEmotionKey=null,emotionChangeCooldown=0;
 function applyDetectionResult(backendEmotion,conf,engagement,probs){
   const draftKey=BACKEND_TO_DRAFT[backendEmotion.toLowerCase()]||'neutral';
   const score=engagement!=null?engagement*100:(SCORE_MAP[draftKey]||50);
-  engagementScore+=(score-engagementScore)*0.4;
+  // EMA α=0.20 — smooth enough to avoid jitter, fast enough for real-time feedback.
+  // Warm-start: if this is the very first detection, seed directly (no cold-start at 0).
+  if(totalDetected===0){engagementScore=score;}else{engagementScore+=(score-engagementScore)*0.20;}
   _engagementScores.push(engagementScore/100);
   totalDetected++;
   emotionCounts[draftKey]=(emotionCounts[draftKey]||0)+1;
@@ -1082,6 +1095,10 @@ function applyDetectionResult(backendEmotion,conf,engagement,probs){
   if(scoreEl)scoreEl.textContent=`· ${Math.round(conf)}%`;
   const esn=document.getElementById('engageScoreNum');
   if(esn)esn.textContent=Math.round(engagementScore);
+  // Live engagement tier
+  const tier=engagementScore>=70?{label:'Active',color:'#16a34a'}:engagementScore>=40?{label:'Moderate',color:'#ca8a04'}:{label:'Inactive',color:'#dc2626'};
+  const tierEl=document.getElementById('engageTierLabel');
+  if(tierEl){tierEl.textContent=tier.label;tierEl.style.color=tier.color;}
   updateEngageLegend();
   if(probs){showDistGraph();updateTrendGraph(probs);}
   updateEmotionBars();updateDominantChips();

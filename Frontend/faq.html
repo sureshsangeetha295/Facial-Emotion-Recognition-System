@@ -71,6 +71,17 @@ nav{height:64px;display:flex;align-items:center;padding:0 48px;gap:24px;backgrou
 .faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:max-height 0.35s ease,padding 0.2s}
 .faq-item.open .faq-a{padding:0 20px 16px;max-height:400px}
 .faq-a p{font-size:13px;color:var(--text2);line-height:1.7}
+/* ── Complaint box (shown on dislike) ── */
+.complaint-box{margin-top:12px;padding:12px 14px;background:var(--elevated);border-radius:10px;border:1px solid var(--border2)}
+.complaint-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px}
+.complaint-label span{font-weight:400;color:var(--text3)}
+.complaint-input{width:100%;padding:9px 11px;font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;resize:vertical;outline:none;transition:border-color 0.15s}
+.complaint-input:focus{border-color:var(--accent)}
+.complaint-actions{display:flex;gap:8px;margin-top:8px}
+.complaint-submit{font-size:12px;font-weight:600;padding:6px 16px;border-radius:99px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:var(--font-body)}
+.complaint-submit:hover{opacity:0.88}
+.complaint-skip{font-size:12px;font-weight:500;padding:6px 14px;border-radius:99px;background:none;border:1.5px solid var(--border2);color:var(--text2);cursor:pointer;font-family:var(--font-body)}
+.complaint-skip:hover{border-color:var(--text3);color:var(--text)}
 .faq-a-footer{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .helpful-txt{font-size:11px;color:var(--text3)}
 .helpful-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border2);background:none;cursor:pointer;color:var(--text2);transition:all 0.15s;font-family:var(--font-body)}
@@ -341,7 +352,55 @@ function toggleFAQ(item){item.classList.toggle('open');}
 function filterFAQ(q){const lower=q.toLowerCase();document.querySelectorAll('.faq-item').forEach(item=>{const text=item.querySelector('.faq-q').textContent.toLowerCase();item.style.display=text.includes(lower)?'':'none';});}
 function filterCat(btn,cat){document.querySelectorAll('.cat-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const labels={all:'All questions',general:'General',detection:'Detection',analysis:'Analysis & Insights',privacy:'Privacy & Security'};document.getElementById('faqHeading').textContent=labels[cat]||'All questions';document.querySelectorAll('.faq-item').forEach(item=>{item.style.display=(cat==='all'||item.dataset.cat===cat)?'':'none';});}
 let toastTimer=null;
-function vote(btn,type){const footer=btn.closest('.faq-a-footer');if(footer.dataset.voted)return;footer.dataset.voted='true';btn.classList.add(type==='yes'?'voted-yes':'voted-no');btn.textContent=type==='yes'?'👍 Helpful':'👎 Not helpful';footer.querySelectorAll('.helpful-btn').forEach(b=>{b.onclick=null;b.style.pointerEvents='none';if(!b.classList.contains('voted-yes')&&!b.classList.contains('voted-no')){b.style.opacity='0.35';}});showToast(type==='yes'?'Thank you! Glad this was helpful 🎉':'Thanks for the feedback — we\'ll improve this answer.');}
+function vote(btn,type){
+  const footer=btn.closest('.faq-a-footer');
+  if(footer.dataset.voted)return;
+  const faqQuestion=btn.closest('.faq-item').querySelector('.faq-q').childNodes[0].textContent.trim();
+  // Lock both vote buttons
+  footer.querySelectorAll('.helpful-btn').forEach(b=>{b.onclick=null;b.style.pointerEvents='none';});
+  btn.classList.add(type==='yes'?'voted-yes':'voted-no');
+  if(type==='yes'){
+    footer.dataset.voted='true';
+    btn.textContent='👍 Helpful';
+    footer.querySelectorAll('.helpful-btn').forEach(b=>{if(!b.classList.contains('voted-yes'))b.style.opacity='0.35';});
+    submitFaqVote(faqQuestion,'liked',null);
+    showToast('Thank you! Glad this was helpful 🎉');
+  } else {
+    btn.textContent='👎 Not helpful';
+    footer.querySelectorAll('.helpful-btn').forEach(b=>{if(!b.classList.contains('voted-no'))b.style.opacity='0.35';});
+    // Show inline complaint box
+    const box=document.createElement('div');
+    box.className='complaint-box';
+    box.innerHTML=`<p class="complaint-label">What went wrong? <span>(optional)</span></p>
+      <textarea class="complaint-input" placeholder="Describe what was incorrect or missing…" rows="3"></textarea>
+      <div class="complaint-actions">
+        <button class="complaint-submit">Submit</button>
+        <button class="complaint-skip">Skip</button>
+      </div>`;
+    footer.appendChild(box);
+    function submitComplaint(complaint){
+      footer.dataset.voted='true';
+      box.remove();
+      submitFaqVote(faqQuestion,'disliked',complaint||null);
+      showToast('Thanks for the feedback — we\'ll improve this answer.');
+    }
+    box.querySelector('.complaint-submit').onclick=function(){
+      const txt=box.querySelector('.complaint-input').value.trim();
+      submitComplaint(txt);
+    };
+    box.querySelector('.complaint-skip').onclick=function(){submitComplaint('');};
+  }
+}
+function submitFaqVote(question,vote,complaint){
+  const token=localStorage.getItem('ea_access_token');
+  const headers={'Content-Type':'application/json'};
+  if(token)headers['Authorization']='Bearer '+token;
+  fetch('/api/faq-feedback',{
+    method:'POST',
+    headers:headers,
+    body:JSON.stringify({faq_question:question,vote:vote,complaint:complaint})
+  }).catch(()=>{/* silent fail */});
+}
 function showToast(msg){const toast=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;toast.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3000);}
 (function(){var btn=document.getElementById('hamburgerBtn'),closeBtn=document.getElementById('drawerCloseBtn'),drawer=document.getElementById('mobileDrawer'),overlay=document.getElementById('mobileOverlay');if(!btn)return;function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});if(closeBtn)closeBtn.addEventListener('click',closeD);overlay.addEventListener('click',closeD);document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});drawer.querySelectorAll('a').forEach(function(el){el.addEventListener('click',closeD);});})();
 </script>
