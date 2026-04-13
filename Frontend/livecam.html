@@ -23,9 +23,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:rgba(253,248,244,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:0;z-index:300}
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:600;font-size:1rem;text-decoration:none;color:var(--text)}
 .logo-box{width:30px;height:30px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow)}
-.nav-right{display:flex;align-items:center;gap:8px}
-.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;font-family:var(--font-body)}
-.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+
+
 .nav-live-badge{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:99px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.2);font-size:11px;font-weight:700;color:#dc2626;letter-spacing:0.06em}
 .nav-live-dot{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:livePip 1s ease-in-out infinite}
 @keyframes livePip{0%,100%{opacity:1}50%{opacity:0.2}}
@@ -248,23 +248,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .analysis-typing span:nth-child(2){animation-delay:0.2s}
 .analysis-typing span:nth-child(3){animation-delay:0.4s}
 @keyframes typingDot{0%,60%,100%{opacity:0.2;transform:scale(0.8)}30%{opacity:1;transform:scale(1)}}
-.hamburger-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:none;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0}
+
 .hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .2s}
 .hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
 .hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-.mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:rgba(253,248,244,0.99);backdrop-filter:blur(24px);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 32px rgba(0,0,0,.10);visibility:hidden}
-.mobile-drawer.open{transform:translateX(0);visibility:visible}
-.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 24px;font-size:15px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s}
-.mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
-.mobile-drawer-divider{height:1px;background:var(--border);margin:8px 20px}
-.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
-.drawer-brand{display:flex;align-items:center;gap:10px}
-.drawer-brand-name{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--text)}
-.drawer-close-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.drawer-close-btn:hover{background:var(--elevated);color:var(--text)}
-.mobile-overlay{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.25);backdrop-filter:blur(2px)}
-.mobile-overlay.open{display:block}
+
 /* ── Emotion category cards ─────────────────────────────────────── */
 .emo-cat-positive{background:rgba(22,163,74,0.05);border-color:rgba(22,163,74,0.18)}
 .emo-cat-positive:hover{background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.35);box-shadow:0 2px 12px rgba(22,163,74,0.12)}
@@ -307,65 +296,102 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 .tip-item{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;color:var(--text2);line-height:1.5}
 .tip-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
 @media(max-width:1024px){.row1{grid-template-columns:1fr}.row2{grid-template-columns:1fr}.analysis-inner{grid-template-columns:1fr}.analysis-left{border-right:none;border-bottom:1px solid var(--border)}}
-@media(max-width:768px){.hamburger-btn{display:flex!important;order:1;flex-shrink:0}.nav-logo{order:0;flex:1 1 auto;min-width:0}.back-btn{display:none}.nav-mode-btn span{display:none}.how-steps-row{grid-template-columns:1fr}.page{padding:16px 14px 40px}nav{z-index:300;justify-content:space-between}}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:300;height:64px;display:flex;flex-direction:row;align-items:center;padding:0 24px;gap:16px;background:rgba(253,248,244,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.nav-logo-wrap{display:flex;align-items:center;flex-shrink:0}
+.nav-logo{font-family:var(--font-display);font-weight:600;font-size:1.1rem;display:flex;flex-direction:row;align-items:center;gap:8px;text-decoration:none;color:var(--text);white-space:nowrap}
+.logo-box{width:30px;height:30px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px var(--accent-glow);flex-shrink:0}
+.nav-spacer{flex:1}
+.nav-links{display:flex !important;flex-direction:row !important;gap:28px;list-style:none;margin:0;padding:0;align-items:center}
+.nav-links li{display:flex;align-items:center}
+.nav-links a{font-size:13px;color:var(--text2);text-decoration:none;font-weight:500;transition:color 0.15s;white-space:nowrap}
+.nav-links a:hover,.nav-links a.active{color:var(--accent)}
+.nav-actions{display:flex !important;flex-direction:row !important;gap:10px;align-items:center;flex-shrink:0}
+.btn-ghost-sm{font-size:13px;font-weight:600;padding:7px 16px;border-radius:99px;border:1.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s;display:inline-flex;flex-direction:row;align-items:center;gap:6px;white-space:nowrap;font-family:var(--font-body)}
+.btn-ghost-sm:hover{border-color:var(--accent);color:var(--accent)}
+/* Hamburger — far right, mobile only */
+.hamburger-btn{display:none !important;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:transparent;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--text);border-radius:2px;transition:transform 0.25s ease,opacity 0.2s ease;transform-origin:center}
+.hamburger-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+/* Drawer slides in from LEFT */
+.mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:rgba(253,248,244,0.99);backdrop-filter:blur(24px);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 32px rgba(0,0,0,0.10);visibility:hidden}
+.mobile-drawer.open{transform:translateX(0);visibility:visible}
+.mobile-drawer ul{list-style:none;padding:8px 0;flex:1;margin:0}
+.mobile-drawer ul li a{display:flex;align-items:center;gap:12px;width:100%;padding:13px 24px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background 0.12s,color 0.12s}
+.mobile-drawer ul li a:hover,.mobile-drawer ul li a.active{background:var(--elevated);color:var(--accent)}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 20px}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.drawer-brand{display:flex;align-items:center;gap:10px}
+.drawer-brand-name{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--text)}
+.drawer-close-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.drawer-close-btn:hover{background:var(--elevated);color:var(--text)}
+.mobile-drawer-actions{padding:12px 20px 20px;margin-top:auto;border-top:1px solid var(--border)}
+.mobile-drawer-actions .btn-ghost-sm{width:100%;justify-content:center;border-radius:12px;padding:11px 16px;font-size:14px}
+.mobile-overlay{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,0.25)}
+.mobile-overlay.open{display:block}
+
+@media(max-width:768px){
+  nav{padding:0 16px}
+  .nav-links,.nav-actions{display:none !important}
+  .hamburger-btn{display:flex !important}
+  .nav-mode-btn span{display:none}
+  .how-steps-row{grid-template-columns:1fr}
+  .page{padding:16px 14px 40px}
+}
 </style>
 </head>
 <body>
 
 <nav>
-  <a class="nav-logo" href="/home">
-    <div class="logo-box">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>
-    </div>
-    Emotion Analysis
-  </a>
-  <div style="display:flex;align-items:center;gap:8px">
-    <div class="nav-live-badge" id="navLiveBadge" style="display:none"><div class="nav-live-dot"></div>LIVE</div>
-    <span id="sessionTimerNav" style="display:none!important;visibility:hidden"></span>
-  </div>
-  <div class="nav-right">
-    <div style="position:relative" id="navModeWrap">
-      <button class="nav-mode-btn" onclick="toggleDD(event)">
-        <svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>Switch Mode
-      </button>
-      <div id="navDD" style="position:absolute;top:calc(100%+10px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.1);min-width:190px;padding:6px;z-index:200;opacity:0;transform:translateY(-8px) scale(0.97);pointer-events:none;transition:opacity 0.18s,transform 0.18s;transform-origin:top right">
-        <a href="/detect" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--text);font-size:12px;font-weight:500">
-          <div style="width:28px;height:28px;border-radius:8px;background:var(--elevated);display:flex;align-items:center;justify-content:center;color:var(--accent)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
-          <div><div style="font-weight:700;font-size:12px">Detect</div><div style="font-size:10px;color:var(--text3)">Single snapshot mode</div></div>
-        </a>
-        <a href="/livecam" style="display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;text-decoration:none;color:var(--accent);font-size:12px;font-weight:500;background:var(--accent-dim)">
-          <div style="width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
-          <div><div style="font-weight:700;font-size:12px">Live Cam</div><div style="font-size:10px;color:var(--accent2)">Current page</div></div>
-        </a>
-      </div>
-    </div>
-    <a class="back-btn" href="/home">
-      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Back
+  <!-- Logo on far left -->
+  <div class="nav-logo-wrap">
+    <a href="/home" class="nav-logo">
+      <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+      Emotion Analysis
     </a>
-    <button class="back-btn" onclick="if(typeof Auth!=='undefined')Auth.logout()">
-      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
-    </button>
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
   </div>
+  <!-- Spacer pushes everything to the right -->
+  <div class="nav-spacer"></div>
+  <!-- Nav links (hidden on mobile) -->
+  <ul class="nav-links">
+    <li><a href="/home">Home</a></li>
+    <li><a href="/detect" class="active">Detect</a></li>
+    <li><a href="/faq">FAQ</a></li>
+    <li><a href="/feedback">Feedback</a></li>
+  </ul>
+  <!-- Actions (hidden on mobile) -->
+  <div class="nav-actions">
+    <a href="#" onclick="if(typeof Auth!=='undefined'&&Auth.logout)Auth.logout();else window.location.href='/logout'" class="btn-ghost-sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+  </div>
+  <!-- Hamburger on far RIGHT (mobile only) -->
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
-
 <div class="mobile-overlay" id="mobileOverlay"></div>
-<div class="mobile-drawer" id="mobileDrawer">
+<div class="mobile-drawer" id="mobileDrawer" role="dialog" aria-label="Navigation menu">
   <div class="drawer-header">
     <div class="drawer-brand">
-      <div class="logo-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
+      <div class="logo-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg></div>
       <span class="drawer-brand-name">Emotion Analysis</span>
     </div>
-    <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close menu">✕</button>
+    <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close menu">&#x2715;</button>
   </div>
   <div class="mobile-drawer-divider"></div>
-  <a href="/home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
-  <a href="/detect"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect Mode</a>
+  <ul>
+    <li><a href="/home"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a></li>
+    <li><a href="/detect" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect</a></li>
+    <li><a href="/faq"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a></li>
+    <li><a href="/feedback"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Feedback</a></li>
+  </ul>
   <div class="mobile-drawer-divider"></div>
-  <a href="/faq"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a>
-  <div class="mobile-drawer-divider"></div>
-  <button onclick="if(typeof Auth!=='undefined')Auth.logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</button>
+  <div class="mobile-drawer-actions">
+    <a href="#" onclick="if(typeof Auth!=='undefined'&&Auth.logout)Auth.logout();else window.location.href='/logout'" class="btn-ghost-sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+  </div>
 </div>
+
+
 
 <div class="page">
 
@@ -1273,13 +1299,13 @@ window.addEventListener('load',()=>{
   var drawer=document.getElementById('mobileDrawer');
   var overlay=document.getElementById('mobileOverlay');
   if(!btn)return;
-  function open(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');document.body.style.overflow='hidden';}
-  function close(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');document.body.style.overflow='';}
-  btn.addEventListener('click',function(){btn.classList.contains('open')?close():open();});
-  if(closeBtn)closeBtn.addEventListener('click',close);
-  overlay.addEventListener('click',close);
-  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
-  drawer.querySelectorAll('a').forEach(function(el){el.addEventListener('click',close);});
+  function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+  function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+  btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});
+  if(closeBtn)closeBtn.addEventListener('click',closeD);
+  if(overlay)overlay.addEventListener('click',closeD);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});
+  if(drawer)drawer.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeD);});
 })();
 </script>
 </body>

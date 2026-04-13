@@ -64,12 +64,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 28px
 /* ── MOBILE DRAWER ── */
 .mobile-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)}
 .mobile-overlay.open{display:block}
-.mobile-drawer{position:fixed;top:52px;left:0;right:0;background:rgba(250,249,247,0.99);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:200;padding:0;transform:translateY(-110%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 12px 32px rgba(0,0,0,.1)}
-.mobile-drawer.open{transform:translateY(0)}
-.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:12px;width:100%;padding:14px 24px;font-size:15px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s}
+.mobile-drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:rgba(250,249,247,0.99);backdrop-filter:blur(24px);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;padding:0;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(0,0,0,.10);visibility:hidden}
+.mobile-drawer.open{transform:translateX(0);visibility:visible}
+.mobile-drawer a,.mobile-drawer button{display:flex;align-items:center;gap:12px;width:100%;padding:13px 24px;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:none;cursor:pointer;font-family:var(--font-body);transition:background .12s,color .12s}
 .mobile-drawer a:hover,.mobile-drawer button:hover{background:var(--elevated);color:var(--accent)}
-.mobile-drawer-divider{height:1px;background:var(--border);margin:8px 20px}
-.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px}
+.mobile-drawer-divider{height:1px;background:var(--border);margin:6px 20px}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
 .drawer-brand{display:flex;align-items:center;gap:10px}
 .drawer-brand-name{font-weight:600;font-size:1rem;color:var(--text)}
 .drawer-close-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
