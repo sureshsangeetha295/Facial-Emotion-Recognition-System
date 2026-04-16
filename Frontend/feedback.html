@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f97316' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7V5a2 2 0 0 1 2-2h2'/%3E%3Cpath d='M17 3h2a2 2 0 0 1 2 2v2'/%3E%3Cpath d='M21 17v2a2 2 0 0 1-2 2h-2'/%3E%3Cpath d='M7 21H5a2 2 0 0 1-2-2v-2'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3Cpath d='M7 18a5 5 0 0 1 10 0'/%3E%3C/svg%3E"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>EmotionAI — Feedback</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -74,6 +75,8 @@ nav{height:64px;display:flex;align-items:center;padding:0 48px;gap:24px;backgrou
 .success-state p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px}
 .reset-btn{padding:9px 22px;border-radius:99px;border:1.5px solid var(--border2);background:none;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text2);transition:all 0.15s}
 .reset-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;font-size:13px;font-weight:600;padding:11px 22px;border-radius:99px;box-shadow:0 6px 24px rgba(0,0,0,0.18);opacity:0;pointer-events:none;transition:opacity 0.25s,transform 0.25s;z-index:9999;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
@@ -119,11 +122,10 @@ nav{position:sticky;top:0;z-index:100;height:64px;display:flex;flex-direction:ro
   .hamburger-btn{display:flex !important}
 }
 </style>
-<script>
-(function(){var s=document.createElement('script');s.src='script/auth.js';s.onerror=function(){window.__authJsFailed=true;};document.head.appendChild(s);})();
-</script>
+<link rel="stylesheet" href="style/pages/feedback.css"/>
 </head>
 <body>
+<div class="toast" id="toast"><span>🙏</span><span id="toastMsg">Thank you for your feedback!</span></div>
 <nav>
   <div class="nav-logo-wrap">
     <a href="/home" class="nav-logo">
@@ -134,7 +136,7 @@ nav{position:sticky;top:0;z-index:100;height:64px;display:flex;flex-direction:ro
   <div class="nav-spacer"></div>
   <ul class="nav-links">
     <li><a href="/home">Home</a></li>
-    <li><a href="/detect">Detect</a></li>
+    <li><a href="#" onclick="launchApp(event)">Detect</a></li>
     <li><a href="/faq">FAQ</a></li>
     <li><a href="/feedback" class="active">Feedback</a></li>
   </ul>
@@ -155,7 +157,7 @@ nav{position:sticky;top:0;z-index:100;height:64px;display:flex;flex-direction:ro
   <div class="mobile-drawer-divider"></div>
   <ul>
     <li><a href="/home"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a></li>
-    <li><a href="/detect"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect</a></li>
+    <li><a href="#" onclick="launchApp(event)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>Detect</a></li>
     <li><a href="/faq"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>FAQ</a></li>
     <li><a href="/feedback" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Feedback</a></li>
   </ul>
@@ -184,7 +186,6 @@ nav{position:sticky;top:0;z-index:100;height:64px;display:flex;flex-direction:ro
       </div>
       <div class="rating-wrap">
         <span class="field-label">Overall experience</span>
-        <div class="stars" id="stars">
         <div class="stars" id="stars">
           <button class="star-btn" onclick="setRating(1)" aria-label="1 star"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>
           <button class="star-btn" onclick="setRating(2)" aria-label="2 stars"><svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg></button>
@@ -224,19 +225,8 @@ nav{position:sticky;top:0;z-index:100;height:64px;display:flex;flex-direction:ro
 </div>
 
 
-<script>
-let rating=0,category="General";
-window.addEventListener('DOMContentLoaded',()=>{try{const token=localStorage.getItem('ea_access_token');if(token){fetch('/auth/me',{headers:{'Authorization':'Bearer '+token}}).then(r=>r.ok?r.json():null).then(me=>{if(me&&me.username){const inp=document.getElementById('usernameInput');inp.value=me.username;inp.readOnly=true;inp.style.background='var(--elevated)';inp.style.color='var(--text2)';}}).catch(()=>{});}}catch(_){}});
-function setRating(r){rating=r;const btns=[...document.querySelectorAll('.star-btn')];btns.forEach((b,i)=>{b.classList.toggle('lit',i<r);b.classList.remove('preview');});}
-// hover preview
-(function(){function applyPreview(btns,lit,prev){btns.forEach((b,i)=>{b.classList.toggle('lit',i<lit);b.classList.toggle('preview',i>=lit&&i<prev);});}document.addEventListener('DOMContentLoaded',function(){const btns=[...document.querySelectorAll('.star-btn')];btns.forEach((btn,idx)=>{btn.addEventListener('mouseenter',()=>applyPreview(btns,rating,idx+1));btn.addEventListener('mouseleave',()=>applyPreview(btns,rating,0));});});})();
-function selectChip(el){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');category=el.textContent.trim();}
-function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.classList.add('show');}
-function hideError(){const el=document.getElementById('errorMsg');el.textContent='';el.classList.remove('show');}
-function setLoading(loading){const btn=document.getElementById('submitBtn');if(loading){btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Sending…';}else{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Feedback';}}
-async function submitFeedback(){hideError();const username=document.getElementById('usernameInput').value.trim();const email=document.getElementById('emailInput').value.trim();const text=document.getElementById('feedbackText').value.trim();if(!username){document.getElementById('usernameInput').focus();document.getElementById('usernameInput').style.borderColor='var(--accent)';showError('Please enter your username before submitting.');return;}document.getElementById('usernameInput').style.borderColor='';if(!text){document.getElementById('feedbackText').focus();document.getElementById('feedbackText').style.borderColor='var(--accent)';showError('Please write your feedback before submitting.');return;}document.getElementById('feedbackText').style.borderColor='';if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById('emailInput').focus();document.getElementById('emailInput').style.borderColor='var(--accent)';showError('Please enter a valid email address, or leave it blank.');return;}document.getElementById('emailInput').style.borderColor='';const payload={username,email:email||null,rating:rating>0?rating:null,category,message:text};setLoading(true);try{let token=null;try{if(typeof Auth!=='undefined'&&Auth.getAccessToken)token=Auth.getAccessToken();}catch(_){}if(!token)token=localStorage.getItem('ea_access_token');const headers={'Content-Type':'application/json'};if(token)headers['Authorization']='Bearer '+token;let res;try{res=await fetch('/api/feedback',{method:'POST',headers,body:JSON.stringify(payload)});}catch(e){res=await fetch('/feedback',{method:'POST',headers,body:JSON.stringify(payload)});}if(!res.ok){let errMsg=`Server error (${res.status}). Please try again.`;try{const d=await res.json();if(d.detail)errMsg=d.detail;else if(d.message)errMsg=d.message;}catch(_){}throw new Error(errMsg);}document.getElementById('formContent').style.display='none';document.getElementById('successState').classList.add('show');}catch(err){showError(err.message||'Failed to submit feedback. Please try again.');}finally{setLoading(false);}}
-(function(){var btn=document.getElementById('hamburgerBtn'),closeBtn=document.getElementById('drawerCloseBtn'),drawer=document.getElementById('mobileDrawer'),overlay=document.getElementById('mobileOverlay');if(!btn)return;function openD(){btn.classList.add('open');drawer.classList.add('open');overlay.classList.add('open');btn.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}function closeD(){btn.classList.remove('open');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.style.overflow='';}btn.addEventListener('click',function(){btn.classList.contains('open')?closeD():openD();});if(closeBtn)closeBtn.addEventListener('click',closeD);if(overlay)overlay.addEventListener('click',closeD);document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD();});if(drawer)drawer.querySelectorAll('a').forEach(function(el){el.addEventListener('click',closeD);});})();
-function resetForm(){rating=0;category='General';hideError();document.getElementById('feedbackText').value='';document.getElementById('feedbackText').style.borderColor='';const unameInp=document.getElementById('usernameInput');if(!unameInp.readOnly)unameInp.value='';unameInp.style.borderColor='';document.getElementById('emailInput').value='';document.getElementById('emailInput').style.borderColor='';document.querySelectorAll('.star-btn').forEach(b=>{b.classList.remove('lit');b.classList.remove('preview');});document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));document.querySelector('.chip').classList.add('active');document.getElementById('formContent').style.display='block';document.getElementById('successState').classList.remove('show');}
-</script>
+<div class="toast" id="toast"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span id="toastMsg">Thank you for your feedback!</span></div>
+
+<script src="script/pages/feedback.js"></script>
 </body>
 </html>
