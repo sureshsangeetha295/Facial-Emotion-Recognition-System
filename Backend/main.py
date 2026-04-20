@@ -30,6 +30,12 @@ from dotenv import load_dotenv
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
+# ── MockCoach router ──────────────────────────────────────────────────────────
+import sys as _sys
+import os as _os
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+
+
 
 # =============================================================================
 #  ENV
@@ -100,34 +106,21 @@ DB_DSN = {
     "password": os.getenv("DB_PASSWORD", ""),
 }
 
+# Google OAuth
+GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID",     "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI  = os.getenv("GOOGLE_REDIRECT_URI",  "http://localhost:8000/auth/google/callback")
+
+# reCAPTCHA v2
+RECAPTCHA_SITE_KEY   = os.getenv("RECAPTCHA_SITE_KEY",   "")
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY", "")
+
 
 # =============================================================================
 #  ML CONFIG  —  Engagement weights, EMA tracker, tone aggregation
 # =============================================================================
 
 EMOTION_LABELS = ["Anger", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise"]
-
-# ── Research-grounded 3-tier engagement weights ──────────────────────────────
-#
-#  Tier 1  HIGH POSITIVE  (active learning state)
-#    Happiness  0.85  active enjoyment, fully receptive — strongest engagement signal
-#    Surprise   0.70  attention spike / curiosity / "aha" moment — but short-lived
-#
-#  Tier 2  NEUTRAL BASELINE  (stable passive attention)
-#    Neutral    0.55  steady focus, low emotional activation — reliable baseline
-#
-#  Tier 3  NEGATIVE  (engagement declining or at risk)
-#    Fear       0.35  anxious focus — learner is stressed; present but fragile
-#    Sadness    0.20  withdrawal beginning — low motivation
-#    Anger      0.15  frustration/confusion — content is NOT landing
-#    Disgust    0.05  strong aversion — strongest disengagement signal
-#
-#  Design notes:
-#    • Gap between Neutral (0.55) and Fear (0.35) is intentionally large —
-#      crossing into negative emotions is a qualitative shift, not a small step.
-#    • Disgust sits alone at 0.05 (not 0.10) because it signals active rejection.
-#    • Surprise < Happiness because attention spikes are fleeting; sustained
-#      happiness is a better learning predictor.
 
 ENGAGEMENT_SCORES: dict[str, float] = {
     "Happiness": 0.85,
@@ -139,7 +132,6 @@ ENGAGEMENT_SCORES: dict[str, float] = {
     "Disgust":   0.05,
 }
 
-# Tone for positive / neutral / negative aggregation
 EMOTION_TONE: dict[str, str] = {
     "Happiness": "positive",
     "Surprise":  "positive",
@@ -150,72 +142,53 @@ EMOTION_TONE: dict[str, str] = {
     "Disgust":   "negative",
 }
 
-# EMA alpha: 0.20 = ~5 frames to "forget" old data.
-# Increase toward 0.35 for faster reaction; lower to 0.10 for smoother curve.
 EMA_ALPHA = 0.20
 
 
 def emotion_to_engagement(emotion: str) -> float:
-    """Return the base engagement weight for a given emotion label."""
     return ENGAGEMENT_SCORES.get(emotion, 0.50)
 
 
 class SessionEngagementTracker:
     """
     Per-session engagement tracker using Exponential Moving Average (EMA).
-
-    Three parallel scores are tracked:
-
-    1. EMA engagement  (primary output)
-       ------------------------------------------
-       EMA_0 = w(e_0)
-       EMA_t = alpha * w(e_t) + (1 - alpha) * EMA_{t-1}
-
-       Recent frames count more than older frames.
-       A learner who ends a session engaged will score HIGHER than one who was
-       engaged only at the start — which is pedagogically correct.
-
-    2. Confidence-weighted average  (secondary)
-       ------------------------------------------
-       score = SUM(w(e_i) * conf_i) / SUM(conf_i)
-
-       A Happiness detection at 95% confidence contributes more than the same
-       emotion detected at 52% confidence.
-
-    3. Tone breakdown  (tertiary)
-       ------------------------------------------
-       % of frames classified as positive / neutral / negative.
-       Passed to the LLM prompt for richer emotional context.
+    Also used by mock_routes.py for video emotion analysis.
     """
 
     def __init__(self, alpha: float = EMA_ALPHA):
         self.alpha        = alpha
-        self.ema          = None       # None until first frame
+        self.ema          = None
         self.conf_sum     = 0.0
         self.weighted_sum = 0.0
         self.frame_count  = 0
         self.tone_counts  = {"positive": 0, "negative": 0, "neutral": 0}
 
+    def _adaptive_alpha(self, score: float, confidence: float) -> float:
+        """
+        Alpha adapts based on:
+          1. Confidence: high-confidence detections react faster (higher alpha)
+          2. Emotion intensity: strong emotions move the EMA more;
+             neutral/low-intensity emotions smooth more (lower alpha)
+        Range: 0.08 (low conf + neutral) → 0.30 (high conf + strong emotion)
+        """
+        conf_norm = max(0.0, min(1.0, confidence))
+        intensity = abs(score - 0.50) / 0.50   # 0 = neutral midpoint, 1 = extreme
+        alpha = 0.08 + (conf_norm * 0.12) + (intensity * 0.10)
+        return min(0.30, alpha)
+
     def update(self, emotion: str, confidence: float = 1.0) -> float:
-        """Feed one detection frame. Returns updated EMA score (0.0-1.0)."""
         score = emotion_to_engagement(emotion)
         conf  = max(0.0, min(1.0, float(confidence)))
-
-        # EMA update
         if self.ema is None:
             self.ema = score
         else:
-            self.ema = self.alpha * score + (1.0 - self.alpha) * self.ema
-
-        # Confidence-weighted accumulator
+            alpha = self._adaptive_alpha(score, conf)
+            self.ema = alpha * score + (1.0 - alpha) * self.ema
         self.weighted_sum += score * conf
         self.conf_sum     += conf
         self.frame_count  += 1
-
-        # Tone bucket
         tone = EMOTION_TONE.get(emotion, "neutral")
         self.tone_counts[tone] += 1
-
         return round(self.ema, 4)
 
     @property
@@ -243,11 +216,72 @@ class SessionEngagementTracker:
 
 
 # =============================================================================
+#  SPIKE DETECTOR  — detects sudden engagement drops/surges
+# =============================================================================
+
+class SpikeDetector:
+    """
+    Detects sudden engagement spikes (sharp drops or surges) using a
+    rolling z-score over a short window of EMA scores.
+    A 'spike' = the EMA moves more than `threshold` standard deviations
+    from the recent rolling mean in a single step.
+    """
+
+    def __init__(self, window: int = 10, threshold: float = 1.8):
+        self.window    = window
+        self.threshold = threshold
+        self._history: list[float] = []   # raw EMA values
+        self._spikes:  list[dict]  = []   # {frame, direction, delta, ema}
+        self._frame    = 0
+
+    def update(self, ema_score: float) -> dict | None:
+        """
+        Feed the latest EMA score. Returns a spike dict if one is detected,
+        else None.
+        spike dict: {frame, direction ('drop'|'surge'), delta, ema}
+        """
+        self._frame += 1
+        spike = None
+        if len(self._history) >= 2:
+            window_vals = self._history[-self.window:]
+            mean = sum(window_vals) / len(window_vals)
+            std  = (sum((v - mean) ** 2 for v in window_vals) / len(window_vals)) ** 0.5
+            if std > 0.01:
+                z = (ema_score - mean) / std
+                if abs(z) >= self.threshold:
+                    direction = "drop" if ema_score < mean else "surge"
+                    spike = {
+                        "frame":     self._frame,
+                        "direction": direction,
+                        "delta":     round(abs(ema_score - mean), 4),
+                        "ema":       round(ema_score, 4),
+                    }
+                    self._spikes.append(spike)
+        self._history.append(ema_score)
+        return spike
+
+    def summary(self) -> dict:
+        drops  = [s for s in self._spikes if s["direction"] == "drop"]
+        surges = [s for s in self._spikes if s["direction"] == "surge"]
+        return {
+            "total_spikes":  len(self._spikes),
+            "drops":         len(drops),
+            "surges":        len(surges),
+            "spike_frames":  [s["frame"] for s in self._spikes],
+            "spike_details": self._spikes,
+        }
+
+    def reset(self):
+        self._history.clear()
+        self._spikes.clear()
+        self._frame = 0
+
+
+# =============================================================================
 #  LLM HELPERS
 # =============================================================================
 
 def _parse_duration_to_minutes(duration_str: str) -> int:
-    """Parses "00:04:32", "4:32", "27m", "1h 5m" etc. into total minutes (min 1)."""
     total_seconds = 0
     s = str(duration_str or "0").replace("h", ":").replace("m", ":").replace("s", "").strip()
     parts = s.split(":")
@@ -264,7 +298,6 @@ def _parse_duration_to_minutes(duration_str: str) -> int:
 
 
 def _parse_emotion_pcts(emotion_summary: str) -> dict:
-    """Parses "Happy: 45%, Neutral: 30%" -> {"Happy": 45, "Neutral": 30}."""
     result = {}
     if not emotion_summary:
         return result
@@ -282,7 +315,6 @@ def _parse_emotion_pcts(emotion_summary: str) -> dict:
 
 
 def _engagement_band(score: float) -> tuple:
-    """Converts engagement score (0-1 or 0-100) to (band, emoji, coaching) tuple."""
     pct = round(score) if score > 1 else round(score * 100)
     if pct >= 80:
         return ("Excellent", "🟢",
@@ -315,7 +347,6 @@ def _dominant_emotion_profile(dominant: str) -> str:
 
 
 def _duration_context(total_minutes: int) -> tuple:
-    """Returns (phase_label, duration_note, time_tip) based on session length."""
     if total_minutes < 5:
         return (
             "short warm-up session",
@@ -349,7 +380,6 @@ def _duration_context(total_minutes: int) -> tuple:
 
 
 def _engagement_time_interpretation(eng_pct: int, total_minutes: int) -> str:
-    """Single plain-English sentence combining engagement % and session duration."""
     if eng_pct >= 70 and total_minutes >= 20:
         return (f"Strong sustained focus — {eng_pct}% EMA engagement held over {total_minutes} min "
                 f"indicates deep learning mode.")
@@ -371,15 +401,10 @@ def _engagement_time_interpretation(eng_pct: int, total_minutes: int) -> str:
 
 
 # =============================================================================
-#  generate_summary()  —  engagement + time aware
+#  generate_summary()
 # =============================================================================
 
 def generate_summary(session_data: dict) -> str:
-    """
-    Generates a chat-style session summary via Groq — EMA engagement only.
-    No timestamps, no duration math, no 'time-based' coaching.
-    Talks directly to the learner like a real coach would after watching them.
-    """
     api_key = os.getenv("GROQ_API_KEY", "").strip()
     if not api_key:
         raise ValueError("GROQ_API_KEY is missing. Add it to your .env file.")
@@ -391,13 +416,11 @@ def generate_summary(session_data: dict) -> str:
     dominant    = session_data.get("dominantEmotion", "Neutral")
     dom_profile = _dominant_emotion_profile(dominant)
 
-    # Tone breakdown from tracker (pos/neg/neutral % of frames)
     tone    = session_data.get("tone", {})
     pos_pct = tone.get("positive", 0)
     neg_pct = tone.get("negative", 0)
     neu_pct = tone.get("neutral",  0)
 
-    # Determine conversational engagement label
     if eng_pct >= 75:
         eng_read = f"strong — you were clearly in the zone at {eng_pct}%"
     elif eng_pct >= 55:
@@ -408,34 +431,37 @@ def generate_summary(session_data: dict) -> str:
         eng_read = f"very low at {eng_pct}% — significant disengagement detected"
 
     system_msg = (
-        "You are EmotionAI, a friendly and direct learning coach. "
-        "You just finished watching a learner's live session through their webcam. "
-        "You detected their facial emotions frame by frame and computed an EMA engagement score — "
-        "a recency-weighted score where recent frames matter more than older ones. "
-        "It reflects WHERE the learner ended up, not just a flat average.\n\n"
-        "Write a short, warm, CHAT-STYLE message directly to the learner — like a coach texting "
-        "feedback after a session. No headers. No bullet points. No sections. No timestamps. "
-        "No references to session duration or time. Just 3-4 natural sentences.\n\n"
-        "Structure (write as flowing prose, NOT labelled):\n"
-        "  1. One honest sentence about how engaged they were (use the EMA score naturally).\n"
-        "  2. One sentence about what their dominant emotion says about them right now.\n"
-        "  3. One concrete, specific action they can take before their next session.\n"
-        "  4. One short encouraging closer.\n\n"
-        "Rules:\n"
-        "- Never mention timestamps, duration, minutes, or seconds.\n"
-        "- Never say 'session data', 'timeline', 'refer to', or 'see details'.\n"
-        "- Never use headers like SESSION SNAPSHOT or COACH TIP.\n"
-        "- Write like a real human coach, not a report generator.\n"
-        "- Keep it under 80 words total."
+        "You are EmotionAI, a warm and encouraging learning coach. "
+        "You just analysed a learner's webcam session by reading their facial expressions frame by frame. "
+        "Your job is to turn that data into a short, friendly chat message — like a supportive friend "
+        "giving honest feedback after a study session.\n\n"
+        "WHAT THE DATA MEANS (explain naturally, never use jargon):\n"
+        "- EMA Engagement score: think of it as a focus meter from 0–100. "
+        "  Above 65 = good focus, 45–64 = some wandering, below 45 = mind was elsewhere.\n"
+        "- Dominant emotion: the face you showed most during the session. "
+        "  Neutral = calm but passive. Happy/Surprised = actively interested. "
+        "  Sad/Angry/Fear/Disgust = something was frustrating or hard.\n\n"
+        "Write exactly 3–4 sentences in a warm, conversational tone. No bullet points. No headers. "
+        "No technical words like 'EMA', 'recency-weighted', or 'frame'. "
+        "Speak directly to the learner as 'you'. Be honest but kind.\n\n"
+        "Sentence 1: Tell them simply how focused they were — use plain language, not a score.\n"
+        "Sentence 2: Tell them what their main emotion during the session suggests — make it human and relatable.\n"
+        "Sentence 3: Give ONE specific, practical thing they can do differently or repeat next time.\n"
+        "Sentence 4 (optional): A short, genuine encouragement — not generic cheerleading.\n\n"
+        "Hard rules:\n"
+        "- Never say 'EMA', 'timeline', 'session data', 'refer to', 'timestamps', or 'minutes'.\n"
+        "- Never use headers or bullet points.\n"
+        "- Keep it under 85 words total.\n"
+        "- Sound like a real person, not a report."
     )
 
     user_msg = (
-        f"EMA Engagement   : {eng_pct}% — {eng_read}\n"
-        f"Engagement Band  : {band} {emoji}\n"
-        f"Dominant Emotion : {dominant} ({dom_profile})\n"
-        + (f"Tone Breakdown   : {pos_pct}% positive / {neu_pct}% neutral / {neg_pct}% negative\n" if tone else "")
-        + f"\nCoaching direction: {coaching}\n\n"
-        "Write the chat-style message now. Remember: no headers, no timestamps, no sections, under 80 words."
+        f"Focus level      : {eng_pct}/100 — {eng_read}\n"
+        f"Focus rating     : {band} {emoji}\n"
+        f"Main emotion     : {dominant} — means: {dom_profile}\n"
+        + (f"Mood breakdown   : {pos_pct}% positive / {neu_pct}% neutral / {neg_pct}% negative\n" if tone else "")
+        + f"\nCoach suggestion : {coaching}\n\n"
+        "Write the friendly chat message now. Plain English only, under 85 words, no jargon, no headers."
     )
 
     url     = "https://api.groq.com/openai/v1/chat/completions"
@@ -564,19 +590,14 @@ def init_db():
             is_admin            BOOLEAN      NOT NULL DEFAULT FALSE,
             created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
             last_login          TIMESTAMPTZ,
-            security_q1         TEXT,
-            security_a1         TEXT,
-            security_q2         TEXT,
-            security_a2         TEXT,
             password_reset_hash TEXT
         )
     """)
     for _col_sql in [
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q1         TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a1         TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_q2         TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS security_a2         TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_hash TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id            TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_code             TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires          TIMESTAMPTZ",
     ]:
         try:
             cur.execute(_col_sql); con.commit()
@@ -647,8 +668,6 @@ def init_db():
             id           BIGSERIAL    PRIMARY KEY,
             user_id      BIGINT       REFERENCES users(id) ON DELETE SET NULL,
             email        VARCHAR(254) NOT NULL,
-            security_q1  TEXT,
-            security_q2  TEXT,
             step1_at     TIMESTAMPTZ,
             step2_at     TIMESTAMPTZ,
             step2_passed BOOLEAN      NOT NULL DEFAULT FALSE,
@@ -686,6 +705,7 @@ def init_db():
     cur.execute("CREATE INDEX IF NOT EXISTS idx_faqs_category ON faqs(category)")
     con.commit()
 
+    # ── Admin account sync ────────────────────────────────────────────────────
     admin_email_clean = ADMIN_EMAIL.strip().lower()
     cur.execute(
         "SELECT id FROM users WHERE is_admin=TRUE AND (username=%s OR LOWER(email)=%s) LIMIT 1",
@@ -773,10 +793,6 @@ class RegisterRequest(BaseModel):
     email:       str
     password:    str
     username:    Optional[str] = None
-    security_q1: Optional[str] = None
-    security_a1: Optional[str] = None
-    security_q2: Optional[str] = None
-    security_a2: Optional[str] = None
 
 class RefreshRequest(BaseModel):
     refresh_token: str
@@ -804,7 +820,7 @@ class SummaryRequest(BaseModel):
     duration:        str
     engagement:      float
     dominantEmotion: str
-    tone:            Optional[dict] = None  # {"positive": %, "neutral": %, "negative": %}
+    tone:            Optional[dict] = None
 
 class InsightsRequest(BaseModel):
     duration:              str
@@ -812,7 +828,13 @@ class InsightsRequest(BaseModel):
     most_frequent_emotion: str
     engagement_score:      float
     reactions_sent:        int
-    tone:                  Optional[dict] = None  # {"positive": %, "neutral": %, "negative": %}
+    tone:                  Optional[dict] = None
+    timeline_context:      Optional[str]  = None
+    positive_pct:          Optional[int]  = None
+    negative_pct:          Optional[int]  = None
+    neutral_pct:           Optional[int]  = None
+    spike_summary:         Optional[dict] = None   # {total_spikes, drops, surges, spike_frames}
+    instructions:          Optional[str]  = None
 
 class AdminCreateUserRequest(BaseModel):
     username: str
@@ -822,7 +844,7 @@ class AdminCreateUserRequest(BaseModel):
 
 class FaqFeedbackRequest(BaseModel):
     faq_question: str
-    vote:         str            # "liked" or "disliked"
+    vote:         str
     complaint:    Optional[str] = None
 
 class FAQCreate(BaseModel):
@@ -843,19 +865,6 @@ class FAQUpdate(BaseModel):
 executor = ThreadPoolExecutor(max_workers=1)
 
 def run_pipeline(img_rgb: np.ndarray, use_mtcnn: bool = False):
-    """
-    Run face detection + emotion classification on one frame.
-
-    The 'engagement' field in the returned dict is the confidence-weighted
-    single-frame score:
-        engagement = emotion_weight * model_confidence
-
-    Example: Happiness at 95% confidence -> 0.85 * 0.95 = 0.807
-             Happiness at 52% confidence -> 0.85 * 0.52 = 0.442
-
-    Downstream callers accumulate these per-frame scores using
-    SessionEngagementTracker to produce EMA-based session scores.
-    """
     import testing
     idx, confidence, probs = testing.predict_emotion_from_image(img_rgb, use_mtcnn=use_mtcnn)
 
@@ -865,8 +874,6 @@ def run_pipeline(img_rgb: np.ndarray, use_mtcnn: bool = False):
 
     norm_probs = [round(float(p) / 100.0 if float(p) > 1.0 else float(p), 4) for p in probs]
     emotion    = EMOTION_LABELS[idx]
-
-    # Confidence-weighted single-frame score
     frame_engagement = round(emotion_to_engagement(emotion) * conf, 4)
 
     return {
@@ -916,10 +923,9 @@ async def register(body: RegisterRequest):
             if not cur.fetchone(): break
             username = f"{base_username}{suffix}"; suffix += 1
         cur.execute(
-            "INSERT INTO users (username, email, password_hash, security_q1, security_a1, security_q2, security_a2) "
-            "VALUES (%s,%s,%s,%s,%s,%s,%s)",
-            (username, email_clean, hash_password(body.password),
-             body.security_q1, body.security_a1, body.security_q2, body.security_a2)
+            "INSERT INTO users (username, email, password_hash) "
+            "VALUES (%s,%s,%s)",
+            (username, email_clean, hash_password(body.password))
         )
         con.commit()
         return {"message": "Account created successfully"}
@@ -1002,64 +1008,6 @@ async def me(current: dict = Depends(get_current_user)):
     }
 
 
-@app.post("/auth/reset/verify-email")
-async def reset_verify_email(body: dict, request: Request):
-    email = body.get("email", "").strip().lower()
-    if not email: raise HTTPException(status_code=400, detail="Email is required.")
-    ip = request.client.host if request.client else None
-    con = db_conn(); cur = con.cursor()
-    try:
-        cur.execute(
-            "SELECT id, security_q1, security_q2 FROM users WHERE LOWER(email)=%s AND is_admin=FALSE",
-            (email,)
-        )
-        row = fetchone(cur)
-        if not row:
-            raise HTTPException(status_code=404, detail="No account found for that email.")
-        if not row.get("security_q1") or not row.get("security_q2"):
-            raise HTTPException(status_code=400, detail="This account has no security questions set.")
-        cur.execute(
-            "INSERT INTO password_reset_log (user_id,email,security_q1,security_q2,step1_at,ip_address) "
-            "VALUES (%s,%s,%s,%s,NOW(),%s)",
-            (row["id"], email, row["security_q1"], row["security_q2"], ip)
-        )
-        con.commit()
-        return {"q1label": row["security_q1"], "q2label": row["security_q2"]}
-    finally:
-        cur.close(); con.close()
-
-
-@app.post("/auth/reset/verify-answers")
-async def reset_verify_answers(body: dict):
-    email = body.get("email", "").strip().lower()
-    a1    = (body.get("a1") or "").strip().lower()
-    a2    = (body.get("a2") or "").strip().lower()
-    if not email or not a1 or not a2:
-        raise HTTPException(status_code=400, detail="Email and both answers are required.")
-    con = db_conn(); cur = con.cursor()
-    try:
-        cur.execute(
-            "SELECT id, security_a1, security_a2 FROM users WHERE LOWER(email)=%s AND is_admin=FALSE",
-            (email,)
-        )
-        row = fetchone(cur)
-        if not row: raise HTTPException(status_code=404, detail="Account not found.")
-        passed = (
-            a1 == (row.get("security_a1") or "").strip().lower() and
-            a2 == (row.get("security_a2") or "").strip().lower()
-        )
-        cur.execute(
-            "UPDATE password_reset_log SET step2_at=NOW(), step2_passed=%s "
-            "WHERE id=(SELECT id FROM password_reset_log WHERE user_id=%s ORDER BY step1_at DESC LIMIT 1)",
-            (passed, row["id"])
-        )
-        con.commit()
-        if not passed: raise HTTPException(status_code=400, detail="Answers do not match.")
-        return {"verified": True}
-    finally:
-        cur.close(); con.close()
-
-
 @app.post("/auth/reset/password")
 async def reset_password(body: dict):
     email  = body.get("email", "").strip().lower()
@@ -1090,10 +1038,299 @@ async def reset_password(body: dict):
 
 
 # =============================================================================
+#  AUTH CONFIG  (exposes public keys to frontend)
+# =============================================================================
+
+@app.get("/auth/config")
+async def auth_config():
+    """Return public config values the frontend needs (reCAPTCHA site key, OAuth flags)."""
+    return {
+        "recaptcha_site_key":   RECAPTCHA_SITE_KEY,
+        "google_oauth_enabled": bool(GOOGLE_CLIENT_ID),
+    }
+
+
+# =============================================================================
+#  LOGIN WITH reCAPTCHA
+# =============================================================================
+
+class LoginWithCaptchaRequest(BaseModel):
+    email:           str
+    password:        str
+    recaptcha_token: str = ""
+
+
+async def _verify_recaptcha(token: Optional[str]) -> bool:
+    """Verify reCAPTCHA v2 token with Google. Returns True if valid."""
+    import httpx
+    if not token:
+        return False
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data={"secret": RECAPTCHA_SECRET_KEY, "response": token},
+            timeout=10,
+        )
+        return resp.json().get("success", False)
+
+
+@app.post("/auth/login-captcha")
+async def login_with_captcha(body: LoginWithCaptchaRequest):
+    """Login with optional reCAPTCHA verification.
+    If RECAPTCHA_SECRET_KEY is not configured the captcha check is skipped,
+    so the app works correctly even without reCAPTCHA credentials set up.
+    """
+    if RECAPTCHA_SECRET_KEY:
+        ok = await _verify_recaptcha(body.recaptcha_token)
+        if not ok:
+            raise HTTPException(status_code=400, detail="reCAPTCHA verification failed. Please try again.")
+
+    con = db_conn(); cur = con.cursor()
+    try:
+        cur.execute("SELECT * FROM users WHERE LOWER(email)=%s", (body.email.strip().lower(),))
+        row = fetchone(cur)
+        if not row or not verify_password(body.password, row["password_hash"]):
+            raise HTTPException(status_code=401, detail="Incorrect email or password")
+        cur.execute("UPDATE users SET last_login=NOW() WHERE id=%s", (row["id"],))
+        con.commit()
+        return {
+            "access_token":  create_access_token(row["id"], is_admin=bool(row["is_admin"])),
+            "refresh_token": create_refresh_token(row["id"]),
+            "token_type":    "bearer",
+            "is_admin":      bool(row["is_admin"]),
+        }
+    finally:
+        cur.close(); con.close()
+
+
+# =============================================================================
+#  GOOGLE OAUTH
+# =============================================================================
+
+@app.get("/auth/google/login")
+async def google_login():
+    """Redirect user to Google consent screen."""
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=400,
+            detail="Google OAuth is not configured. Add GOOGLE_CLIENT_ID to your .env file."
+        )
+    from urllib.parse import urlencode
+    params = urlencode({
+        "client_id":     GOOGLE_CLIENT_ID,
+        "redirect_uri":  GOOGLE_REDIRECT_URI,
+        "response_type": "code",
+        "scope":         "openid email profile",
+        "access_type":   "offline",
+        "prompt":        "select_account",
+    })
+    return RedirectResponse(f"https://accounts.google.com/o/oauth2/auth?{params}")
+
+
+@app.get("/auth/google/callback")
+async def google_callback(code: Optional[str] = None, error: Optional[str] = None):
+    """Google redirects here with an auth code. Exchange it for tokens and log the user in."""
+    import httpx
+    import secrets as _secrets
+    import re as _re
+
+    # If Google returned an error (e.g. access_denied), redirect back to login
+    if error or not code:
+        reason = error or "missing_code"
+        return RedirectResponse(f"http://localhost:5500/login.html?google_error={reason}")
+
+    async with httpx.AsyncClient() as client:
+        token_resp = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code":          code,
+                "client_id":     GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "redirect_uri":  GOOGLE_REDIRECT_URI,
+                "grant_type":    "authorization_code",
+            },
+            timeout=15,
+        )
+        token_data = token_resp.json()
+        if "error" in token_data:
+            raise HTTPException(
+                status_code=400,
+                detail="Google OAuth failed: " + token_data.get("error_description", token_data["error"])
+            )
+
+        userinfo_resp = await client.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {token_data['access_token']}"},
+            timeout=10,
+        )
+        guser = userinfo_resp.json()
+
+    google_id = guser.get("id", "")
+    email     = guser.get("email", "").lower().strip()
+    gname     = guser.get("name", email.split("@")[0])
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Could not retrieve email from Google.")
+
+    con = db_conn(); cur = con.cursor()
+    try:
+        cur.execute("SELECT * FROM users WHERE LOWER(email)=%s", (email,))
+        row = fetchone(cur)
+
+        if row:
+            # Existing user — update google_id if not yet stored
+            if not row.get("google_id") and google_id:
+                cur.execute("UPDATE users SET google_id=%s WHERE id=%s", (google_id, row["id"]))
+                con.commit()
+            user_id  = row["id"]
+            is_admin = bool(row["is_admin"])
+        else:
+            # New Google user — create account automatically
+            username = _re.sub(r"[^A-Za-z0-9._-]", "_", gname)[:30] or "user"
+            base = username; suffix = 1
+            while True:
+                cur.execute("SELECT id FROM users WHERE username=%s", (username,))
+                if not cur.fetchone(): break
+                username = f"{base}{suffix}"; suffix += 1
+
+            dummy_hash = hash_password(_secrets.token_urlsafe(32))
+            cur.execute(
+                "INSERT INTO users (username, email, password_hash, google_id) VALUES (%s,%s,%s,%s) RETURNING id",
+                (username, email, dummy_hash, google_id)
+            )
+            user_id  = cur.fetchone()[0]
+            is_admin = False
+            con.commit()
+
+        access_token  = create_access_token(user_id, is_admin=is_admin)
+        refresh_token_val = create_refresh_token(user_id)
+
+        redirect_url = (
+            f"http://localhost:8000/login.html"
+            f"?google_login=1"
+            f"#access={access_token}&refresh={refresh_token_val}&admin={'1' if is_admin else '0'}"
+        )
+        return RedirectResponse(redirect_url)
+    finally:
+        cur.close(); con.close()
+
+
+# =============================================================================
+#  OTP PASSWORD RESET
+# =============================================================================
+
+from routes.otp_email import generate_otp, send_otp_email  # type: ignore
+
+
+class OtpRequestBody(BaseModel):
+    email: str
+
+class OtpVerifyBody(BaseModel):
+    email: str
+    otp:   str
+
+class OtpResetBody(BaseModel):
+    email:        str
+    otp:          str
+    new_password: str
+
+
+@app.post("/auth/otp/send")
+async def send_otp(body: OtpRequestBody):
+    """Step 1: Send a 6-digit OTP to the user's email."""
+    from datetime import datetime, timedelta, timezone as _tz
+    email_clean = body.email.strip().lower()
+    con = db_conn(); cur = con.cursor()
+    try:
+        cur.execute("SELECT id, username, email FROM users WHERE LOWER(email)=%s", (email_clean,))
+        row = fetchone(cur)
+        if not row:
+            return {"message": "If that email is registered, an OTP has been sent."}
+
+        otp     = generate_otp()
+        expires = datetime.now(_tz.utc) + timedelta(minutes=10)
+        cur.execute(
+            "UPDATE users SET otp_code=%s, otp_expires=%s WHERE id=%s",
+            (otp, expires, row["id"])
+        )
+        con.commit()
+
+        sent = send_otp_email(row["email"], otp, row["username"])
+        if not sent:
+            raise HTTPException(status_code=500, detail="Failed to send OTP email. Check SMTP settings.")
+        return {"message": "OTP sent to your email. Valid for 10 minutes."}
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/otp/verify")
+async def verify_otp(body: OtpVerifyBody):
+    """Step 2: Verify OTP is correct and not expired."""
+    from datetime import datetime, timezone as _tz
+    email_clean = body.email.strip().lower()
+    con = db_conn(); cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT id, otp_code, otp_expires FROM users WHERE LOWER(email)=%s", (email_clean,)
+        )
+        row = fetchone(cur)
+        if not row or not row.get("otp_code"):
+            raise HTTPException(status_code=400, detail="No OTP was requested for this email.")
+        now = datetime.now(_tz.utc)
+        expires = row["otp_expires"]
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=_tz.utc)
+        if now > expires:
+            raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
+        if body.otp.strip() != row["otp_code"]:
+            raise HTTPException(status_code=400, detail="Incorrect OTP. Please try again.")
+        return {"message": "OTP verified successfully."}
+    finally:
+        cur.close(); con.close()
+
+
+@app.post("/auth/otp/reset-password")
+async def otp_reset_password(body: OtpResetBody):
+    """Step 3: Verify OTP and set new password."""
+    from datetime import datetime, timezone as _tz
+    email_clean = body.email.strip().lower()
+    pw_err = validate_password_strength(body.new_password)
+    if pw_err:
+        raise HTTPException(status_code=400, detail=pw_err)
+    con = db_conn(); cur = con.cursor()
+    try:
+        cur.execute(
+            "SELECT id, otp_code, otp_expires FROM users WHERE LOWER(email)=%s", (email_clean,)
+        )
+        row = fetchone(cur)
+        if not row or not row.get("otp_code"):
+            raise HTTPException(status_code=400, detail="No active OTP session. Please start over.")
+        now = datetime.now(_tz.utc)
+        expires = row["otp_expires"]
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=_tz.utc)
+        if now > expires:
+            raise HTTPException(status_code=400, detail="OTP expired. Please request a new one.")
+        if body.otp.strip() != row["otp_code"]:
+            raise HTTPException(status_code=400, detail="Incorrect OTP.")
+        new_hash = hash_password(body.new_password)
+        cur.execute(
+            "UPDATE users SET password_hash=%s, otp_code=NULL, otp_expires=NULL WHERE id=%s",
+            (new_hash, row["id"])
+        )
+        con.commit()
+        return {"message": "Password reset successfully."}
+    finally:
+        cur.close(); con.close()
+
+
+# =============================================================================
 #  EMOTION DETECTION
 # =============================================================================
 
-_active_sessions: dict[int, str] = {}
+_active_sessions:       dict[int, str]          = {}
+_session_ema_trackers:  dict[str, SessionEngagementTracker] = {}  # sid → EMA tracker
+_session_spike_detectors: dict[str, SpikeDetector]          = {}  # sid → spike detector
 
 
 @app.post("/predict/")
@@ -1119,9 +1356,28 @@ async def predict(
             sid = _active_sessions[uid]
         else:
             sid = str(uuid.uuid4()); _active_sessions[uid] = sid
+
+        # ── Per-session EMA + spike tracking ──────────────────────────────
+        if sid not in _session_ema_trackers:
+            _session_ema_trackers[sid]    = SessionEngagementTracker()
+            _session_spike_detectors[sid] = SpikeDetector(window=10, threshold=1.8)
+
+        tracker  = _session_ema_trackers[sid]
+        detector = _session_spike_detectors[sid]
+        ema_now  = tracker.update(result["emotion"], result.get("confidence", 1.0))
+        spike    = detector.update(ema_now)
+
         if save:
             _save_detection(uid, sid, result, source="webcam")
-        return {**result, "session_id": sid, "user_id": uid}
+
+        return {
+            **result,
+            "session_id":  sid,
+            "user_id":     uid,
+            "ema":         round(ema_now, 4),
+            "spike":       spike,                  # None or {frame, direction, delta, ema}
+            "spike_count": len(detector._spikes),
+        }
     except Exception as exc:
         print(f"[EmotionAI] /predict error: {exc}")
         return JSONResponse(status_code=500, content={"error": "server_error", "message": str(exc)})
@@ -1165,7 +1421,7 @@ async def analyze_video(
         timeline_data: list[dict] = []
         frame_idx      = 0
         loop           = asyncio.get_event_loop()
-        tracker        = SessionEngagementTracker()   # EMA tracker for video
+        tracker        = SessionEngagementTracker()
 
         while True:
             ret, frame = cap.read()
@@ -1296,12 +1552,11 @@ async def session_stop(body: SessionStopRequest, current: dict = Depends(get_cur
 
 
 # =============================================================================
-#  /generate-insights  —  EMA + engagement x time aware
+#  /generate-insights
 # =============================================================================
 
 @app.post("/generate-insights")
 async def generate_insights(body: InsightsRequest, current: dict = Depends(get_current_user)):
-    """Use Groq to generate 3 structured insight blocks — EMA engagement only, no time references."""
     import json as _json
     import re   as _re
 
@@ -1312,12 +1567,10 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
             detail="GROQ_API_KEY is not set. Add it to your .env file and restart."
         )
 
-    # Normalise engagement to 0-100
     raw_eng = body.engagement_score or 0
     eng_pct = round(raw_eng * 100) if raw_eng <= 1.0 else round(raw_eng)
     band, emoji, coaching = _engagement_band(eng_pct)
 
-    # Parse emotion distribution
     emotion_dist = _parse_emotion_pcts(body.emotion_summary or "")
     pos_emotions = {"Happiness", "Happy", "Surprise", "Surprised"}
     neg_emotions = {"Anger", "Angry", "Sadness", "Sad", "Fear", "Disgust"}
@@ -1325,7 +1578,6 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
     neg_pct = sum(v for k, v in emotion_dist.items() if k in neg_emotions)
     neu_pct = max(0, 100 - pos_pct - neg_pct)
 
-    # Prefer tracker tone if provided (more accurate than string parsing)
     if body.tone:
         pos_pct = body.tone.get("positive", pos_pct)
         neg_pct = body.tone.get("negative", neg_pct)
@@ -1334,17 +1586,15 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
     dominant    = body.most_frequent_emotion or "Neutral"
     dom_profile = _dominant_emotion_profile(dominant)
 
-    # Determine what the EMA score actually means right now
     if eng_pct >= 75:
-        eng_verdict = f"strong engagement — learner ended the session well-focused"
+        eng_verdict = "strong engagement — learner ended the session well-focused"
     elif eng_pct >= 55:
-        eng_verdict = f"moderate engagement — decent attention with some drift"
+        eng_verdict = "moderate engagement — decent attention with some drift"
     elif eng_pct >= 35:
-        eng_verdict = f"low engagement — significant attention loss detected"
+        eng_verdict = "low engagement — significant attention loss detected"
     else:
-        eng_verdict = f"very low engagement — learner was largely disengaged"
+        eng_verdict = "very low engagement — learner was largely disengaged"
 
-    # Dominant emotion coaching context
     if neg_pct >= 35:
         emotional_context = f"high negativity ({neg_pct}%) — frustration or confusion signals"
         action_hint = "Break content into smaller pieces, slow delivery, ask check-in questions"
@@ -1362,32 +1612,66 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
         action_hint = coaching
 
     system_msg = (
-        "You are EmotionAI, a direct and friendly learning coach. "
-        "You generate exactly 3 insight cards based on a learner's EMA engagement score and emotion data. "
-        "Each card has a short title (3-5 words) and a 1-sentence description.\n\n"
+        "You are EmotionAI, a friendly learning coach writing short insight cards for a non-technical user. "
+        "The user has just finished a webcam learning session. Their facial expressions were tracked to measure "
+        "focus and emotion. You must turn that data into 3 clear, plain-English insight cards.\n\n"
+        "WHAT THE NUMBERS MEAN — always translate these into simple language:\n"
+        "- Focus score (EMA): 0–100 scale. 65+ = good focus, 45–64 = some distraction, below 45 = mostly disengaged.\n"
+        "- Positive emotions (Happy, Surprised) = curious, interested, enjoying the content.\n"
+        "- Negative emotions (Angry, Sad, Fear, Disgust) = frustrated, confused, or overwhelmed.\n"
+        "- Neutral = calm but not very emotionally activated — passively listening.\n"
+        "- Engagement spikes/drops = moments where focus suddenly jumped or fell.\n\n"
+        "CARD RULES:\n"
+        "Card 1 — FOCUS READING: Explain in one simple sentence what the focus score means for this learner. "
+        "Do NOT say 'EMA'. Say things like 'your focus was...' or 'your attention stayed...'.\n"
+        "Card 2 — EMOTION SIGNAL: In one sentence, explain what their main emotion during the session suggests. "
+        "If there were engagement drops, mention they happened naturally (no timestamps).\n"
+        "Card 3 — WHAT TO DO NEXT: One specific, actionable suggestion. Use everyday language. "
+        "Not generic advice — make it feel personal based on their actual numbers.\n\n"
         "STRICT RULES:\n"
-        "1. NEVER mention timestamps, minutes, seconds, session duration, or time.\n"
-        "2. NEVER say 'see timeline', 'check session data', 'at X:XX', or 'refer to'.\n"
-        "3. Base everything ONLY on EMA engagement score and emotion percentages.\n"
-        "4. The EMA score is recency-weighted — the final score reflects how the learner ENDED, "
-        "   not just a flat average. A high EMA means they finished strong.\n"
-        "5. Be direct and specific. Mention the actual % numbers.\n"
+        "1. NEVER say 'EMA', 'recency-weighted', 'z-score', 'frame', or any technical term.\n"
+        "2. NEVER mention timestamps, minutes, seconds, or session duration.\n"
+        "3. NEVER say 'see session data', 'check the timeline', or 'refer to'.\n"
+        "4. Use the actual percentage numbers naturally in sentences.\n"
+        "5. Write each card title as 3–5 plain words (no jargon).\n"
         "6. Return ONLY valid JSON. No markdown, no code fences, no preamble.\n\n"
         'Output format: {"insights":[{"title":"...","desc":"..."},{"title":"...","desc":"..."},{"title":"...","desc":"..."}]}'
     )
 
+    # Spike context for prompt
+    _sp        = body.spike_summary or {}
+    _sp_total  = _sp.get("total_spikes", 0)
+    _sp_drops  = _sp.get("drops", 0)
+    _sp_surges = _sp.get("surges", 0)
+    if _sp_total == 0:
+        spike_line = "Attention pattern: steady throughout — no sudden focus changes detected\n"
+    elif _sp_drops >= _sp_surges:
+        spike_line = (
+            f"Attention pattern: {_sp_total} sudden focus change(s) detected "
+            f"({_sp_drops} drop(s), {_sp_surges} recovery(ies)) — "
+            f"learner lost focus sharply {_sp_drops} time(s)\n"
+        )
+    else:
+        spike_line = (
+            f"Attention pattern: {_sp_total} sudden focus change(s) detected "
+            f"({_sp_drops} drop(s), {_sp_surges} re-engagement burst(s)) — "
+            f"learner re-engaged strongly {_sp_surges} time(s)\n"
+        )
+
     user_msg = (
-        f"EMA Engagement  : {eng_pct}% — {eng_verdict}\n"
-        f"Engagement Band : {band} {emoji}\n"
-        f"Dominant Emotion: {dominant} ({dom_profile})\n"
-        f"Emotion Tone    : {pos_pct}% positive / {neu_pct}% neutral / {neg_pct}% negative\n"
-        f"Emotional State : {emotional_context}\n"
-        f"Full Distribution: {body.emotion_summary or 'N/A'}\n\n"
-        "Generate 3 insight cards:\n"
-        f"Card 1 — EMA READING: What does {eng_pct}% EMA engagement actually mean for this learner right now?\n"
-        f"Card 2 — EMOTION SIGNAL: What does {dominant} as dominant emotion ({dom_profile}) reveal?\n"
-        f"Card 3 — ACTION: One specific, real-world action. Hint: {action_hint}\n\n"
-        "No timestamps. No time references. Numbers only from the data above. Return JSON only."
+        f"Focus score     : {eng_pct}/100 — {eng_verdict}\n"
+        f"Focus level     : {band} {emoji}\n"
+        f"Main emotion    : {dominant} — what it means: {dom_profile}\n"
+        f"Mood breakdown  : {pos_pct}% positive / {neu_pct}% neutral / {neg_pct}% negative\n"
+        f"Emotional state : {emotional_context}\n"
+        f"{spike_line}"
+        f"All emotions    : {body.emotion_summary or 'N/A'}\n\n"
+        "Now write the 3 insight cards in plain English:\n"
+        f"Card 1 — FOCUS READING: What does a {eng_pct}/100 focus score actually mean for this learner in simple terms?\n"
+        f"Card 2 — EMOTION SIGNAL: What does '{dominant}' as their main emotion tell us?"
+        + (f" Note: there were {_sp_total} sudden attention change(s) during the session." if _sp_total > 0 else "") + "\n"
+        f"Card 3 — WHAT TO DO NEXT: One specific, personal suggestion. Base it on: {action_hint}\n\n"
+        "No timestamps. No jargon. Use the actual numbers. Return JSON only."
     )
 
     url     = "https://api.groq.com/openai/v1/chat/completions"
@@ -1406,14 +1690,12 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
         text = raw.strip()
         text = _re.sub(r"^```[a-z]*\s*", "", text, flags=_re.IGNORECASE)
         text = _re.sub(r"\s*```$", "", text).strip()
-
         try:
             parsed = _json.loads(text)
             if "insights" in parsed and isinstance(parsed["insights"], list) and len(parsed["insights"]) >= 1:
                 return parsed
         except Exception:
             pass
-
         match = _re.search(r'\{.*\}', text, _re.DOTALL)
         if match:
             try:
@@ -1422,7 +1704,6 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
                     return parsed
             except Exception:
                 pass
-
         titles = _re.findall(r'"title"\s*:\s*"([^"]+)"', text)
         descs  = _re.findall(r'"desc"\s*:\s*"([^"]+)"', text)
         if titles:
@@ -1431,7 +1712,6 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
                 for i, t in enumerate(titles[:3])
             ]
             if insights: return {"insights": insights}
-
         print(f"[EmotionAI] /generate-insights: all parse strategies failed. Raw:\n{raw}")
         return {"insights": [
             {"title": "EMA reading",       "desc": f"{eng_pct}% EMA engagement — {eng_verdict}."},
@@ -1607,6 +1887,11 @@ async def submit_faq_feedback(body: FaqFeedbackRequest, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close(); con.close()
+
+
+# =============================================================================
+#  ADMIN
+# =============================================================================
 
 @app.get("/admin/stats")
 async def admin_stats(admin: dict = Depends(get_admin_user)):
@@ -1815,7 +2100,6 @@ async def delete_faq_feedback_row(row_id: int, admin: dict = Depends(get_admin_u
 
 @app.get("/api/faqs")
 async def public_list_faqs():
-    """Public endpoint — used by faq.html to load dynamic FAQs."""
     con = db_conn(); cur = con.cursor()
     try:
         cur.execute("SELECT id, category, question, answer FROM faqs ORDER BY id ASC")
@@ -1827,7 +2111,6 @@ async def public_list_faqs():
 
 @app.get("/admin/faqs")
 async def admin_list_faqs(admin: dict = Depends(get_admin_user)):
-    """Admin — list all FAQs with timestamps."""
     con = db_conn(); cur = con.cursor()
     try:
         cur.execute(
@@ -1841,7 +2124,6 @@ async def admin_list_faqs(admin: dict = Depends(get_admin_user)):
 
 @app.post("/admin/faqs", status_code=201)
 async def admin_create_faq(payload: FAQCreate, admin: dict = Depends(get_admin_user)):
-    """Admin — create a new FAQ entry."""
     if not payload.question.strip() or not payload.answer.strip():
         raise HTTPException(status_code=422, detail="Question and answer are required")
     con = db_conn(); cur = con.cursor()
@@ -1859,7 +2141,6 @@ async def admin_create_faq(payload: FAQCreate, admin: dict = Depends(get_admin_u
 
 @app.put("/admin/faqs/{faq_id}")
 async def admin_update_faq(faq_id: int, payload: FAQUpdate, admin: dict = Depends(get_admin_user)):
-    """Admin — update an existing FAQ entry."""
     con = db_conn(); cur = con.cursor()
     try:
         cur.execute("SELECT id FROM faqs WHERE id=%s", (faq_id,))
@@ -1885,7 +2166,6 @@ async def admin_update_faq(faq_id: int, payload: FAQUpdate, admin: dict = Depend
 
 @app.delete("/admin/faqs/{faq_id}")
 async def admin_delete_faq(faq_id: int, admin: dict = Depends(get_admin_user)):
-    """Admin — delete a FAQ entry."""
     con = db_conn(); cur = con.cursor()
     try:
         cur.execute("SELECT id FROM faqs WHERE id=%s", (faq_id,))
@@ -1896,6 +2176,11 @@ async def admin_delete_faq(faq_id: int, admin: dict = Depends(get_admin_user)):
         return {"message": "FAQ deleted successfully"}
     finally:
         cur.close(); con.close()
+
+
+# =============================================================================
+#  INTERNAL HELPERS
+# =============================================================================
 
 def _save_detection(user_id: int, session_id: Optional[str], result: dict, source: str = "webcam"):
     try:
