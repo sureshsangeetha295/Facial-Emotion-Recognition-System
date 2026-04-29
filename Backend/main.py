@@ -43,49 +43,12 @@ _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 
 _ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 
-print(f"[EmotionAI] Looking for .env at: {_ENV_PATH}")
-if not os.path.exists(_ENV_PATH):
-    print("[EmotionAI] ERROR: .env file NOT FOUND at that path.")
-else:
-    print("[EmotionAI] .env file found. Checking for common formatting issues...")
-    try:
-        raw_lines = open(_ENV_PATH, encoding="utf-8-sig").readlines()
-    except UnicodeDecodeError:
-        raw_lines = open(_ENV_PATH, encoding="latin-1").readlines()
-    for i, line in enumerate(raw_lines, 1):
-        stripped = line.rstrip("\r\n")
-        if stripped and not stripped.startswith("#"):
-            if "=" not in stripped:
-                print(f"[EmotionAI]   Line {i}: MISSING '=' -> {stripped!r}")
-            elif stripped.startswith(" ") or stripped.startswith("\t"):
-                print(f"[EmotionAI]   Line {i}: LEADING WHITESPACE -> {stripped!r}")
-            else:
-                key = stripped.split("=", 1)[0].strip()
-                val = stripped.split("=", 1)[1].strip() if "=" in stripped else ""
-                masked = val[:6] + "..." if len(val) > 6 else ("(empty)" if not val else val)
-                print(f"[EmotionAI]   Line {i}: {key} = {masked}")
+
 
 load_dotenv(dotenv_path=_ENV_PATH, override=True)
 
 _GROQ_KEY = os.getenv("GROQ_API_KEY", "").strip()
-if not _GROQ_KEY:
-    print(
-        "\n[EmotionAI] WARNING: GROQ_API_KEY is not set.\n"
-        f"  Looked for .env at: {_ENV_PATH}\n"
-        "  Add  GROQ_API_KEY=gsk_...  to that file and restart.\n"
-        "  Common causes:\n"
-        "    - The .env file has Windows BOM encoding (save as UTF-8 without BOM)\n"
-        "    - Value has quotes: GROQ_API_KEY=\"gsk_...\" -> remove the quotes\n"
-        "    - Extra spaces:    GROQ_API_KEY = gsk_...  -> use GROQ_API_KEY=gsk_...\n"
-        "    - Wrong filename:  .env.txt instead of .env\n"
-    )
-
 _DB_PASS = os.getenv("DB_PASSWORD", "")
-if not _DB_PASS:
-    print(
-        "\n[EmotionAI] WARNING: DB_PASSWORD is not set.\n"
-        "  Add  DB_PASSWORD=your_postgres_password  to your .env file.\n"
-    )
 
 APP_HOST     = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT     = int(os.getenv("APP_PORT", "8000"))
@@ -164,15 +127,8 @@ class SessionEngagementTracker:
         self.tone_counts  = {"positive": 0, "negative": 0, "neutral": 0}
 
     def _adaptive_alpha(self, score: float, confidence: float) -> float:
-        """
-        Alpha adapts based on:
-          1. Confidence: high-confidence detections react faster (higher alpha)
-          2. Emotion intensity: strong emotions move the EMA more;
-             neutral/low-intensity emotions smooth more (lower alpha)
-        Range: 0.08 (low conf + neutral) → 0.30 (high conf + strong emotion)
-        """
         conf_norm = max(0.0, min(1.0, confidence))
-        intensity = abs(score - 0.50) / 0.50   # 0 = neutral midpoint, 1 = extreme
+        intensity = abs(score - 0.50) / 0.50
         alpha = 0.08 + (conf_norm * 0.12) + (intensity * 0.10)
         return min(0.30, alpha)
 
@@ -220,26 +176,14 @@ class SessionEngagementTracker:
 # =============================================================================
 
 class SpikeDetector:
-    """
-    Detects sudden engagement spikes (sharp drops or surges) using a
-    rolling z-score over a short window of EMA scores.
-    A 'spike' = the EMA moves more than `threshold` standard deviations
-    from the recent rolling mean in a single step.
-    """
-
     def __init__(self, window: int = 10, threshold: float = 1.8):
         self.window    = window
         self.threshold = threshold
-        self._history: list[float] = []   # raw EMA values
-        self._spikes:  list[dict]  = []   # {frame, direction, delta, ema}
+        self._history: list[float] = []
+        self._spikes:  list[dict]  = []
         self._frame    = 0
 
     def update(self, ema_score: float) -> dict | None:
-        """
-        Feed the latest EMA score. Returns a spike dict if one is detected,
-        else None.
-        spike dict: {frame, direction ('drop'|'surge'), delta, ema}
-        """
         self._frame += 1
         spike = None
         if len(self._history) >= 2:
@@ -479,7 +423,6 @@ def generate_summary(session_data: dict) -> str:
     try:
         res  = requests.post(url, headers=headers, json=payload, timeout=20)
         data = res.json()
-        print("[EmotionAI] generate_summary GROQ response:", data)
         return data["choices"][0]["message"]["content"]
     except Exception as e:
         print(f"[EmotionAI] generate_summary error: {e}")
@@ -717,17 +660,13 @@ def init_db():
             "INSERT INTO users (username, email, password_hash, is_admin) VALUES (%s,%s,%s,TRUE)",
             (ADMIN_USERNAME, admin_email_clean, hash_password(ADMIN_PASSWORD))
         )
-        print(f"[EmotionAI] Default admin created -> email: {admin_email_clean}")
-        print("[EmotionAI] Please change the admin password after first login!")
     else:
         cur.execute(
             "UPDATE users SET password_hash=%s, email=%s WHERE id=%s",
             (hash_password(ADMIN_PASSWORD), admin_email_clean, existing_admin[0])
         )
-        print(f"[EmotionAI] Admin credentials synced -> email: {admin_email_clean}")
 
     con.commit(); cur.close(); con.close()
-    print("[EmotionAI] Database initialised")
 
 
 # =============================================================================
@@ -738,12 +677,11 @@ def init_db():
 async def lifespan(app: FastAPI):
     init_db()
     try:
-        import testing
-        testing.get_haar_detector()
-        testing.get_model()
-        print("[EmotionAI] Preload complete")
+        import testing  # type: ignore[import]
+        testing.get_haar_detector()  # type: ignore[attr-defined]
+        testing.get_model()           # type: ignore[attr-defined]
     except Exception as e:
-        print(f"[EmotionAI] Preload error (non-fatal): {e}")
+        pass
     webbrowser.open(f"http://localhost:{APP_PORT}")
     yield
 
@@ -833,7 +771,7 @@ class InsightsRequest(BaseModel):
     positive_pct:          Optional[int]  = None
     negative_pct:          Optional[int]  = None
     neutral_pct:           Optional[int]  = None
-    spike_summary:         Optional[dict] = None   # {total_spikes, drops, surges, spike_frames}
+    spike_summary:         Optional[dict] = None
     instructions:          Optional[str]  = None
 
 class AdminCreateUserRequest(BaseModel):
@@ -865,8 +803,8 @@ class FAQUpdate(BaseModel):
 executor = ThreadPoolExecutor(max_workers=1)
 
 def run_pipeline(img_rgb: np.ndarray, use_mtcnn: bool = False):
-    import testing
-    idx, confidence, probs = testing.predict_emotion_from_image(img_rgb, use_mtcnn=use_mtcnn)
+    import testing  # type: ignore[import]
+    idx, confidence, probs = testing.predict_emotion_from_image(img_rgb, use_mtcnn=use_mtcnn)  # type: ignore[attr-defined]
 
     conf = float(confidence)
     if conf > 1.0:
@@ -883,6 +821,38 @@ def run_pipeline(img_rgb: np.ndarray, use_mtcnn: bool = False):
         "engagement":        frame_engagement,
         "timestamp":         datetime.utcnow().isoformat(),
     }, None
+
+
+def run_pipeline_multi(img_rgb: np.ndarray, use_mtcnn: bool = False) -> list[dict]:
+    """
+    Run multi-face detection + emotion classification on *img_rgb*.
+    Returns a list of per-face result dicts.
+    """
+    import testing  # type: ignore[import]
+    raw_faces = testing.predict_emotions_multi(img_rgb, use_mtcnn=use_mtcnn)  # type: ignore[attr-defined]
+
+    results: list[dict] = []
+    for face in raw_faces:
+        conf = float(face["confidence"])
+        if conf > 1.0:
+            conf /= 100.0
+
+        norm_probs = [
+            round(float(p) / 100.0 if float(p) > 1.0 else float(p), 6)
+            for p in face["all_probs"]
+        ]
+        emotion = face["emotion"]
+
+        results.append({
+            "face_index":        face["face_index"],
+            "bbox":              face["bbox"],
+            "emotion":           emotion,
+            "confidence":        round(conf, 4),
+            "all_probabilities": norm_probs,
+            "engagement":        round(emotion_to_engagement(emotion) * conf, 4),
+            "timestamp":         datetime.utcnow().isoformat(),
+        })
+    return results
 
 
 # =============================================================================
@@ -1037,13 +1007,8 @@ async def reset_password(body: dict):
         cur.close(); con.close()
 
 
-# =============================================================================
-#  AUTH CONFIG  (exposes public keys to frontend)
-# =============================================================================
-
 @app.get("/auth/config")
 async def auth_config():
-    """Return public config values the frontend needs (reCAPTCHA site key, OAuth flags)."""
     return {
         "recaptcha_site_key":   RECAPTCHA_SITE_KEY,
         "google_oauth_enabled": bool(GOOGLE_CLIENT_ID),
@@ -1061,7 +1026,6 @@ class LoginWithCaptchaRequest(BaseModel):
 
 
 async def _verify_recaptcha(token: Optional[str]) -> bool:
-    """Verify reCAPTCHA v2 token with Google. Returns True if valid."""
     import httpx
     if not token:
         return False
@@ -1076,10 +1040,6 @@ async def _verify_recaptcha(token: Optional[str]) -> bool:
 
 @app.post("/auth/login-captcha")
 async def login_with_captcha(body: LoginWithCaptchaRequest):
-    """Login with optional reCAPTCHA verification.
-    If RECAPTCHA_SECRET_KEY is not configured the captcha check is skipped,
-    so the app works correctly even without reCAPTCHA credentials set up.
-    """
     if RECAPTCHA_SECRET_KEY:
         ok = await _verify_recaptcha(body.recaptcha_token)
         if not ok:
@@ -1109,7 +1069,6 @@ async def login_with_captcha(body: LoginWithCaptchaRequest):
 
 @app.get("/auth/google/login")
 async def google_login():
-    """Redirect user to Google consent screen."""
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=400,
@@ -1129,12 +1088,10 @@ async def google_login():
 
 @app.get("/auth/google/callback")
 async def google_callback(code: Optional[str] = None, error: Optional[str] = None):
-    """Google redirects here with an auth code. Exchange it for tokens and log the user in."""
     import httpx
     import secrets as _secrets
     import re as _re
 
-    # If Google returned an error (e.g. access_denied), redirect back to login
     if error or not code:
         reason = error or "missing_code"
         return RedirectResponse(f"http://localhost:5500/login.html?google_error={reason}")
@@ -1178,14 +1135,12 @@ async def google_callback(code: Optional[str] = None, error: Optional[str] = Non
         row = fetchone(cur)
 
         if row:
-            # Existing user — update google_id if not yet stored
             if not row.get("google_id") and google_id:
                 cur.execute("UPDATE users SET google_id=%s WHERE id=%s", (google_id, row["id"]))
                 con.commit()
             user_id  = row["id"]
             is_admin = bool(row["is_admin"])
         else:
-            # New Google user — create account automatically
             username = _re.sub(r"[^A-Za-z0-9._-]", "_", gname)[:30] or "user"
             base = username; suffix = 1
             while True:
@@ -1202,7 +1157,7 @@ async def google_callback(code: Optional[str] = None, error: Optional[str] = Non
             is_admin = False
             con.commit()
 
-        access_token  = create_access_token(user_id, is_admin=is_admin)
+        access_token      = create_access_token(user_id, is_admin=is_admin)
         refresh_token_val = create_refresh_token(user_id)
 
         redirect_url = (
@@ -1237,7 +1192,6 @@ class OtpResetBody(BaseModel):
 
 @app.post("/auth/otp/send")
 async def send_otp(body: OtpRequestBody):
-    """Step 1: Send a 6-digit OTP to the user's email."""
     from datetime import datetime, timedelta, timezone as _tz
     email_clean = body.email.strip().lower()
     con = db_conn(); cur = con.cursor()
@@ -1265,7 +1219,6 @@ async def send_otp(body: OtpRequestBody):
 
 @app.post("/auth/otp/verify")
 async def verify_otp(body: OtpVerifyBody):
-    """Step 2: Verify OTP is correct and not expired."""
     from datetime import datetime, timezone as _tz
     email_clean = body.email.strip().lower()
     con = db_conn(); cur = con.cursor()
@@ -1291,7 +1244,6 @@ async def verify_otp(body: OtpVerifyBody):
 
 @app.post("/auth/otp/reset-password")
 async def otp_reset_password(body: OtpResetBody):
-    """Step 3: Verify OTP and set new password."""
     from datetime import datetime, timezone as _tz
     email_clean = body.email.strip().lower()
     pw_err = validate_password_strength(body.new_password)
@@ -1328,9 +1280,9 @@ async def otp_reset_password(body: OtpResetBody):
 #  EMOTION DETECTION
 # =============================================================================
 
-_active_sessions:       dict[int, str]          = {}
-_session_ema_trackers:  dict[str, SessionEngagementTracker] = {}  # sid → EMA tracker
-_session_spike_detectors: dict[str, SpikeDetector]          = {}  # sid → spike detector
+_active_sessions:         dict[int, str]                        = {}
+_session_ema_trackers:    dict[str, SessionEngagementTracker]   = {}
+_session_spike_detectors: dict[str, SpikeDetector]              = {}
 
 
 @app.post("/predict/")
@@ -1357,7 +1309,6 @@ async def predict(
         else:
             sid = str(uuid.uuid4()); _active_sessions[uid] = sid
 
-        # ── Per-session EMA + spike tracking ──────────────────────────────
         if sid not in _session_ema_trackers:
             _session_ema_trackers[sid]    = SessionEngagementTracker()
             _session_spike_detectors[sid] = SpikeDetector(window=10, threshold=1.8)
@@ -1375,11 +1326,80 @@ async def predict(
             "session_id":  sid,
             "user_id":     uid,
             "ema":         round(ema_now, 4),
-            "spike":       spike,                  # None or {frame, direction, delta, ema}
+            "spike":       spike,
             "spike_count": len(detector._spikes),
         }
     except Exception as exc:
         print(f"[EmotionAI] /predict error: {exc}")
+        return JSONResponse(status_code=500, content={"error": "server_error", "message": str(exc)})
+
+
+# =============================================================================
+#  /predict-multi/
+# =============================================================================
+
+@app.post("/predict-multi/")
+async def predict_multi(
+    file:       UploadFile = File(...),
+    fast:       bool = Query(False),
+    save:       bool = Query(True),
+    session_id: Optional[str] = Query(None),
+    current:    dict = Depends(get_current_user),
+):
+    """
+    Detect and classify emotions for every face visible in the uploaded frame.
+
+    Response schema
+    ---------------
+    {
+        "session_id": str,
+        "user_id":    int,
+        "face_count": int,
+        "faces": [
+            {
+                "face_index":        int,
+                "bbox":              {"x": int, "y": int, "w": int, "h": int},
+                "emotion":           str,
+                "confidence":        float,
+                "all_probabilities": list[float],
+                "engagement":        float,
+                "timestamp":         str (ISO-8601)
+            },
+            ...
+        ]
+    }
+    """
+    try:
+        contents = await file.read()
+        img      = Image.open(io.BytesIO(contents)).convert("RGB")
+        img_rgb  = np.array(img)
+        loop     = asyncio.get_event_loop()
+
+        faces = await loop.run_in_executor(
+            executor, lambda: run_pipeline_multi(img_rgb, use_mtcnn=not fast)
+        )
+
+        uid = current["id"]
+        if session_id:
+            sid = session_id; _active_sessions[uid] = sid
+        elif uid in _active_sessions:
+            sid = _active_sessions[uid]
+        else:
+            sid = str(uuid.uuid4()); _active_sessions[uid] = sid
+
+        if save and faces:
+            for face in faces:
+                _save_detection(uid, sid, face, source="multiuser")
+
+        return {
+            "session_id": sid,
+            "user_id":    uid,
+            "face_count": len(faces),
+            "faces":      faces,
+        }
+
+    except Exception as exc:
+        print(f"[EmotionAI] /predict-multi error: {exc}")
         return JSONResponse(status_code=500, content={"error": "server_error", "message": str(exc)})
 
 
@@ -1638,7 +1658,6 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
         'Output format: {"insights":[{"title":"...","desc":"..."},{"title":"...","desc":"..."},{"title":"...","desc":"..."}]}'
     )
 
-    # Spike context for prompt
     _sp        = body.spike_summary or {}
     _sp_total  = _sp.get("total_spikes", 0)
     _sp_drops  = _sp.get("drops", 0)
@@ -1712,11 +1731,10 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
                 for i, t in enumerate(titles[:3])
             ]
             if insights: return {"insights": insights}
-        print(f"[EmotionAI] /generate-insights: all parse strategies failed. Raw:\n{raw}")
         return {"insights": [
-            {"title": "EMA reading",       "desc": f"{eng_pct}% EMA engagement — {eng_verdict}."},
-            {"title": "Emotion signal",    "desc": f"{dominant} dominated ({pos_pct}% positive, {neg_pct}% negative)."},
-            {"title": "Action",            "desc": action_hint},
+            {"title": "EMA reading",    "desc": f"{eng_pct}% EMA engagement — {eng_verdict}."},
+            {"title": "Emotion signal", "desc": f"{dominant} dominated ({pos_pct}% positive, {neg_pct}% negative)."},
+            {"title": "Action",         "desc": action_hint},
         ]}
 
     def _static_fallback() -> dict:
@@ -1729,13 +1747,9 @@ async def generate_insights(body: InsightsRequest, current: dict = Depends(get_c
     try:
         res = requests.post(url, headers=headers, json=payload, timeout=20)
         if not res.ok:
-            try:    err_body = res.json()
-            except: err_body = {}
-            print(f"[EmotionAI] /generate-insights Groq HTTP {res.status_code}: {err_body}")
             return _static_fallback()
         data     = res.json()
         raw_text = data["choices"][0]["message"]["content"]
-        print(f"[EmotionAI] /generate-insights raw LLM output: {raw_text!r}")
         return _extract_insights(raw_text)
     except Exception as e:
         print(f"[EmotionAI] /generate-insights error: {e}")
@@ -2239,8 +2253,6 @@ if not FRONTEND_DIR:
         "  Expected one of: frontend / Frontend / front-end / Front-End\n"
     )
 
-print(f"[EmotionAI] Frontend: {FRONTEND_DIR}")
-
 
 @app.get("/")
 async def root():
@@ -2285,6 +2297,11 @@ async def detect_page():
 @app.get("/livecam.html")
 async def livecam_page():
     return FileResponse(os.path.join(FRONTEND_DIR, "livecam.html"))
+
+@app.get("/multiuser")
+@app.get("/multiuser.html")
+async def multiuser_page():
+    return FileResponse(os.path.join(FRONTEND_DIR, "multiuser.html"))
 
 @app.get("/logout")
 async def logout():
