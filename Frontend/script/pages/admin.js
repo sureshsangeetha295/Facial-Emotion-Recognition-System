@@ -55,7 +55,8 @@ async function loadStats() {
   const u  = d.total_users      ?? 0;
   const de = d.total_detections ?? 0;
   const fb = d.total_feedback   ?? 0;
-  const en = d.avg_engagement   != null ? d.avg_engagement * 100 : null;
+  const rawEng = d.avg_engagement ?? null;
+  const en = rawEng != null ? (rawEng > 1 ? Math.min(rawEng, 100) : rawEng * 100) : null;
   animateCount('s-users',      u);
   animateCount('s-detections', de);
   animateCount('s-feedback',   fb);
@@ -212,7 +213,8 @@ function emotionChipClass(e) {
 
 function engBar(v) {
   if (v==null) return '<span style="color:var(--text3)">—</span>';
-  const pct = Math.round(v*100);
+  // Guard: backend stores engagement as 0-1; old rows may be 0-100
+  const pct = Math.min(100, Math.round(v > 1 ? v : v * 100));
   const col = pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)';
   return `<div class="eng-wrap">
     <div class="eng-bar-bg"><div class="eng-bar-fill" style="width:${pct}%;background:${col}"></div></div>

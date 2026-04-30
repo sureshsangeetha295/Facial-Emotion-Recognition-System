@@ -1919,7 +1919,7 @@ async def admin_stats(admin: dict = Depends(get_admin_user)):
         total_sessions = cur.fetchone()[0]
         cur.execute("SELECT COUNT(*) FROM feedback")
         total_feedback = cur.fetchone()[0]
-        cur.execute("SELECT AVG(engagement) FROM detections")
+        cur.execute("SELECT AVG(CASE WHEN engagement > 1 THEN engagement / 100.0 ELSE engagement END) FROM detections")
         avg_row = cur.fetchone()[0]
         cur.execute("SELECT emotion, COUNT(*) as cnt FROM detections GROUP BY emotion ORDER BY cnt DESC")
         emotion_rows = fetchall(cur)

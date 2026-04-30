@@ -1,6 +1,6 @@
-# EmotionAI — AI-Based Facial Emotion Recognition System
+# Emotion Analysis — AI-Based Facial Emotion Recognition System
 
-EmotionAI is a full-stack web application that detects and classifies human facial emotions in real time using a MobileNetV2-based deep learning model. It serves a live webcam detection dashboard, video upload analysis, session tracking, LLM-generated coaching feedback, and an admin panel — all from a single FastAPI server that also hosts the frontend.
+Emotion Analysis is a full-stack web application that detects and classifies human facial emotions in real time using a MobileNetV2-based deep learning model. It serves a live webcam detection dashboard, multi-user simultaneous detection, video upload analysis, session tracking, LLM-generated coaching feedback, and an admin panel — all from a single FastAPI server that also hosts the frontend.
 
 ---
 
@@ -15,19 +15,25 @@ Everything lives in a single Python process. The FastAPI backend handles the RES
 ## Features
 
 - Real-time facial emotion detection via webcam at configurable FPS (1–30, default 5)
+- **Multi-user simultaneous detection** — `/predict-multi/` endpoint detects and tracks up to 12 faces in a single frame, each with their own emotion, confidence, and engagement card
 - Video file upload analysis with per-second EMA timeline breakdown
 - MobileNetV2 model trained in two phases; phase 2 model used for inference
 - Haar Cascade face detector (default, fast) with MTCNN as a higher-accuracy alternative
 - Standalone desktop webcam app (`webcam_main.py`) with animated UI, face tracking, and multi-face ID assignment
 - EMA-based engagement scoring with confidence weighting across 7 emotion classes
+- **SpikeDetector** — per-session z-score spike detection on engagement values, flagging anomalous engagement surges in real time
 - LLM-generated session summary and 3 insight cards via Groq (LLaMA 3.1 8B Instant)
 - JWT authentication (access + refresh tokens) with bcrypt password hashing
-- Security question-based self-service password reset (3-step flow)
+- **Google OAuth 2.0** — one-click sign-in via Google; existing email accounts are linked automatically
+- **OTP-based password reset** — 3-step email OTP flow (send → verify → reset) via Gmail SMTP, replacing the legacy security-question flow
+- **reCAPTCHA v2** support on login/register to block bots (optional, activated by env vars)
 - Session history, detection records, and timeline stored in PostgreSQL
 - Admin dashboard with full CRUD over users, detections, sessions, feedback, and FAQs
 - Dynamic FAQ management — admins create/edit/delete FAQ entries; users vote on them
-- Responsive multi-page frontend (landing, login, live detection, video upload, results, FAQ, feedback, admin)
+- Responsive multi-page frontend (landing, login, live detection, multi-user detection, video upload, results, FAQ, feedback, admin)
 - Modular CSS split into base, layout, components, responsive, and per-page stylesheets
+- **Network alert banner** — `network-alert.js` shows a non-blocking banner when the backend is unreachable
+- **Spike detector frontend** — `spike-detector.js` subscribes to real-time engagement events and visually highlights emotion spikes on the live detection page
 
 ---
 
@@ -43,6 +49,8 @@ Everything lives in a single Python process. The FastAPI backend handles the RES
 | Image Processing | Pillow, NumPy |
 | LLM Integration | Groq API — LLaMA 3.1 8B Instant |
 | Authentication | JWT via python-jose, bcrypt via passlib |
+| OAuth | Google OAuth 2.0 (via requests + Google Identity endpoints) |
+| Email / OTP | Gmail SMTP via smtplib (HTML OTP emails) |
 | Database | PostgreSQL via psycopg2 |
 | ML Utilities | Scikit-learn, SciPy, Matplotlib |
 
@@ -92,7 +100,9 @@ project/
 │   │   ├── llm_helpers.py       # LLM prompt builders, engagement band logic
 │   │   ├── misc_routes.py       # /feedback, /api/faq-feedback, /admin/* routes
 │   │   ├── db.py                # DB connection, fetchone, fetchall, init_db
-│   │   └── config.py            # ENV loading, shared constants (re-exports main config)
+│   │   ├── config.py            # ENV loading, shared constants (SMTP, Google OAuth,
+│   │   │                        #   reCAPTCHA keys, emotion labels, EMA config)
+│   │   └── otp_email.py         # OTP generator + Gmail SMTP email sender (NEW)
 │   │
 │   └── Models/
 │       ├── phase1_best_model.keras      # Phase 1 trained model
@@ -102,9 +112,10 @@ project/
 │
 └── frontend/
     ├── index.html               # Landing page
-    ├── login.html               # Login / register (served at /)
+    ├── login.html               # Login / register / Google OAuth (served at /)
     ├── app.html                 # Detection dashboard (redirects to /livecam)
-    ├── livecam.html             # Live webcam detection
+    ├── livecam.html             # Live webcam detection (single user)
+    ├── multiuser.html           # Multi-user simultaneous detection (NEW)
     ├── live-results.html        # Session results and LLM coaching feedback
     ├── detect.html              # Video upload detection
     ├── feedback.html            # User feedback form
@@ -113,11 +124,12 @@ project/
     │
     ├── script/
     │   ├── config.js            # API base URL, FPS limits, emotion labels and colours
-    │   ├── auth.js              # Login, register, token storage and refresh
+    │   ├── auth.js              # Login, register, Google OAuth, token storage and refresh
     │   ├── api.js               # Fetch wrappers for all API endpoints
     │   ├── landing.js           # Landing page interactions
     │   ├── renderer.js          # Shared UI rendering helpers
     │   ├── timeline.js          # Legacy timeline chart helper
+    │   ├── network-alert.js     # Non-blocking banner when backend is unreachable (NEW)
     │   │
     │   ├── app/                 # Modular live-detection sub-scripts
     │   │   ├── camera.js        # Webcam capture and frame loop
@@ -138,12 +150,14 @@ project/
     │   │   ├── feedback.js      # Feedback form submission
     │   │   ├── index.js         # Landing page
     │   │   ├── live-results.js  # Results page (summary + insights)
-    │   │   ├── livecam.js       # Live webcam page entry
-    │   │   ├── login.js         # Login / register page
+    │   │   ├── livecam.js       # Live webcam page entry (single user)
+    │   │   ├── login.js         # Login / register / Google OAuth page
+    │   │   ├── multiuser.js     # Multi-user detection page (NEW)
     │   │   └── timeline.js      # Session timeline chart
     │   │
     │   └── shared/
-    │       └── drawer.js        # Mobile navigation drawer
+    │       ├── drawer.js        # Mobile navigation drawer
+    │       └── spike-detector.js  # Real-time engagement spike visualiser (NEW)
     │
     └── style/
         ├── base.css             # CSS reset and design tokens
@@ -159,7 +173,8 @@ project/
             ├── index.css
             ├── live-results.css
             ├── livecam.css
-            └── login.css
+            ├── login.css
+            └── multiuser.css    # Multi-user detection page styles (NEW)
 ```
 
 ---
@@ -171,13 +186,16 @@ project/
 - Python 3.10 or higher
 - PostgreSQL 14 or higher
 - A [Groq API key](https://console.groq.com/) for LLM-powered summaries and insights
+- A Gmail account with an [App Password](https://myaccount.google.com/apppasswords) for OTP email delivery
+- *(Optional)* A Google Cloud project with OAuth 2.0 credentials for Google sign-in
+- *(Optional)* A Google reCAPTCHA v2 site/secret key pair
 
 ### Steps
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/emotionai.git
-cd emotionai
+git clone https://github.com/sureshsangeetha295/Facial-Emotion-Recognition-System.git
+cd Facial-Emotion-Recognition-System
 
 # 2. Create and activate a virtual environment
 python -m venv venv
@@ -207,7 +225,7 @@ The web app starts at `http://localhost:8000`, opens automatically in your brows
 
 ## Environment Variables
 
-Create a `.env` file in the `Backend/` directory. On startup the application prints each key it finds and masks values for debugging. Common causes of misconfiguration are printed as warnings.
+Create a `.env` file in the `Backend/` directory. On startup the application prints each key it finds and masks values for debugging.
 
 | Key | Description |
 |---|---|
@@ -225,6 +243,13 @@ Create a `.env` file in the `Backend/` directory. On startup the application pri
 | `ADMIN_PASSWORD` | Admin account password |
 | `ADMIN_EMAIL` | Admin account email |
 | `GROQ_API_KEY` | Groq API key for LLM features |
+| `SMTP_EMAIL` | Gmail address used to send OTP emails |
+| `SMTP_APP_PASSWORD` | Gmail App Password (not your account password) |
+| `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID (optional) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret (optional) |
+| `GOOGLE_REDIRECT_URI` | OAuth callback URL (default: `http://localhost:8000/auth/google/callback`) |
+| `RECAPTCHA_SITE_KEY` | Google reCAPTCHA v2 site key (optional) |
+| `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v2 secret key (optional) |
 
 Never commit the `.env` file. Add it to `.gitignore` before your first push.
 
@@ -241,15 +266,21 @@ Never commit the `.env` file. Add it to `.gitignore` before your first push.
 | POST | `/auth/admin/login` | Admin-only login |
 | POST | `/auth/refresh` | Refresh access token |
 | GET | `/auth/me` | Get current user profile |
-| POST | `/auth/reset/verify-email` | Step 1 — verify email and return security questions |
-| POST | `/auth/reset/verify-answers` | Step 2 — verify security question answers |
-| POST | `/auth/reset/password` | Step 3 — set new password |
+| GET | `/auth/google/login` | Initiate Google OAuth 2.0 sign-in flow |
+| GET | `/auth/google/callback` | Google OAuth callback — issues JWT on success |
+| POST | `/auth/otp/send` | Step 1 — send a 6-digit OTP to the user's email |
+| POST | `/auth/otp/verify` | Step 2 — verify the OTP is correct and not expired |
+| POST | `/auth/otp/reset-password` | Step 3 — verify OTP again and set a new password |
+| POST | `/auth/reset/verify-email` | Legacy Step 1 — verify email and return security questions |
+| POST | `/auth/reset/verify-answers` | Legacy Step 2 — verify security question answers |
+| POST | `/auth/reset/password` | Legacy Step 3 — set new password |
 
 **Detection** — requires JWT
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/predict/` | Predict emotion from a single image frame (webcam) |
+| POST | `/predict/` | Predict emotion from a single image frame (webcam, single user) |
+| POST | `/predict-multi/` | Detect and classify emotions for all faces in a frame (multi-user) |
 | POST | `/analyze` | Analyze a frame and save to active session |
 | POST | `/analyze-video` | Upload and analyze a video file with EMA timeline |
 | GET | `/session-report/{session_id}` | Get full session detection report |
@@ -295,6 +326,79 @@ Never commit the `.env` file. Add it to `.gitignore` before your first push.
 | GET/POST | `/admin/faqs` | List all FAQs or create a new FAQ entry |
 | PUT | `/admin/faqs/{id}` | Update an existing FAQ entry |
 | DELETE | `/admin/faqs/{id}` | Delete a FAQ entry |
+
+---
+
+## Multi-User Detection
+
+The `/predict-multi/` endpoint processes a single frame and returns results for every face detected in it. It is designed for classroom, group, or panel scenarios where multiple participants are visible simultaneously.
+
+**Request** — `POST /predict-multi/` (multipart/form-data)
+
+| Parameter | Type | Description |
+|---|---|---|
+| `file` | blob | JPEG/PNG frame from the webcam |
+| `fast` | bool (query) | Use Haar Cascade instead of MTCNN (default: true) |
+| `save` | bool (query) | Persist detections to the DB (default: false) |
+| `session_id` | str (query) | Active session UUID to associate detections with |
+
+**Response**
+
+```json
+{
+  "session_id": "uuid",
+  "user_id": 42,
+  "face_count": 3,
+  "faces": [
+    {
+      "face_index": 0,
+      "bbox": { "x": 120, "y": 80, "w": 90, "h": 90 },
+      "emotion": "Happiness",
+      "confidence": 0.92,
+      "all_probabilities": [0.01, 0.01, 0.01, 0.92, 0.03, 0.01, 0.01],
+      "engagement": 0.782,
+      "timestamp": "2025-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+The frontend (`multiuser.html` + `pages/multiuser.js`) renders one card per detected face, capped at 12 simultaneous faces. The page polls at 400 ms intervals (slightly relaxed vs the single-user 200 ms cadence).
+
+---
+
+## Engagement Spike Detection
+
+A `SpikeDetector` class (defined in `main.py`) runs per active session. It uses a rolling window z-score calculation: if an incoming frame's engagement value deviates more than 1.8 standard deviations from the window mean, it is flagged as a spike.
+
+- Window size: 10 frames
+- Z-score threshold: 1.8
+- Spikes are returned inline with `/predict/` responses and surfaced visually via `spike-detector.js` on the frontend
+
+---
+
+## OTP Password Reset
+
+The legacy security-question reset flow is still available but the recommended flow is now OTP-based:
+
+1. **Send OTP** — `POST /auth/otp/send` with `{ "email": "..." }`. A 6-digit numeric code is stored (hashed) against the user row with a 10-minute expiry, and an HTML-formatted email is dispatched via Gmail SMTP.
+2. **Verify OTP** — `POST /auth/otp/verify` with `{ "email": "...", "otp": "..." }`. Returns 200 if the code matches and has not expired.
+3. **Reset password** — `POST /auth/otp/reset-password` with `{ "email": "...", "otp": "...", "new_password": "..." }`. Re-verifies the OTP, updates the password hash, and clears the OTP columns.
+
+Requires `SMTP_EMAIL` and `SMTP_APP_PASSWORD` in `.env`.
+
+---
+
+## Google OAuth 2.0
+
+When `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, a **Sign in with Google** button appears on `login.html`.
+
+1. The browser navigates to `GET /auth/google/login`, which redirects to Google's consent screen.
+2. Google redirects back to `GET /auth/google/callback` with an authorization code.
+3. The backend exchanges the code for an ID token, extracts the email and Google subject ID, and either links the Google account to an existing user (matching by email) or creates a new one.
+4. A standard JWT access + refresh token pair is issued and the user is redirected to the app.
+
+The `users` table stores a nullable `google_id` column for this linkage.
 
 ---
 
@@ -358,12 +462,12 @@ python webcam_main.py
 
 ## Database Schema
 
-Six tables are auto-created on startup:
+Seven tables are auto-created on startup:
 
-- `users` — accounts, hashed passwords, security questions, admin flag
-- `detections` — per-frame emotion, confidence, engagement, and source (webcam / upload)
+- `users` — accounts, hashed passwords, security questions, admin flag, `google_id` (for OAuth linking), `otp_code` and `otp_expires` (for OTP password reset)
+- `detections` — per-frame emotion, confidence, engagement, and source (`webcam` / `upload` / `multiuser`)
 - `session_timeline` — aggregated session rows with EMA engagement and dominant emotion
-- `feedback` — user-submitted ratings and messages
+- `feedback` — user-submitted ratings and messages (includes `username`, `email`, `rating`, `category`)
 - `password_reset_log` — 3-step reset audit trail with IP address
 - `faq_feedback` — per-question liked/disliked votes with optional complaint text
 - `faqs` — admin-managed FAQ entries with category, question, and answer fields
@@ -372,5 +476,5 @@ Six tables are auto-created on startup:
 
 ## Author
 
-**Your Name**  
-GitHub: [Suresh Sangeetha](https://github.com/sureshsangeetha295/Facial-Emotion-Recognition-System.git)
+**Suresh Sangeetha**  
+GitHub: [sureshsangeetha295/Facial-Emotion-Recognition-System](https://github.com/sureshsangeetha295/Facial-Emotion-Recognition-System)
